@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 import os
 import shutil
 import uuid
+import sqlite3
+import json
 
 load_dotenv()
 
@@ -21,13 +23,44 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 이미지 저장 폴더
 os.makedirs("../frontend/images", exist_ok=True)
 app.mount("/images", StaticFiles(directory="../frontend/images"), name="images")
 app.mount("/static", StaticFiles(directory="../frontend"), name="static")
 
+# SQLite 초기화
+def init_db():
+    conn = sqlite3.connect("chatbot.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS characters (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            prompt TEXT NOT NULL,
+            first_message TEXT DEFAULT '',
+            situation TEXT DEFAULT '',
+            category TEXT DEFAULT '기타',
+            visibility TEXT DEFAULT 'public',
+            image_url TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS chat_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL,
+            character_id TEXT NOT NULL,
+            role TEXT NOT NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
+
 chat_histories = {}
-custom_characters = {}
 
 class ChatRequest(BaseModel):
     character_id: str
@@ -48,6 +81,11 @@ class CreateCharacterRequest(BaseModel):
     category: str = "기타"
     visibility: str = "public"
     image_url: str = ""
+
+def get_db():
+    conn = sqlite3.connect("chatbot.db")
+    conn.row_factory = sqlite3.Row
+    return conn
 
 @app.get("/")
 async def root():
@@ -71,6 +109,7 @@ async def upload_image(file: UploadFile = File(...)):
 async def get_characters():
     from prompt import characters
 
+    # 기본 캐릭터
     result = [
         {
             "id": k,
@@ -84,24 +123,31 @@ async def get_characters():
         }
         for k, v in characters.items()
     ]
-    result += [
-        {
-            "id": k,
-            "name": v["name"],
+
+    # DB에서 유저 생성 캐릭터 불러오기
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM characters ORDER BY created_at DESC")
+    rows = cursor.fetchall()
+    conn.close()
+
+    for row in rows:
+        result.append({
+            "id": row["id"],
+            "name": row["name"],
             "custom": True,
-            "description": v.get("description", ""),
-            "category": v.get("category", ""),
-            "first_message": v.get("first_message", ""),
-            "situation": v.get("situation", ""),
-            "image_url": v.get("image_url", "")
-        }
-        for k, v in custom_characters.items()
-    ]
+            "description": row["description"],
+            "category": row["category"],
+            "first_message": row["first_message"],
+            "situation": row["situation"],
+            "image_url": row["image_url"]
+        })
+
     return result
 
 @app.post("/characters")
 async def create_character(request: CreateCharacterRequest):
-    char_id = f"custom_{request.name}_{len(custom_characters)}"
+    char_id = f"custom_{request.name}_{uuid.uuid4().hex[:8]}"
 
     prompt = f"""
 너는 {request.name}라는 캐릭터야.
@@ -127,29 +173,46 @@ async def create_character(request: CreateCharacterRequest):
 - 캐릭터를 절대 벗어나지 않음
 """
 
-    custom_characters[char_id] = {
-        "name": request.name,
-        "description": request.description,
-        "prompt": prompt,
-        "first_message": request.first_message,
-        "situation": request.situation,
-        "category": request.category,
-        "visibility": request.visibility,
-        "image_url": request.image_url
-    }
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO characters (id, name, description, prompt, first_message, situation, category, visibility, image_url)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        char_id,
+        request.name,
+        request.description,
+        prompt,
+        request.first_message,
+        request.situation,
+        request.category,
+        request.visibility,
+        request.image_url
+    ))
+    conn.commit()
+    conn.close()
 
     return {"id": char_id, "name": request.name, "message": "캐릭터 생성 완료"}
-
-@app.post("/characters/{char_id}/generate-image")
-async def generate_image(char_id: str):
-    # TODO: DALL-E 연동 (나중에)
-    return {"message": "AI 이미지 생성은 준비 중입니다"}
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
     from prompt import characters
 
-    all_characters = {**characters, **custom_characters}
+    # 기본 캐릭터 + DB 캐릭터에서 찾기
+    all_characters = dict(characters)
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM characters WHERE id = ?", (request.character_id,))
+    row = cursor.fetchone()
+
+    if row:
+        all_characters[row["id"]] = {
+            "name": row["name"],
+            "prompt": row["prompt"]
+        }
+
+    conn.close()
 
     if request.character_id not in all_characters:
         return {"error": "캐릭터를 찾을 수 없습니다"}
@@ -162,16 +225,14 @@ async def chat(request: ChatRequest):
 
     history = chat_histories[session_key]
 
+    history.append({"role": "user", "content": request.message})
+
     contents = []
     for msg in history[-30:]:
         contents.append({
             "role": "user" if msg["role"] == "user" else "model",
             "parts": [{"text": msg["content"]}]
         })
-    contents.append({
-        "role": "user",
-        "parts": [{"text": request.message}]
-    })
 
     response = client.models.generate_content(
         model="gemini-2.5-flash",
@@ -184,7 +245,6 @@ async def chat(request: ChatRequest):
 
     assistant_message = response.text
 
-    history.append({"role": "user", "content": request.message})
     history.append({"role": "assistant", "content": assistant_message})
     chat_histories[session_key] = history
 
@@ -199,3 +259,12 @@ async def clear_chat(session_id: str, character_id: str):
     if session_key in chat_histories:
         del chat_histories[session_key]
     return {"message": "대화 기록 삭제 완료"}
+
+@app.delete("/characters/{char_id}")
+async def delete_character(char_id: str):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM characters WHERE id = ?", (char_id,))
+    conn.commit()
+    conn.close()
+    return {"message": "캐릭터 삭제 완료"}
