@@ -1,0 +1,76 @@
+from fastapi import APIRouter, Depends, HTTPException
+from database import get_db
+from auth.router import get_current_user
+
+router = APIRouter(
+    prefix="/likes",
+    tags=["좋아요"],
+    responses={404: {"description": "찾을 수 없습니다"}}
+)
+
+@router.post("/{character_id}", summary="캐릭터 좋아요", description="캐릭터에 좋아요를 누릅니다.")
+async def like_character(
+        character_id: str,
+        current_user: dict = Depends(get_current_user)):
+    from achievements.router import check_and_grant
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM characters WHERE id = ?", (character_id,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="캐릭터를 찾을 수 없습니다.")
+
+    try:
+        cursor.execute("""
+            INSERT INTO character_likes (user_id, character_id) VALUES (?, ?)
+        """, (current_user["id"], character_id))
+        cursor.execute("""
+            UPDATE characters SET like_count = like_count + 1 WHERE id = ?
+        """, (character_id,))
+        conn.commit()
+        conn.close()
+
+        check_and_grant(current_user["id"], "first_like")
+
+        return {"message": "좋아요 완료"}
+    except:
+        conn.close()
+        raise HTTPException(status_code=400, detail="이미 좋아요한 캐릭터입니다.")
+
+@router.delete("/{character_id}", summary="좋아요 취소", description="캐릭터 좋아요를 취소합니다.")
+async def unlike_character(
+        character_id: str,
+        current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        DELETE FROM character_likes WHERE user_id = ? AND character_id = ?
+    """, (current_user["id"], character_id))
+
+    if cursor.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=400, detail="좋아요하지 않은 캐릭터입니다.")
+
+    cursor.execute("""
+        UPDATE characters SET like_count = like_count - 1 WHERE id = ?
+    """, (character_id,))
+    conn.commit()
+    conn.close()
+    return {"message": "좋아요 취소 완료"}
+
+@router.get("/me", summary="내 좋아요 목록", description="내가 좋아요한 캐릭터 목록을 반환합니다.")
+async def get_my_likes(current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT c.* FROM characters c
+        JOIN character_likes cl ON c.id = cl.character_id
+        WHERE cl.user_id = ?
+        ORDER BY cl.created_at DESC
+    """, (current_user["id"],))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
