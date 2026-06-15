@@ -63,6 +63,9 @@ async def login(form: OAuth2PasswordRequestForm = Depends()):
 
     if not user or not verify_password(form.password, user["password"]):
         raise HTTPException(status_code=401, detail="이메일 또는 비밀번호가 틀렸습니다.")
+    
+    if user["suspended"]:
+        raise HTTPException(status_code=403, detail="정지된 계정입니다. 고객센터에 문의해주세요.")
 
     token = create_access_token(user["id"], user["email"])
     return TokenResponse(access_token=token, username=user["username"])
