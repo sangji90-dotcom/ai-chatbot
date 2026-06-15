@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from database import get_db
-from auth.router import get_current_user, get_optional_user
+from deps import get_current_user, get_optional_user
 
 router = APIRouter(
     prefix="/suggestions",

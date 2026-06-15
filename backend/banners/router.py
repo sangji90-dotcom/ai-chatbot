@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from database import get_db
-from auth.router import get_current_user
+from deps import get_current_user
 
 router = APIRouter(
     prefix="/banners",

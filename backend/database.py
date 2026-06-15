@@ -253,17 +253,20 @@ def init_db():
 
     # 스토리
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS stories (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            title TEXT NOT NULL,
-            genre TEXT DEFAULT '기타',
-            background TEXT NOT NULL,
-            system_prompt TEXT NOT NULL,
-            image_url TEXT DEFAULT '',
-            is_official INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id)
+    CREATE TABLE IF NOT EXISTS stories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        title TEXT NOT NULL,
+        genre TEXT DEFAULT '기타',
+        background TEXT NOT NULL,
+        system_prompt TEXT NOT NULL,
+        image_url TEXT DEFAULT '',
+        recommended_players INTEGER DEFAULT 4,
+        min_players INTEGER DEFAULT 2,
+        max_players INTEGER DEFAULT 6,
+        is_official INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
 
@@ -308,6 +311,58 @@ def init_db():
             FOREIGN KEY (room_id) REFERENCES party_rooms(id)
         )
     """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS character_reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        character_id TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, character_id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+""")
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS user_blocks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        blocker_id INTEGER NOT NULL,
+        blocked_id INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(blocker_id, blocked_id),
+        FOREIGN KEY (blocker_id) REFERENCES users(id),
+        FOREIGN KEY (blocked_id) REFERENCES users(id)
+    )
+""")
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS party_invitations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        room_code TEXT NOT NULL,
+        inviter_id INTEGER NOT NULL,
+        invitee_id INTEGER NOT NULL,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(room_code, invitee_id),
+        FOREIGN KEY (inviter_id) REFERENCES users(id),
+        FOREIGN KEY (invitee_id) REFERENCES users(id)
+    )
+""")
+    
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        link TEXT DEFAULT '',
+        is_read INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+""")
 
     conn.commit()
     conn.close()

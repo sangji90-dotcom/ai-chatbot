@@ -1,7 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from pydantic import BaseModel
 from database import get_db
-from auth.router import get_current_user
+from deps import get_current_user
 from google import genai
 from dotenv import load_dotenv
 import os
@@ -14,8 +14,8 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 router = APIRouter(prefix="/party", tags=["파티챗"])
 
-# 방별 WebSocket 연결 관리 {room_code: [(websocket, user_id, username)]}
 room_connections: dict[str, list[tuple]] = {}
+kick_votes: dict[str, dict[int, dict[int, str]]] = {}
 
 def generate_room_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
@@ -34,10 +34,24 @@ class CreateStoryRequest(BaseModel):
     background: str
     system_prompt: str
     image_url: str = ""
+    recommended_players: int = 4
+    min_players: int = 2
+    max_players: int = 6
 
-# ===== 스토리 =====
 
-@router.get("/stories", summary="스토리 목록", description="전체 스토리 목록을 반환합니다.")
+def get_party_tokens(user_id: int, room_code: str) -> int:
+    member_count = len(room_connections.get(room_code, []))
+    member_count = max(member_count, 1)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT output_multiplier FROM users WHERE id = ?", (user_id,))
+    u = cursor.fetchone()
+    conn.close()
+    multiplier = u["output_multiplier"] if u and u["output_multiplier"] else 1.0
+    return min(int(1000 * member_count * multiplier), 8000)
+
+
+@router.get("/stories", summary="스토리 목록")
 async def get_stories():
     conn = get_db()
     cursor = conn.cursor()
@@ -46,27 +60,29 @@ async def get_stories():
     conn.close()
     return [dict(row) for row in rows]
 
-@router.post("/stories", summary="스토리 생성", description="새 스토리를 생성합니다.")
+
+@router.post("/stories", summary="스토리 생성")
 async def create_story(
         request: CreateStoryRequest,
         current_user: dict = Depends(get_current_user)):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO stories (user_id, title, genre, background, system_prompt, image_url)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO stories (user_id, title, genre, background, system_prompt, image_url,
+                            recommended_players, min_players, max_players)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         current_user["id"], request.title, request.genre,
-        request.background, request.system_prompt, request.image_url
+        request.background, request.system_prompt, request.image_url,
+        request.recommended_players, request.min_players, request.max_players
     ))
     conn.commit()
     story_id = cursor.lastrowid
     conn.close()
     return {"id": story_id, "message": "스토리 생성 완료"}
 
-# ===== 방 생성/참여 =====
 
-@router.post("/rooms", summary="파티방 생성", description="새 파티방을 생성합니다.")
+@router.post("/rooms", summary="파티방 생성")
 async def create_room(
         request: CreateRoomRequest,
         current_user: dict = Depends(get_current_user)):
@@ -89,7 +105,8 @@ async def create_room(
     conn.close()
     return {"room_id": room_id, "code": code, "message": "방 생성 완료"}
 
-@router.post("/rooms/join", summary="파티방 참여", description="코드로 파티방에 참여합니다.")
+
+@router.post("/rooms/join", summary="파티방 참여")
 async def join_room(
         request: JoinRoomRequest,
         current_user: dict = Depends(get_current_user)):
@@ -126,7 +143,8 @@ async def join_room(
     conn.close()
     return {"room_id": room["id"], "message": "방 참여 완료"}
 
-@router.get("/rooms/{code}", summary="파티방 정보", description="파티방 정보와 참여자 목록을 반환합니다.")
+
+@router.get("/rooms/{code}", summary="파티방 정보")
 async def get_room_info(code: str):
     conn = get_db()
     cursor = conn.cursor()
@@ -149,7 +167,6 @@ async def get_room_info(code: str):
         "members": [dict(m) for m in members]
     }
 
-# ===== WebSocket =====
 
 @router.websocket("/ws/{room_code}/{user_id}")
 async def party_websocket(websocket: WebSocket, room_code: str, user_id: int):
@@ -183,16 +200,14 @@ async def party_websocket(websocket: WebSocket, room_code: str, user_id: int):
     members = cursor.fetchall()
     conn.close()
 
-    # 연결 등록
     if room_code not in room_connections:
         room_connections[room_code] = []
     room_connections[room_code].append((websocket, user_id, user["username"]))
 
-    # 입장 알림
     await broadcast(room_code, {
         "type": "system",
         "message": f"{user['username']}님이 입장했습니다.",
-        "members": [m["username"] for _, _, m in room_connections[room_code]]
+        "members": [m for _, _, m in room_connections[room_code]]
     }, exclude=None)
 
     try:
@@ -200,15 +215,13 @@ async def party_websocket(websocket: WebSocket, room_code: str, user_id: int):
             data = await websocket.receive_text()
             payload = json.loads(data)
             message = payload.get("message", "")
-            msg_type = payload.get("type", "chat")  # chat or start
+            msg_type = payload.get("type", "chat")
 
             if msg_type == "start":
-                # 스토리 시작 — AI 첫 나레이션
                 members_info = "\n".join([
                     f"- {m['username']}: {m['character_stats']}"
                     for m in members
                 ])
-
                 prompt = f"""
 {story['system_prompt']}
 
@@ -219,15 +232,14 @@ async def party_websocket(websocket: WebSocket, room_code: str, user_id: int):
 참여자들의 캐릭터 설정을 반영하여 스토리를 시작해줘.
 나레이션과 NPC 대사를 포함하여 첫 장면을 묘사해줘.
 """
+                party_tokens = get_party_tokens(user_id, room_code)
                 response = client.models.generate_content(
                     model="gemini-2.5-flash",
                     contents=[{"role": "user", "parts": [{"text": "스토리 시작"}]}],
-                    config={"system_instruction": prompt, "max_output_tokens": 1000}
+                    config={"system_instruction": prompt, "max_output_tokens": party_tokens}
                 )
-
                 ai_response = response.text
 
-                # DB 저장
                 conn = get_db()
                 cursor = conn.cursor()
                 cursor.execute("""
@@ -245,14 +257,12 @@ async def party_websocket(websocket: WebSocket, room_code: str, user_id: int):
                 }, exclude=None)
 
             elif msg_type == "chat":
-                # 유저 메시지 브로드캐스트
                 await broadcast(room_code, {
                     "type": "chat",
                     "username": user["username"],
                     "message": message
                 }, exclude=None)
 
-                # DB 저장
                 conn = get_db()
                 cursor = conn.cursor()
                 cursor.execute("""
@@ -261,7 +271,6 @@ async def party_websocket(websocket: WebSocket, room_code: str, user_id: int):
                 """, (room["id"], user_id, "chat", message))
                 conn.commit()
 
-                # 최근 대화 기록 가져와서 AI 응답
                 cursor.execute("""
                     SELECT * FROM party_messages
                     WHERE room_id = ?
@@ -274,12 +283,10 @@ async def party_websocket(websocket: WebSocket, room_code: str, user_id: int):
                     f"[{m['message_type']}] {m['content']}"
                     for m in reversed(recent)
                 ])
-
                 members_info = "\n".join([
                     f"- {m['username']}: {m['character_stats']}"
                     for m in members
                 ])
-
                 prompt = f"""
 {story['system_prompt']}
 
@@ -292,12 +299,12 @@ async def party_websocket(websocket: WebSocket, room_code: str, user_id: int):
 위 상황에서 나레이터로서 스토리를 자연스럽게 이어가줘.
 필요하면 NPC 대사도 포함해줘.
 """
+                party_tokens = get_party_tokens(user_id, room_code)
                 response = client.models.generate_content(
                     model="gemini-2.5-flash",
                     contents=[{"role": "user", "parts": [{"text": message}]}],
-                    config={"system_instruction": prompt, "max_output_tokens": 1000}
+                    config={"system_instruction": prompt, "max_output_tokens": party_tokens}
                 )
-
                 ai_response = response.text
 
                 conn = get_db()
@@ -314,12 +321,123 @@ async def party_websocket(websocket: WebSocket, room_code: str, user_id: int):
                     "message": ai_response
                 }, exclude=None)
 
+            elif msg_type == "kick_vote":
+                target_id = payload.get("target_user_id")
+                member_count = len(room_connections.get(room_code, []))
+
+                if member_count <= 2:
+                    await websocket.send_text(json.dumps({
+                        "type": "error",
+                        "message": "2인 파티에서는 강퇴 투표를 사용할 수 없습니다."
+                    }, ensure_ascii=False))
+                    continue
+
+                if target_id == user_id:
+                    await websocket.send_text(json.dumps({
+                        "type": "error",
+                        "message": "본인을 강퇴할 수 없습니다."
+                    }, ensure_ascii=False))
+                    continue
+
+                if room_code not in kick_votes:
+                    kick_votes[room_code] = {}
+                kick_votes[room_code][target_id] = {user_id: "yes"}
+
+                target_name = next(
+                    (uname for _, uid, uname in room_connections.get(room_code, [])
+                     if uid == target_id), "알 수 없음"
+                )
+
+                await broadcast(room_code, {
+                    "type": "kick_vote_started",
+                    "target_user_id": target_id,
+                    "target_username": target_name,
+                    "proposer_id": user_id,
+                    "proposer_username": user["username"],
+                    "message": f"{user['username']}님이 {target_name}님 강퇴를 제안했습니다. 찬반 투표를 해주세요."
+                }, exclude=None)
+
+            elif msg_type == "kick_vote_result":
+                target_id = payload.get("target_user_id")
+                vote = payload.get("vote")
+
+                if room_code not in kick_votes or target_id not in kick_votes[room_code]:
+                    await websocket.send_text(json.dumps({
+                        "type": "error",
+                        "message": "진행 중인 투표가 없습니다."
+                    }, ensure_ascii=False))
+                    continue
+
+                kick_votes[room_code][target_id][user_id] = vote
+
+                member_count = len(room_connections.get(room_code, []))
+                votes = kick_votes[room_code][target_id]
+                yes_count = sum(1 for v in votes.values() if v == "yes")
+                no_count = sum(1 for v in votes.values() if v == "no")
+
+                await broadcast(room_code, {
+                    "type": "kick_vote_update",
+                    "target_user_id": target_id,
+                    "yes": yes_count,
+                    "no": no_count,
+                    "total_members": member_count
+                }, exclude=None)
+
+                if yes_count > member_count // 2:
+                    target_ws = next(
+                        (ws for ws, uid, _ in room_connections.get(room_code, [])
+                         if uid == target_id), None
+                    )
+                    target_name = next(
+                        (uname for _, uid, uname in room_connections.get(room_code, [])
+                         if uid == target_id), "알 수 없음"
+                    )
+
+                    del kick_votes[room_code][target_id]
+
+                    room_connections[room_code] = [
+                        (ws, uid, uname)
+                        for ws, uid, uname in room_connections[room_code]
+                        if uid != target_id
+                    ]
+
+                    await broadcast(room_code, {
+                        "type": "kick_result",
+                        "target_user_id": target_id,
+                        "target_username": target_name,
+                        "message": f"{target_name}님이 강퇴되었습니다."
+                    }, exclude=None)
+
+                    if target_ws:
+                        try:
+                            await target_ws.send_text(json.dumps({
+                                "type": "kicked",
+                                "message": "투표로 강퇴되었습니다."
+                            }, ensure_ascii=False))
+                            await target_ws.close()
+                        except:
+                            pass
+
+                elif no_count >= member_count // 2 + 1:
+                    del kick_votes[room_code][target_id]
+                    await broadcast(room_code, {
+                        "type": "kick_vote_failed",
+                        "target_user_id": target_id,
+                        "message": "강퇴 투표가 부결되었습니다."
+                    }, exclude=None)
+
     except WebSocketDisconnect:
         room_connections[room_code] = [
             (ws, uid, uname)
             for ws, uid, uname in room_connections[room_code]
             if uid != user_id
         ]
+
+        if room_code in kick_votes:
+            kick_votes[room_code].pop(user_id, None)
+            for target_id in list(kick_votes[room_code].keys()):
+                kick_votes[room_code][target_id].pop(user_id, None)
+
         await broadcast(room_code, {
             "type": "system",
             "message": f"{user['username']}님이 퇴장했습니다."
@@ -327,6 +445,8 @@ async def party_websocket(websocket: WebSocket, room_code: str, user_id: int):
 
         if not room_connections[room_code]:
             del room_connections[room_code]
+            if room_code in kick_votes:
+                del kick_votes[room_code]
 
 
 async def broadcast(room_code: str, data: dict, exclude):
@@ -339,3 +459,115 @@ async def broadcast(room_code: str, data: dict, exclude):
             await ws.send_text(json.dumps(data, ensure_ascii=False))
         except:
             pass
+
+
+@router.post("/rooms/{code}/invite/{user_id}", summary="파티 초대")
+async def invite_to_party(
+        code: str,
+        user_id: int,
+        current_user: dict = Depends(get_current_user)):
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # 방 존재 확인
+    cursor.execute("SELECT * FROM party_rooms WHERE code = ?", (code,))
+    room = cursor.fetchone()
+    if not room:
+        conn.close()
+        raise HTTPException(status_code=404, detail="방을 찾을 수 없습니다.")
+
+    # 초대 대상 존재 확인
+    cursor.execute("SELECT id, username FROM users WHERE id = ?", (user_id,))
+    invitee = cursor.fetchone()
+    if not invitee:
+        conn.close()
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+
+    # 본인 초대 불가
+    if user_id == current_user["id"]:
+        conn.close()
+        raise HTTPException(status_code=400, detail="본인을 초대할 수 없습니다.")
+
+    # 방 꽉 찼는지 확인
+    cursor.execute("SELECT COUNT(*) as cnt FROM party_members WHERE room_id = ?", (room["id"],))
+    count = cursor.fetchone()["cnt"]
+    if count >= room["max_members"]:
+        conn.close()
+        raise HTTPException(status_code=400, detail="방이 꽉 찼습니다.")
+
+    try:
+        cursor.execute("""
+            INSERT INTO party_invitations (room_code, inviter_id, invitee_id)
+            VALUES (?, ?, ?)
+        """, (code, current_user["id"], user_id))
+        conn.commit()
+        conn.close()
+        return {
+            "message": f"{invitee['username']}님을 초대했습니다.",
+            "room_code": code
+        }
+    except:
+        conn.close()
+        raise HTTPException(status_code=400, detail="이미 초대한 사용자입니다.")
+
+
+@router.get("/invitations/me", summary="내 파티 초대 목록")
+async def get_my_party_invitations(current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT pi.*, u.username as inviter_name,
+               pr.story_id, pr.max_members, pr.status as room_status
+        FROM party_invitations pi
+        JOIN users u ON pi.inviter_id = u.id
+        JOIN party_rooms pr ON pi.room_code = pr.code
+        WHERE pi.invitee_id = ? AND pi.status = 'pending'
+        ORDER BY pi.created_at DESC
+    """, (current_user["id"],))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+@router.patch("/invitations/{invitation_id}/accept", summary="파티 초대 수락")
+async def accept_party_invitation(
+        invitation_id: int,
+        current_user: dict = Depends(get_current_user)):
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM party_invitations WHERE id = ? AND invitee_id = ?",
+                   (invitation_id, current_user["id"]))
+    inv = cursor.fetchone()
+    if not inv:
+        conn.close()
+        raise HTTPException(status_code=404, detail="초대를 찾을 수 없습니다.")
+
+    cursor.execute("UPDATE party_invitations SET status = 'accepted' WHERE id = ?",
+                   (invitation_id,))
+    conn.commit()
+    conn.close()
+
+    return {"message": "초대 수락 완료", "room_code": inv["room_code"]}
+
+
+@router.patch("/invitations/{invitation_id}/reject", summary="파티 초대 거절")
+async def reject_party_invitation(
+        invitation_id: int,
+        current_user: dict = Depends(get_current_user)):
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM party_invitations WHERE id = ? AND invitee_id = ?",
+                   (invitation_id, current_user["id"]))
+    inv = cursor.fetchone()
+    if not inv:
+        conn.close()
+        raise HTTPException(status_code=404, detail="초대를 찾을 수 없습니다.")
+
+    cursor.execute("UPDATE party_invitations SET status = 'rejected' WHERE id = ?",
+                   (invitation_id,))
+    conn.commit()
+    conn.close()
+    return {"message": "초대 거절 완료"}

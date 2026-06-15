@@ -17,6 +17,8 @@ from suggestions.router import router as suggestions_router
 from tokens.router import router as tokens_router
 from achievements.router import router as achievements_router, init_achievements
 from scheduler import start_scheduler
+from support.router import router as support_router
+from admin.router import router as admin_router
 
 load_dotenv()
 
@@ -70,6 +72,8 @@ app.include_router(banners_router)
 app.include_router(suggestions_router)
 app.include_router(tokens_router)
 app.include_router(achievements_router)
+app.include_router(support_router)
+app.include_router(admin_router)
 
 @app.get("/", tags=["기본"])
 async def root():

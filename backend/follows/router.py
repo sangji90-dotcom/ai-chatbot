@@ -1,12 +1,27 @@
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
-from auth.router import get_current_user
+from deps import get_current_user
 
 router = APIRouter(
     prefix="/follows",
     tags=["팔로우"],
     responses={404: {"description": "찾을 수 없습니다"}}
 )
+
+@router.get("/me/followers", summary="내 팔로워 목록")
+async def get_my_followers(current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT u.id, u.username, f.created_at as followed_at
+        FROM follows f
+        JOIN users u ON f.follower_id = u.id
+        WHERE f.following_id = ?
+        ORDER BY f.created_at DESC
+    """, (current_user["id"],))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
 
 @router.post("/{user_id}", summary="팔로우", description="창작자를 팔로우합니다.")
 async def follow_user(

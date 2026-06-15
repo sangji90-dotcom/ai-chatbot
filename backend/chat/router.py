@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from database import get_db
-from auth.router import get_optional_user, get_current_user
+from deps import get_current_user, get_optional_user
 from google import genai
 import os
 from dotenv import load_dotenv
@@ -78,7 +78,9 @@ async def chat(
         u = cursor.fetchone()
         conn.close()
         if u:
-            max_tokens = OUTPUT_LENGTH.get(u["output_length"], 1000)
+            base_tokens = OUTPUT_LENGTH.get(u["output_length"], 1000)
+            multiplier = u["output_multiplier"] if u["output_multiplier"] else 1.0
+            max_tokens = int(base_tokens * multiplier)
 
     # 이어하기 — 메모리에 없으면 DB에서 복원
     if session_key not in chat_histories:

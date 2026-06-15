@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
-from auth.router import get_current_user
+from deps import get_current_user
 from datetime import date, datetime, timedelta
-from achievements.router import check_and_grant
 
 router = APIRouter(
     prefix="/tokens",
@@ -48,6 +47,7 @@ def add_token(user_id: int, amount: int, token_type: str, reason: str, expires_a
     conn.close()
 
 def deduct_token(user_id: int, amount: int, reason: str):
+    from notifications.router import send_notification
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
@@ -57,6 +57,13 @@ def deduct_token(user_id: int, amount: int, reason: str):
 
     if user["token_balance"] < amount:
         conn.close()
+        send_notification(
+             user_id,
+            "token_empty",
+            "토큰이 부족합니다",
+            "토큰을 충전하고 대화를 계속해보세요!",
+            "/tokens/packages"
+        )
         raise HTTPException(status_code=400, detail="토큰이 부족합니다.")
 
     event = user["token_event"]
@@ -85,7 +92,17 @@ def deduct_token(user_id: int, amount: int, reason: str):
         INSERT INTO token_history (user_id, amount, token_type, reason)
         VALUES (?, ?, ?, ?)
     """, (user_id, -amount, "use", reason))
+
     conn.commit()
+    remaining = user["token_balance"] - amount
+    if remaining <= 100:
+        send_notification(
+            user_id,
+            "token_low",
+            "토큰이 거의 소진됐어요",
+            f"잔여 토큰: {remaining}개. 지금 충전하면 대화가 끊기지 않아요!",
+            "/tokens/packages"
+        )
     conn.close()
 
 @router.get("/packages", summary="토큰 패키지 목록", description="구매 가능한 토큰 패키지 목록을 반환합니다.")
