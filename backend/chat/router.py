@@ -24,6 +24,9 @@ OUTPUT_LENGTH = {
 }
 
 CHAT_DEDUCT = 50
+AUTO_SUMMARY_THRESHOLD = 100  # 100턴 초과 시 자동 요약
+RECENT_TURNS = 40  # 요약 후 유지할 최근 턴 수
+
 
 class ChatRequest(BaseModel):
     character_id: str
@@ -40,6 +43,77 @@ class OocRequest(BaseModel):
     character_id: str
     message_id: int
     new_content: str
+
+
+async def auto_summarize(history: list, character_name: str) -> list:
+    """100턴 초과 시 이전 대화 자동 요약"""
+    old_history = history[:-RECENT_TURNS]
+    recent_history = history[-RECENT_TURNS:]
+
+    history_text = "\n".join([
+        f"{'유저' if m['role'] == 'user' else character_name}: {m['content']}"
+        for m in old_history
+    ])
+
+    summary_response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=[{"role": "user", "parts": [{"text": history_text}]}],
+        config={
+            "system_instruction": """
+이전 대화를 핵심만 추출해서 메모리 패스 형식으로 요약해줘.
+
+형식:
+[관계] 유저와 캐릭터의 현재 관계
+[주요 사건] 중요한 사건 3개 이하
+[감정 흐름] 현재 감정 상태
+[약속/결정] 중요한 약속이나 결정사항
+[기타 기억] 기억해야 할 세부 정보
+
+5줄 이내로 간결하게.
+""",
+            "max_output_tokens": 300,
+        }
+    )
+
+    summary = summary_response.text
+    return [
+        {"role": "user", "content": f"[메모리 패스 - 이전 대화 핵심 기억]\n{summary}"},
+        {"role": "assistant", "content": "네, 이전 내용을 기억하고 있어요."},
+        *recent_history
+    ]
+
+
+async def extract_memory(
+        user_id: int,
+        character_id: str,
+        message: str,
+        response: str,
+        character_name: str):
+    """대화에서 중요 정보 자동 추출 → memory_book 저장"""
+    extract_response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=[{"role": "user", "parts": [{"text": f"유저: {message}\n{character_name}: {response}"}]}],
+        config={
+            "system_instruction": """
+이 대화에서 나중에 기억해야 할 중요한 정보가 있으면 한 줄로 추출해줘.
+중요한 정보: 유저의 이름, 관계 변화, 중요한 약속, 감정적으로 중요한 사건
+없으면 "없음"이라고만 답해줘.
+절대 설명하지 말고 한 줄만.
+""",
+            "max_output_tokens": 100,
+        }
+    )
+    extracted = extract_response.text.strip()
+    if extracted and extracted != "없음":
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO memory_book (user_id, character_id, title, content)
+            VALUES (?, ?, ?, ?)
+        """, (user_id, character_id, "자동 추출", extracted))
+        conn.commit()
+        conn.close()
+
 
 @router.post("", summary="대화하기", description="AI 캐릭터와 대화합니다. '요약!' 입력 시 대화 요약. 1회당 50토큰 차감.")
 async def chat(
@@ -73,14 +147,14 @@ async def chat(
     character = all_characters[request.character_id]
     session_key = f"{request.session_id}_{request.character_id}"
 
-    # 토큰 차감 + 출력량 설정 (로그인 유저만)
+    # 토큰 차감 + 출력량 설정
     max_tokens = 1000
     if current_user:
         deduct_token(current_user["id"], CHAT_DEDUCT, f"{character['name']}와 대화")
 
         conn = get_db()
         cursor = conn.cursor()
-        cursor.execute("SELECT output_length FROM users WHERE id = ?", (current_user["id"],))
+        cursor.execute("SELECT output_length, output_multiplier FROM users WHERE id = ?", (current_user["id"],))
         u = cursor.fetchone()
         conn.close()
         if u:
@@ -171,16 +245,16 @@ async def chat(
             {"role": "assistant", "content": "네, 이전 내용을 기억하고 있어요. 계속 이야기해요."}
         ]
 
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO chat_history (session_id, character_id, user_id, role, content)
-            VALUES (?, ?, ?, ?, ?)
-        """, (request.session_id, request.character_id,
-              current_user["id"] if current_user else None,
-              "system", f"[요약]\n{summary}"))
-        conn.commit()
-        conn.close()
+        if current_user:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO chat_history (session_id, character_id, user_id, role, content)
+                VALUES (?, ?, ?, ?, ?)
+            """, (request.session_id, request.character_id,
+                  current_user["id"], "system", f"[요약]\n{summary}"))
+            conn.commit()
+            conn.close()
 
         return {"character": character["name"], "message": f"📝 대화를 요약했어요!\n\n{summary}"}
 
@@ -195,9 +269,15 @@ async def chat(
     """, (request.session_id, request.character_id,
           current_user["id"] if current_user else None,
           "user", request.message))
+    conn.commit()
+
+    # 100턴 초과 시 자동 요약
+    if len(history) > AUTO_SUMMARY_THRESHOLD:
+        history = await auto_summarize(history, character["name"])
+        chat_histories[session_key] = history
 
     contents = []
-    for msg in history[-30:]:
+    for msg in history:
         contents.append({
             "role": "user" if msg["role"] == "user" else "model",
             "parts": [{"text": msg["content"]}]
@@ -226,7 +306,17 @@ async def chat(
     message_id = cursor.lastrowid
     conn.close()
 
-    # 업적 체크 (로그인 유저만)
+    # 10턴마다 중요 정보 자동 추출
+    if current_user and len(history) % 10 == 0:
+        await extract_memory(
+            current_user["id"],
+            request.character_id,
+            request.message,
+            assistant_message,
+            character["name"]
+        )
+
+    # 업적 체크
     if current_user:
         conn = get_db()
         cursor = conn.cursor()
@@ -259,8 +349,9 @@ async def chat(
         "message_id": message_id
     }
 
+
 # ===== 메시지 평가 =====
-@router.post("/rating", summary="메시지 평가", description="AI 응답에 좋아요/싫어요를 남깁니다.")
+@router.post("/rating", summary="메시지 평가")
 async def rate_message(
         request: RatingRequest,
         current_user: dict = Depends(get_current_user)):
@@ -277,8 +368,9 @@ async def rate_message(
     conn.close()
     return {"message": "평가 완료"}
 
+
 # ===== OOC 모드 =====
-@router.patch("/ooc", summary="OOC 수정", description="AI 응답을 직접 수정합니다. (Out Of Character)")
+@router.patch("/ooc", summary="OOC 수정")
 async def ooc_edit(
         request: OocRequest,
         current_user: dict = Depends(get_current_user)):
@@ -304,8 +396,9 @@ async def ooc_edit(
 
     return {"message": "메시지 수정 완료"}
 
+
 # ===== 새 채팅 =====
-@router.post("/new/{character_id}", summary="새 채팅 시작", description="현재 대화를 초기화하고 새로 시작합니다.")
+@router.post("/new/{character_id}", summary="새 채팅 시작")
 async def new_chat(
         character_id: str,
         session_id: str,
@@ -315,8 +408,9 @@ async def new_chat(
         del chat_histories[session_key]
     return {"message": "새 채팅 시작 완료", "session_key": session_key}
 
+
 # ===== 이어하기 =====
-@router.get("/resume/{character_id}", summary="대화 이어하기", description="이전 대화를 불러와 이어갑니다.")
+@router.get("/resume/{character_id}", summary="대화 이어하기")
 async def resume_chat(
         character_id: str,
         session_id: str,
@@ -344,7 +438,9 @@ async def resume_chat(
         "message": f"대화 {len(rows)}개 복원 완료"
     }
 
-@router.get("/history/{character_id}", summary="대화 기록 조회", description="캐릭터와의 전체 대화 기록을 반환합니다.")
+
+# ===== 대화 기록 조회 =====
+@router.get("/history/{character_id}", summary="대화 기록 조회")
 async def get_chat_history(
         character_id: str,
         current_user: dict = Depends(get_optional_user)):
@@ -362,13 +458,17 @@ async def get_chat_history(
     conn.close()
     return [dict(row) for row in rows]
 
-@router.delete("/{session_id}/{character_id}", summary="대화 초기화", description="해당 세션의 대화 기록을 삭제합니다.")
+
+# ===== 대화 초기화 =====
+@router.delete("/{session_id}/{character_id}", summary="대화 초기화")
 async def clear_chat(session_id: str, character_id: str):
     session_key = f"{session_id}_{character_id}"
     if session_key in chat_histories:
         del chat_histories[session_key]
     return {"message": "대화 기록 삭제 완료"}
 
+
+# ===== PDF 내보내기 =====
 @router.get("/export/{character_id}", summary="대화 PDF 내보내기")
 async def export_chat_pdf(
         character_id: str,
@@ -393,12 +493,10 @@ async def export_chat_pdf(
 
     char_name = char["name"] if char else character_id
 
-    # PDF 생성
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
-    # 한글 폰트 등록 (나눔고딕 없으면 기본 폰트)
     font_name = "Helvetica"
     font_path = "NanumGothic-Regular.ttf"
     if os.path.exists(font_path):
@@ -416,9 +514,6 @@ async def export_chat_pdf(
     max_width = width - margin * 2
 
     def draw_text_block(c, text, x, y, font_name, font_size, max_width):
-        c.setFont(font_name, font_size)
-        words = text
-        # 줄바꿈 처리
         lines = []
         for paragraph in text.split('\n'):
             line = ""
@@ -443,18 +538,15 @@ async def export_chat_pdf(
         label = "나" if role == "user" else char_name
         color = (0.1, 0.4, 0.8) if role == "user" else (0.1, 0.6, 0.3)
 
-        # 새 페이지
         if y < 100:
             c.showPage()
             y = height - 50
 
-        # 발화자 + 시간
         c.setFillColorRGB(*color)
         c.setFont(font_name, 10)
         c.drawString(margin, y, f"[{label}]  {created_at[:16]}")
         y -= line_height
 
-        # 내용
         c.setFillColorRGB(0, 0, 0)
         lines = draw_text_block(c, content, margin, y, font_name, 9, max_width)
         for line in lines:
@@ -464,7 +556,7 @@ async def export_chat_pdf(
             c.drawString(margin + 10, y, line)
             y -= line_height
 
-        y -= 8  # 메시지 간격
+        y -= 8
 
     c.save()
     buffer.seek(0)

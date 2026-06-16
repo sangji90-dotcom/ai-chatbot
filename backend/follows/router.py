@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
 from deps import get_current_user
+from typing import Optional, List
 
 router = APIRouter(
     prefix="/follows",
     tags=["팔로우"],
     responses={404: {"description": "찾을 수 없습니다"}}
 )
+
 
 @router.get("/me/followers", summary="내 팔로워 목록")
 async def get_my_followers(current_user: dict = Depends(get_current_user)):

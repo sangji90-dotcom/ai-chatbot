@@ -27,6 +27,9 @@ class CreateRoomRequest(BaseModel):
 class JoinRoomRequest(BaseModel):
     code: str
     character_stats: dict
+    
+class RoomSettingsRequest(BaseModel):
+    output_multiplier: float = 1.0
 
 class CreateStoryRequest(BaseModel):
     title: str
@@ -571,3 +574,235 @@ async def reject_party_invitation(
     conn.commit()
     conn.close()
     return {"message": "초대 거절 완료"}
+
+@router.patch("/rooms/{code}/settings", summary="방 설정 변경 (방장 전용)")
+async def update_room_settings(
+        code: str,
+        request: RoomSettingsRequest,
+        current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM party_rooms WHERE code = ?", (code,))
+    room = cursor.fetchone()
+    if not room:
+        conn.close()
+        raise HTTPException(status_code=404, detail="방을 찾을 수 없습니다.")
+    if room["host_id"] != current_user["id"]:
+        conn.close()
+        raise HTTPException(status_code=403, detail="방장만 설정을 변경할 수 있습니다.")
+
+    # 방 전체 출력 배율 broadcast
+    if code in room_connections:
+        import json
+        for ws, _, _ in room_connections[code]:
+            try:
+                await ws.send_text(json.dumps({
+                    "type": "settings_updated",
+                    "output_multiplier": request.output_multiplier,
+                }, ensure_ascii=False))
+            except:
+                pass
+
+    conn.close()
+    return {"message": "설정 변경 완료"}
+
+
+@router.delete("/rooms/{code}/leave", summary="방 나가기")
+async def leave_room(
+        code: str,
+        current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM party_rooms WHERE code = ?", (code,))
+    room = cursor.fetchone()
+    if not room:
+        conn.close()
+        raise HTTPException(status_code=404, detail="방을 찾을 수 없습니다.")
+
+    cursor.execute("DELETE FROM party_members WHERE room_id = ? AND user_id = ?",
+                   (room["id"], current_user["id"]))
+
+    # 방장이 나가면 방 삭제
+    if room["host_id"] == current_user["id"]:
+        cursor.execute("DELETE FROM party_members WHERE room_id = ?", (room["id"],))
+        cursor.execute("DELETE FROM party_rooms WHERE id = ?", (room["id"],))
+
+    conn.commit()
+    conn.close()
+    return {"message": "방 나가기 완료"}
+
+@router.patch("/rooms/{code}/delegate/{user_id}", summary="방장 위임")
+async def delegate_host(
+        code: str,
+        user_id: int,
+        current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM party_rooms WHERE code = ?", (code,))
+    room = cursor.fetchone()
+    if not room:
+        conn.close()
+        raise HTTPException(status_code=404, detail="방을 찾을 수 없습니다.")
+    if room["host_id"] != current_user["id"]:
+        conn.close()
+        raise HTTPException(status_code=403, detail="방장만 위임할 수 있습니다.")
+
+    cursor.execute("SELECT id FROM party_members WHERE room_id = ? AND user_id = ?",
+                   (room["id"], user_id))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="해당 멤버를 찾을 수 없습니다.")
+
+    cursor.execute("UPDATE party_rooms SET host_id = ? WHERE code = ?", (user_id, code))
+    conn.commit()
+
+    # WebSocket 브로드캐스트
+    new_host_name = next(
+        (uname for _, uid, uname in room_connections.get(code, []) if uid == user_id),
+        "알 수 없음"
+    )
+    import json
+    if code in room_connections:
+        for ws, _, _ in room_connections[code]:
+            try:
+                await ws.send_text(json.dumps({
+                    "type": "host_delegated",
+                    "new_host_id": user_id,
+                    "new_host_username": new_host_name,
+                    "message": f"{new_host_name}님이 새 방장이 됐습니다.",
+                }, ensure_ascii=False))
+            except:
+                pass
+
+    conn.close()
+    return {"message": f"방장을 {new_host_name}님에게 위임했습니다."}
+
+
+# 파티 로그 조회
+@router.get("/rooms/{code}/log", summary="파티 로그 조회")
+async def get_party_log(
+        code: str,
+        current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM party_rooms WHERE code = ?", (code,))
+    room = cursor.fetchone()
+    if not room:
+        conn.close()
+        raise HTTPException(status_code=404, detail="방을 찾을 수 없습니다.")
+
+    cursor.execute("""
+        SELECT pm.*, u.username FROM party_messages pm
+        LEFT JOIN users u ON pm.user_id = u.id
+        WHERE pm.room_id = ?
+        ORDER BY pm.created_at ASC
+    """, (room["id"],))
+    messages = cursor.fetchall()
+    conn.close()
+    return [dict(m) for m in messages]
+
+
+# 파티 로그 PDF 내보내기
+@router.get("/rooms/{code}/log/export", summary="파티 로그 PDF 내보내기")
+async def export_party_log(
+        code: str,
+        current_user: dict = Depends(get_current_user)):
+    from fastapi.responses import StreamingResponse
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    import io
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM party_rooms WHERE code = ?", (code,))
+    room = cursor.fetchone()
+    if not room:
+        conn.close()
+        raise HTTPException(status_code=404, detail="방을 찾을 수 없습니다.")
+
+    cursor.execute("""
+        SELECT pm.*, u.username FROM party_messages pm
+        LEFT JOIN users u ON pm.user_id = u.id
+        WHERE pm.room_id = ?
+        ORDER BY pm.created_at ASC
+    """, (room["id"],))
+    messages = cursor.fetchall()
+
+    cursor.execute("SELECT title FROM stories WHERE id = ?", (room["story_id"],))
+    story = cursor.fetchone()
+    conn.close()
+
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    font_name = "Helvetica"
+    font_path = "NanumGothic-Regular.ttf"
+    if os.path.exists(font_path):
+        pdfmetrics.registerFont(TTFont("NanumGothic", font_path))
+        font_name = "NanumGothic"
+
+    c.setFont(font_name, 16)
+    c.drawString(50, height - 50, f"파티챗 로그 - {story['title'] if story else code}")
+    c.setFont(font_name, 9)
+    c.drawString(50, height - 70, f"방 코드: {code} | 총 {len(messages)}개 메시지")
+
+    y = height - 100
+    line_height = 16
+    margin = 50
+    max_width = width - margin * 2
+
+    for msg in messages:
+        if y < 80:
+            c.showPage()
+            y = height - 50
+
+        msg_type = msg["message_type"]
+        username = msg["username"] or "나레이터"
+        content = msg["content"]
+        created_at = msg["created_at"]
+
+        if msg_type == "narration":
+            c.setFillColorRGB(0.5, 0.3, 0.9)
+            label = f"[나레이션] {created_at[:16]}"
+        else:
+            c.setFillColorRGB(0.1, 0.5, 0.8)
+            label = f"[{username}] {created_at[:16]}"
+
+        c.setFont(font_name, 10)
+        c.drawString(margin, y, label)
+        y -= line_height
+
+        c.setFillColorRGB(0, 0, 0)
+        c.setFont(font_name, 9)
+        line = ""
+        for char in content:
+            test = line + char
+            if c.stringWidth(test, font_name, 9) > max_width:
+                if y < 60:
+                    c.showPage()
+                    y = height - 50
+                c.drawString(margin + 10, y, line)
+                y -= line_height
+                line = char
+            else:
+                line = test
+        if line:
+            if y < 60:
+                c.showPage()
+                y = height - 50
+            c.drawString(margin + 10, y, line)
+            y -= line_height
+
+        y -= 8
+
+    c.save()
+    buffer.seek(0)
+
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=party_log_{code}.pdf"}
+    )

@@ -103,7 +103,6 @@ async def create_character(
     count = cursor.fetchone()["cnt"]
     conn.close()
 
-    # 팔로워 알림
     conn2 = get_db()
     cursor2 = conn2.cursor()
     cursor2.execute("SELECT follower_id FROM follows WHERE following_id = ?",
@@ -131,12 +130,10 @@ async def create_character(
 async def get_ranking(
         limit: int = 20,
         current_user: Optional[dict] = Depends(get_optional_user)):
-
     conn = get_db()
     cursor = conn.cursor()
     is_adult = current_user.get("is_adult", 0) if current_user else 0
     adult_filter = "" if is_adult else "AND c.is_adult = 0"
-
     cursor.execute(f"""
         SELECT c.*, GROUP_CONCAT(ct.tag) as tags
         FROM characters c
@@ -156,12 +153,10 @@ async def get_ranking(
 async def get_new_characters(
         limit: int = 20,
         current_user: Optional[dict] = Depends(get_optional_user)):
-
     conn = get_db()
     cursor = conn.cursor()
     is_adult = current_user.get("is_adult", 0) if current_user else 0
     adult_filter = "" if is_adult else "AND c.is_adult = 0"
-
     cursor.execute(f"""
         SELECT c.*, GROUP_CONCAT(ct.tag) as tags
         FROM characters c
@@ -183,12 +178,10 @@ async def get_characters_by_category(
         page: int = 1,
         size: int = 20,
         current_user: Optional[dict] = Depends(get_optional_user)):
-
     conn = get_db()
     cursor = conn.cursor()
     is_adult = current_user.get("is_adult", 0) if current_user else 0
     adult_filter = "" if is_adult else "AND c.is_adult = 0"
-
     cursor.execute(f"""
         SELECT c.*, GROUP_CONCAT(ct.tag) as tags
         FROM characters c
@@ -211,13 +204,10 @@ async def get_characters(
         page: int = 1,
         size: int = 20,
         current_user: Optional[dict] = Depends(get_optional_user)):
-
     conn = get_db()
     cursor = conn.cursor()
-
     is_adult = current_user.get("is_adult", 0) if current_user else 0
     adult_filter = "" if is_adult else "AND c.is_adult = 0"
-
     if tag:
         cursor.execute(f"""
             SELECT c.*, GROUP_CONCAT(ct.tag) as tags
@@ -241,7 +231,6 @@ async def get_characters(
             ORDER BY c.chat_count DESC, c.created_at DESC
             LIMIT ? OFFSET ?
         """, (size, (page - 1) * size))
-
     rows = cursor.fetchall()
     conn.close()
     return [_format_character(row) for row in rows]
@@ -250,7 +239,6 @@ async def get_characters(
 @router.get("/me", summary="내 캐릭터 목록")
 async def get_my_characters(
         current_user: dict = Depends(get_current_user)):
-
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
@@ -272,12 +260,10 @@ async def search_characters(
         page: int = 1,
         size: int = 20,
         current_user: Optional[dict] = Depends(get_optional_user)):
-
     conn = get_db()
     cursor = conn.cursor()
     is_adult = current_user.get("is_adult", 0) if current_user else 0
     adult_filter = "" if is_adult else "AND c.is_adult = 0"
-
     cursor.execute(f"""
         SELECT c.*, GROUP_CONCAT(ct.tag) as tags
         FROM characters c
@@ -294,47 +280,62 @@ async def search_characters(
     return [_format_character(row) for row in rows]
 
 
+@router.get("/user/{user_id}", summary="특정 유저의 캐릭터 목록")
+async def get_characters_by_user(
+        user_id: int,
+        current_user: Optional[dict] = Depends(get_optional_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+    is_adult = current_user.get("is_adult", 0) if current_user else 0
+    adult_filter = "" if is_adult else "AND c.is_adult = 0"
+    cursor.execute(f"""
+        SELECT c.*, GROUP_CONCAT(ct.tag) as tags
+        FROM characters c
+        LEFT JOIN character_tags ct ON c.id = ct.character_id
+        WHERE c.user_id = ?
+        AND c.visibility = 'public'
+        {adult_filter}
+        GROUP BY c.id
+        ORDER BY c.created_at DESC
+    """, (user_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [_format_character(row) for row in rows]
+
+
 @router.post("/{character_id}/image", summary="캐릭터 이미지 업로드")
 async def upload_character_image(
         character_id: str,
         file: UploadFile = File(...),
         current_user: dict = Depends(get_current_user)):
-
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM characters WHERE id = ?", (character_id,))
     char = cursor.fetchone()
-
     if not char:
         conn.close()
         raise HTTPException(status_code=404, detail="캐릭터를 찾을 수 없습니다.")
     if char["user_id"] != current_user["id"]:
         conn.close()
         raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
-
     allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
     if file.content_type not in allowed_types:
         conn.close()
         raise HTTPException(status_code=400, detail="허용되지 않는 파일 형식입니다.")
-
     contents = await file.read()
     if len(contents) > 5 * 1024 * 1024:
         conn.close()
         raise HTTPException(status_code=400, detail="파일 크기는 5MB 이하여야 합니다.")
-
     ext = file.filename.split(".")[-1]
     filename = f"{uuid.uuid4().hex}.{ext}"
     save_dir = "../frontend/images/characters"
     os.makedirs(save_dir, exist_ok=True)
-
     with open(f"{save_dir}/{filename}", "wb") as f:
         f.write(contents)
-
     image_url = f"/images/characters/{filename}"
     cursor.execute("UPDATE characters SET image_url = ? WHERE id = ?", (image_url, character_id))
     conn.commit()
     conn.close()
-
     return {"image_url": image_url, "message": "이미지 업로드 완료"}
 
 
@@ -343,14 +344,12 @@ async def report_character(
         character_id: str,
         request: ReportRequest,
         current_user: dict = Depends(get_current_user)):
-
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT id FROM characters WHERE id = ?", (character_id,))
     if not cursor.fetchone():
         conn.close()
         raise HTTPException(status_code=404, detail="캐릭터를 찾을 수 없습니다.")
-
     try:
         cursor.execute("""
             INSERT INTO character_reports (user_id, character_id, reason)
@@ -368,7 +367,6 @@ async def report_character(
 async def get_character(
         character_id: str,
         current_user: Optional[dict] = Depends(get_optional_user)):
-
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
@@ -380,18 +378,14 @@ async def get_character(
     """, (character_id,))
     row = cursor.fetchone()
     conn.close()
-
     if not row:
         raise HTTPException(status_code=404, detail="캐릭터를 찾을 수 없습니다.")
-
     if row["visibility"] == "private":
         if not current_user or row["user_id"] != current_user["id"]:
             raise HTTPException(status_code=403, detail="접근 권한이 없습니다.")
-
     if row["is_adult"]:
         if not current_user or not current_user.get("is_adult"):
             raise HTTPException(status_code=403, detail="성인 인증이 필요합니다.")
-
     return _format_character(row)
 
 
@@ -400,20 +394,16 @@ async def update_character(
         character_id: str,
         request: UpdateCharacterRequest,
         current_user: dict = Depends(get_current_user)):
-
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM characters WHERE id = ?", (character_id,))
     char = cursor.fetchone()
-
     if not char:
         raise HTTPException(status_code=404, detail="캐릭터를 찾을 수 없습니다.")
     if char["user_id"] != current_user["id"]:
         raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
-
     fields = []
     params = []
-
     if request.name is not None:
         fields.append("name = ?"); params.append(request.name)
     if request.description is not None:
@@ -428,7 +418,6 @@ async def update_character(
         fields.append("is_adult = ?"); params.append(request.is_adult)
     if request.image_url is not None:
         fields.append("image_url = ?"); params.append(request.image_url)
-
     if any([request.name, request.age, request.job, request.personality,
             request.likes, request.dislikes, request.speech_style]):
         name = request.name or char["name"]
@@ -439,7 +428,6 @@ async def update_character(
         dislikes = request.dislikes or ""
         speech_style = request.speech_style or ""
         situation = request.situation or char["situation"]
-
         new_prompt = f"""
 너는 {name}라는 캐릭터야.
 
@@ -464,17 +452,14 @@ async def update_character(
 - 캐릭터를 절대 벗어나지 않음
 """
         fields.append("prompt = ?"); params.append(new_prompt)
-
     if fields:
         params.append(character_id)
         cursor.execute(f"UPDATE characters SET {', '.join(fields)} WHERE id = ?", params)
-
     if request.tags is not None:
         cursor.execute("DELETE FROM character_tags WHERE character_id = ?", (character_id,))
         for tag in request.tags:
             cursor.execute("INSERT INTO character_tags (character_id, tag) VALUES (?, ?)",
                            (character_id, tag))
-
     conn.commit()
     conn.close()
     return {"message": "캐릭터 수정 완료"}
@@ -484,17 +469,14 @@ async def update_character(
 async def delete_character(
         character_id: str,
         current_user: dict = Depends(get_current_user)):
-
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM characters WHERE id = ?", (character_id,))
     char = cursor.fetchone()
-
     if not char:
         raise HTTPException(status_code=404, detail="캐릭터를 찾을 수 없습니다.")
     if char["user_id"] != current_user["id"]:
         raise HTTPException(status_code=403, detail="삭제 권한이 없습니다.")
-
     cursor.execute("DELETE FROM character_tags WHERE character_id = ?", (character_id,))
     cursor.execute("DELETE FROM characters WHERE id = ?", (character_id,))
     conn.commit()
