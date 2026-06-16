@@ -149,13 +149,14 @@ background: rgba(139, 124, 255, 0.5);
 /* ------------------------------------------------ */
 
 .stellia-app {
-position: relative;
-width: 100%;
-height: 100%;
-display: grid;
-grid-template-columns: 320px 1fr 380px;
-background: var(--bg-base);
-overflow: hidden;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 320px 1fr 380px;
+  overflow: hidden;
+  background: transparent;
 }
 
 /* ------------------------------------------------ */
@@ -268,24 +269,128 @@ color: var(--text-muted);
 /* ------------------------------------------------ */
 
 @media (max-width: 1280px) {
-.stellia-app {
-grid-template-columns: 280px 1fr 320px;
-}
+  .stellia-app {
+    grid-template-columns: 260px 1fr 300px;
+  }
 }
 
 @media (max-width: 1024px) {
-.stellia-app {
-grid-template-columns: 1fr;
+  .stellia-app {
+    grid-template-columns: 260px 1fr;
+  }
+
+  .profile-panel {
+    display: none;
+  }
 }
 
-.sidebar,
-.profile-panel {
-display: none;
-}
+@media (max-width: 768px) {
+  .stellia-app {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    display: none;
+  }
 }
 
 @media (max-width: 640px) {
 body {
 font-size: 14px;
 }
+}
+
+.starfield {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle at top, rgba(20,26,51,.65), var(--bg-base) 55%);
+}
+
+.stars {
+  position: absolute;
+  inset: -50%;
+  animation: drift linear infinite;
+}
+
+.stars-1 {
+  opacity: .8;
+  animation-duration: 180s;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,1) 1.5px, transparent 2px),
+    radial-gradient(circle, rgba(255,255,255,.8) 1.5px, transparent 2px);
+  background-size: 150px 150px, 200px 200px;
+  background-position: 0 0, 80px 120px;
+}
+
+.stars-2 {
+  opacity: .6;
+  animation-duration: 240s;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.9) 1.5px, transparent 2px),
+    radial-gradient(circle, rgba(255,255,255,.7) 1.5px, transparent 2px);
+  background-size: 250px 250px, 350px 350px;
+  background-position: 50px 100px, 220px 180px;
+}
+
+.stars-3 {
+  opacity: .4;
+  animation-duration: 320s;
+  background-image: radial-gradient(circle, rgba(255,255,255,1) 2px, transparent 2.5px);
+  background-size: 400px 400px;
+}
+
+.nebula {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: .45;
+  mix-blend-mode: screen;
+}
+
+.nebula-primary {
+  width: 500px;
+  height: 500px;
+  left: -120px;
+  top: 80px;
+  background: var(--primary);
+  animation: floatNebula 18s ease-in-out infinite;
+}
+
+.nebula-secondary {
+  width: 420px;
+  height: 420px;
+  right: -100px;
+  top: 180px;
+  background: var(--secondary);
+  animation: floatNebula 22s ease-in-out infinite reverse;
+}
+
+.nebula-mystic {
+  width: 380px;
+  height: 380px;
+  left: 50%;
+  bottom: -120px;
+  transform: translateX(-50%);
+  background: var(--mystic);
+  animation: floatNebula 20s ease-in-out infinite;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, transparent 45%, rgba(0,0,0,.45) 100%);
+}
+
+@keyframes drift {
+  from { transform: translate3d(0,0,0); }
+  to { transform: translate3d(-120px,-120px,0); }
+}
+
+@keyframes floatNebula {
+  0% { transform: translate3d(0,0,0) scale(1); }
+  50% { transform: translate3d(20px,-25px,0) scale(1.08); }
+  100% { transform: translate3d(0,0,0) scale(1); }
 }
