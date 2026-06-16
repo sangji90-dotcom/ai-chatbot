@@ -199,11 +199,12 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
         }}
       >
         <ChatHeader
-            character={character}
-            apiUrl={apiUrl}
-            token={token}
-            onBack={onBack}
-            onSelectCharacter={onSelectCharacter}  // App.tsx에서 내려줘야 함
+          character={character}
+          apiUrl={apiUrl}
+          token={token}
+          sessionId={SESSION_ID}
+          onBack={onBack}
+          onSelectCharacter={onSelectCharacter}
         />
 
         <div

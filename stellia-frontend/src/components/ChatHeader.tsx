@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import type { Character } from "../App";
 import CreatorProfileModal from "./CreatorProfileModal";
 
@@ -6,12 +7,39 @@ interface ChatHeaderProps {
   character: Character;
   apiUrl: string;
   token: string;
+  sessionId: string;
   onSelectCharacter?: (char: Character) => void;
   onBack?: () => void;
 }
 
-export default function ChatHeader({ character, apiUrl, token, onSelectCharacter, onBack }: ChatHeaderProps) {
+export default function ChatHeader({ character, apiUrl, token, sessionId, onSelectCharacter, onBack }: ChatHeaderProps) {
   const [showCreator, setShowCreator] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleExportPdf = async () => {
+    setDownloading(true);
+    try {
+      const res = await axios.get(
+        `${apiUrl}/chat/export/${character.id}?session_id=${sessionId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
+        }
+      );
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${character.name}_대화.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      alert("PDF 내보내기에 실패했어요.");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <>
@@ -31,7 +59,6 @@ export default function ChatHeader({ character, apiUrl, token, onSelectCharacter
       >
         {/* 왼쪽 */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          {/* 뒤로가기 */}
           {onBack && (
             <button
               onClick={onBack}
@@ -47,7 +74,6 @@ export default function ChatHeader({ character, apiUrl, token, onSelectCharacter
             </button>
           )}
 
-          {/* 아바타 */}
           <div style={{ position: "relative" }}>
             {character.avatar ? (
               <img
@@ -87,7 +113,6 @@ export default function ChatHeader({ character, apiUrl, token, onSelectCharacter
             )}
           </div>
 
-          {/* 이름 */}
           <div>
             <div style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>
               {character.name}
@@ -103,14 +128,16 @@ export default function ChatHeader({ character, apiUrl, token, onSelectCharacter
 
         {/* 오른쪽 */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          {/* 창작자 프로필 버튼 */}
           <ActionButton icon="👤" onClick={() => setShowCreator(true)} title="창작자 프로필" />
           <ActionButton icon="♡" title="좋아요" />
-          <ActionButton icon="⋯" title="더보기" />
+          <ActionButton
+            icon={downloading ? "⏳" : "📄"}
+            onClick={handleExportPdf}
+            title="대화 PDF 내보내기"
+          />
         </div>
       </header>
 
-      {/* 창작자 프로필 모달 */}
       {showCreator && character.user_id && (
         <CreatorProfileModal
           apiUrl={apiUrl}
@@ -125,9 +152,7 @@ export default function ChatHeader({ character, apiUrl, token, onSelectCharacter
 }
 
 function ActionButton({
-  icon,
-  onClick,
-  title,
+  icon, onClick, title,
 }: {
   icon: string;
   onClick?: () => void;

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import type { Character, User } from "../App";
 import CoinModal from "./CoinModal";
+import NotificationModal from "./NotificationModal";
 
 interface HomePageProps {
   apiUrl: string;
@@ -20,7 +21,9 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [showCoinModal, setShowCoinModal] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
   const [coins, setCoins] = useState<number>(user?.token_balance ?? 0);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -47,6 +50,10 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+
+    axios.get(`${apiUrl}/notifications/unread-count`, { headers })
+      .then(res => setUnreadCount(res.data.count))
+      .catch(console.error);
   }, []);
 
   const handleCategoryChange = (cat: string) => {
@@ -119,13 +126,37 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
         </div>
 
         {/* 우측 */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {/* 알림 */}
+          <div
+            onClick={() => { setShowNotification(true); setUnreadCount(0); }}
+            style={{ position: "relative", cursor: "pointer" }}
+          >
+            <span style={{ fontSize: 20 }}>🔔</span>
+            {unreadCount > 0 && (
+              <span
+                style={{
+                  position: "absolute", top: -6, right: -6,
+                  width: 16, height: 16, borderRadius: "50%",
+                  background: "var(--primary)", color: "#fff",
+                  fontSize: 10, fontWeight: 700,
+                  display: "grid", placeItems: "center",
+                }}
+              >
+                {unreadCount}
+              </span>
+            )}
+          </div>
+
+          {/* 코인 */}
           <div
             onClick={() => setShowCoinModal(true)}
             style={{ color: "var(--gold)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
           >
             ✦ {coins.toLocaleString()}
           </div>
+
+          {/* 프로필 */}
           <div
             style={{
               width: 38, height: 38, borderRadius: "50%",
@@ -137,6 +168,8 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
           >
             {user?.username?.[0]?.toUpperCase()}
           </div>
+
+          {/* 로그아웃 */}
           <button
             onClick={onLogout}
             style={{
@@ -232,6 +265,15 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
           onCoinsUpdated={(balance) => setCoins(balance)}
         />
       )}
+
+      {/* 알림 모달 */}
+      {showNotification && (
+        <NotificationModal
+          apiUrl={apiUrl}
+          token={token}
+          onClose={() => setShowNotification(false)}
+        />
+      )}
     </div>
   );
 }
@@ -253,7 +295,7 @@ function CharacterCard({ character, onClick }: { character: Character; onClick: 
           <img
             src={character.avatar}
             alt={character.name}
-            style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .3s ease" }}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         ) : (
           <div
