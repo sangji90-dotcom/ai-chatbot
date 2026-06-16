@@ -49,14 +49,10 @@ class ReportRequest(BaseModel):
 
 
 @router.post("", summary="캐릭터 생성")
-
 async def create_character(
         request: CreateCharacterRequest,
         current_user: dict = Depends(get_current_user)):
     from achievements.router import check_and_grant
-    if count == 1: check_and_grant(current_user["id"], "first_character")
-    if count == 5: check_and_grant(current_user["id"], "character_5")
-    if count == 10: check_and_grant(current_user["id"], "character_10")
 
     char_id = f"custom_{request.name}_{uuid.uuid4().hex[:8]}"
 
@@ -105,7 +101,9 @@ async def create_character(
     cursor.execute("SELECT COUNT(*) as cnt FROM characters WHERE user_id = ?",
                    (current_user["id"],))
     count = cursor.fetchone()["cnt"]
-    # 팔로워들에게 알림 (추가)
+    conn.close()
+
+    # 팔로워 알림
     conn2 = get_db()
     cursor2 = conn2.cursor()
     cursor2.execute("SELECT follower_id FROM follows WHERE following_id = ?",
@@ -121,9 +119,6 @@ async def create_character(
             f"{current_user['username']}님이 새 캐릭터 '{request.name}'을 만들었어요!",
             f"/characters/{char_id}"
         )
-
-    return {"id": char_id, "name": request.name, "message": "캐릭터 생성 완료"}
-    conn.close()
 
     if count == 1: check_and_grant(current_user["id"], "first_character")
     if count == 5: check_and_grant(current_user["id"], "character_5")

@@ -5,6 +5,12 @@ from deps import get_current_user, get_optional_user
 from google import genai
 import os
 from dotenv import load_dotenv
+import io
+from fastapi.responses import StreamingResponse
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 router = APIRouter(prefix="/chat", tags=["대화"])
 load_dotenv()
@@ -362,3 +368,110 @@ async def clear_chat(session_id: str, character_id: str):
     if session_key in chat_histories:
         del chat_histories[session_key]
     return {"message": "대화 기록 삭제 완료"}
+
+@router.get("/export/{character_id}", summary="대화 PDF 내보내기")
+async def export_chat_pdf(
+        character_id: str,
+        session_id: str,
+        current_user: dict = Depends(get_current_user)):
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT role, content, created_at FROM chat_history
+        WHERE session_id = ? AND character_id = ? AND user_id = ?
+        ORDER BY created_at ASC
+    """, (session_id, character_id, current_user["id"]))
+    rows = cursor.fetchall()
+
+    cursor.execute("SELECT name FROM characters WHERE id = ?", (character_id,))
+    char = cursor.fetchone()
+    conn.close()
+
+    if not rows:
+        raise HTTPException(status_code=404, detail="대화 기록이 없습니다.")
+
+    char_name = char["name"] if char else character_id
+
+    # PDF 생성
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    # 한글 폰트 등록 (나눔고딕 없으면 기본 폰트)
+    font_name = "Helvetica"
+    font_path = "NanumGothic-Regular.ttf"
+    if os.path.exists(font_path):
+        pdfmetrics.registerFont(TTFont("NanumGothic", font_path))
+        font_name = "NanumGothic"
+
+    c.setFont(font_name, 16)
+    c.drawString(50, height - 50, f"{char_name}와의 대화")
+    c.setFont(font_name, 9)
+    c.drawString(50, height - 70, f"세션: {session_id}  |  총 {len(rows)}개 메시지")
+
+    y = height - 100
+    line_height = 16
+    margin = 50
+    max_width = width - margin * 2
+
+    def draw_text_block(c, text, x, y, font_name, font_size, max_width):
+        c.setFont(font_name, font_size)
+        words = text
+        # 줄바꿈 처리
+        lines = []
+        for paragraph in text.split('\n'):
+            line = ""
+            for char in paragraph:
+                test_line = line + char
+                if c.stringWidth(test_line, font_name, font_size) > max_width:
+                    lines.append(line)
+                    line = char
+                else:
+                    line = test_line
+            lines.append(line)
+        return lines
+
+    for row in rows:
+        role = row["role"]
+        content = row["content"]
+        created_at = row["created_at"]
+
+        if role == "system":
+            continue
+
+        label = "나" if role == "user" else char_name
+        color = (0.1, 0.4, 0.8) if role == "user" else (0.1, 0.6, 0.3)
+
+        # 새 페이지
+        if y < 100:
+            c.showPage()
+            y = height - 50
+
+        # 발화자 + 시간
+        c.setFillColorRGB(*color)
+        c.setFont(font_name, 10)
+        c.drawString(margin, y, f"[{label}]  {created_at[:16]}")
+        y -= line_height
+
+        # 내용
+        c.setFillColorRGB(0, 0, 0)
+        lines = draw_text_block(c, content, margin, y, font_name, 9, max_width)
+        for line in lines:
+            if y < 60:
+                c.showPage()
+                y = height - 50
+            c.drawString(margin + 10, y, line)
+            y -= line_height
+
+        y -= 8  # 메시지 간격
+
+    c.save()
+    buffer.seek(0)
+
+    filename = f"{char_name}_대화_{session_id[:8]}.pdf"
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )

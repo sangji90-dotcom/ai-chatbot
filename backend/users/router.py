@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from database import get_db
 from deps import get_current_user, get_optional_user
 from typing import Optional
+import uuid
+import os
+
 
 router = APIRouter(prefix="/users", tags=["유저"])
 
@@ -353,6 +356,38 @@ async def update_profile(
     conn.commit()
     conn.close()
     return {"message": "프로필 수정 완료"}
+
+@router.post("/me/profile-image", summary="프로필 이미지 업로드")
+async def upload_profile_image(
+        file: UploadFile = File(...),
+        current_user: dict = Depends(get_current_user)):
+
+    allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="허용되지 않는 파일 형식입니다.")
+
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="파일 크기는 5MB 이하여야 합니다.")
+
+    ext = file.filename.split(".")[-1]
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    save_dir = "../frontend/images/profiles"
+    os.makedirs(save_dir, exist_ok=True)
+
+    with open(f"{save_dir}/{filename}", "wb") as f:
+        f.write(contents)
+
+    image_url = f"/images/profiles/{filename}"
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET profile_image_url = ? WHERE id = ?",
+                   (image_url, current_user["id"]))
+    conn.commit()
+    conn.close()
+
+    return {"image_url": image_url, "message": "프로필 이미지 업로드 완료"}
 
 
 # ===== 비밀번호 변경 =====

@@ -34,7 +34,8 @@ def init_db():
             attendance_streak INTEGER DEFAULT 0,
             ad_watched_today INTEGER DEFAULT 0,
             last_ad_date TEXT DEFAULT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            
         )
     """)
 
@@ -416,6 +417,22 @@ def init_db():
         FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
-
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS refresh_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        token TEXT NOT NULL UNIQUE,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+    
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN profile_image_url TEXT DEFAULT ''")
+        conn.commit()
+    except:
+        pass
+    
+    
     conn.commit()
     conn.close()

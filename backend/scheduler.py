@@ -1,87 +1,80 @@
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 from database import get_db
-from datetime import datetime, timedelta
+from datetime import datetime
 
-scheduler = AsyncIOScheduler()
-
-# ===== 토큰 만료 처리 =====
 def expire_tokens():
-    now = datetime.now()
+    """만료된 이벤트 토큰 정리"""
     conn = get_db()
     cursor = conn.cursor()
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # 만료된 이벤트 토큰 내역 조회
     cursor.execute("""
-        SELECT user_id, SUM(amount) as total
+        SELECT user_id, SUM(amount) as total_expired
         FROM token_history
-        WHERE expires_at IS NOT NULL
-        AND expires_at < ?
-        AND amount > 0
-        AND token_type = 'event'
-        AND id NOT IN (
-            SELECT COALESCE(ref_id, -1) FROM token_history WHERE token_type = 'expired'
-        )
+        WHERE token_type = 'event'
+          AND expires_at IS NOT NULL
+          AND expires_at < ?
+          AND amount > 0
         GROUP BY user_id
     """, (now,))
-    rows = cursor.fetchall()
+    expired_rows = cursor.fetchall()
 
-    for row in rows:
+    for row in expired_rows:
         user_id = row["user_id"]
-        expired_amount = row["total"]
+        expired_amount = row["total_expired"]
 
-        # 유저 이벤트 토큰 차감
+        # 유저 현재 토큰 조회
         cursor.execute("""
-            SELECT token_event FROM users WHERE id = ?
+            SELECT token_event, token_balance FROM users WHERE id = ?
         """, (user_id,))
         user = cursor.fetchone()
         if not user:
             continue
 
-        deduct = min(user["token_event"], expired_amount)
-        if deduct > 0:
-            cursor.execute("""
-                UPDATE users SET
-                token_event = token_event - ?,
+        # 실제 차감 (음수 방지)
+        deduct = min(expired_amount, user["token_event"])
+        if deduct <= 0:
+            continue
+
+        cursor.execute("""
+            UPDATE users
+            SET token_event = token_event - ?,
                 token_balance = token_balance - ?
-                WHERE id = ?
-            """, (deduct, deduct, user_id))
-            cursor.execute("""
-                INSERT INTO token_history (user_id, amount, token_type, reason)
-                VALUES (?, ?, 'expired', '이벤트 토큰 만료')
-            """, (user_id, -deduct))
+            WHERE id = ?
+        """, (deduct, deduct, user_id))
+
+        cursor.execute("""
+            INSERT INTO token_history (user_id, amount, token_type, reason)
+            VALUES (?, ?, 'expire', '이벤트 토큰 만료')
+        """, (user_id, -deduct))
+
+    # 만료된 토큰 내역 expires_at 무효화 (중복 처리 방지)
+    cursor.execute("""
+        UPDATE token_history
+        SET expires_at = NULL
+        WHERE token_type = 'event'
+          AND expires_at IS NOT NULL
+          AND expires_at < ?
+          AND amount > 0
+    """, (now,))
 
     conn.commit()
     conn.close()
 
-# ===== 가입 기념일 업적 =====
-def check_anniversary_achievements():
-    from achievements.router import check_and_grant
 
+def expire_refresh_tokens():
+    """만료된 refresh token 정리"""
     conn = get_db()
     cursor = conn.cursor()
-    today = datetime.now().date()
-
-    cursor.execute("SELECT id, created_at FROM users")
-    users = cursor.fetchall()
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute("DELETE FROM refresh_tokens WHERE expires_at < ?", (now,))
+    conn.commit()
     conn.close()
 
-    for user in users:
-        if not user["created_at"]:
-            continue
-
-        created = datetime.strptime(user["created_at"][:10], "%Y-%m-%d").date()
-        days = (today - created).days
-
-        if days == 30:
-            check_and_grant(user["id"], "anniversary_30")
-        elif days == 100:
-            check_and_grant(user["id"], "anniversary_100")
-        elif days == 365:
-            check_and_grant(user["id"], "anniversary_365")
-        elif days == 730:
-            check_and_grant(user["id"], "anniversary_730")
 
 def start_scheduler():
-    scheduler.add_job(expire_tokens, "interval", hours=1)
-    scheduler.add_job(check_anniversary_achievements, "cron", hour=0, minute=0)
+    scheduler = BackgroundScheduler(timezone="Asia/Seoul")
+    scheduler.add_job(expire_tokens, "cron", hour=0, minute=0)        # 매일 자정
+    scheduler.add_job(expire_refresh_tokens, "cron", hour=3, minute=0) # 매일 새벽 3시
     scheduler.start()
