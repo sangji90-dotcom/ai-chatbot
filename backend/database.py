@@ -433,6 +433,48 @@ def init_db():
     except:
         pass
     
+    try:
+        cursor.execute("ALTER TABLE achievements ADD COLUMN prefix_title TEXT DEFAULT ''")
+        conn.commit()
+    except:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE achievements ADD COLUMN suffix_title TEXT DEFAULT ''")
+        conn.commit()
+    except:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN equipped_prefix TEXT DEFAULT ''")
+        conn.commit()
+    except:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN equipped_suffix TEXT DEFAULT ''")
+        conn.commit()
+    except:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN memory_pass_expires_at TIMESTAMP DEFAULT NULL")
+        conn.commit()
+    except:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN memory_chunk_limit INTEGER DEFAULT 20")
+        conn.commit()
+    except:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN output_multiplier REAL DEFAULT 1.0")
+        conn.commit()
+    except:
+        pass
+    
     
     conn.commit()
     conn.close()
