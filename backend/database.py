@@ -34,7 +34,7 @@ def init_db():
             attendance_streak INTEGER DEFAULT 0,
             ad_watched_today INTEGER DEFAULT 0,
             last_ad_date TEXT DEFAULT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             
         )
     """)
