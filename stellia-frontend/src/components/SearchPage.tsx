@@ -27,7 +27,17 @@ export default function SearchPage({ apiUrl, token, onBack, onSelectCharacter }:
 
     // 인기 캐릭터 로드
     axios.get(`${apiUrl}/characters/ranking?limit=10`, { headers })
-      .then(res => setRanking(res.data))
+      .then(res => setRanking(res.data.map((c: any) => ({
+      id: c.id,
+      name: c.name,
+      title: c.description || "",
+      avatar: c.image_url || "",
+      description: c.description || "",
+      online: true,
+      tags: c.tags || [],
+      user_id: c.user_id,
+      first_message: c.first_message || "",
+    }))))
       .catch(console.error);
   }, []);
 
@@ -52,6 +62,8 @@ export default function SearchPage({ apiUrl, token, onBack, onSelectCharacter }:
         description: c.description || "",
         online: true,
         tags: c.tags || [],
+        user_id: c.user_id,
+        first_message: c.first_message || "",
       }));
       setResults(chars);
     } catch {

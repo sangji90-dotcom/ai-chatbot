@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import CharacterImageModal from "./CharacterImageModal";
 
 interface MyPageProps {
   apiUrl: string;
@@ -33,6 +34,7 @@ export default function MyPage({ apiUrl, token, onBack }: MyPageProps) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [equipMessage, setEquipMessage] = useState("");
+  const [showImageModal, setShowImageModal] = useState<string | null>(null);
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -266,15 +268,27 @@ export default function MyPage({ apiUrl, token, onBack }: MyPageProps) {
                   </div>
                 </div>
                 <button
-                  onClick={() => handleDeleteCharacter(char.id)}
-                  style={{
+                   onClick={() => setShowImageModal(char.id)}
+                    style={{
+                    padding: "8px 14px", borderRadius: 10,
+                    border: "1px solid rgba(95,214,255,.3)",
+                    background: "rgba(95,214,255,.08)",
+                    color: "var(--secondary)", fontSize: 13,
+                    cursor: "pointer",
+                  }}
+                >
+                🖼 이미지
+                </button>
+                <button
+            onClick={() => handleDeleteCharacter(char.id)}
+              style={{
                     padding: "8px 14px", borderRadius: 10,
                     border: "1px solid rgba(255,107,138,.3)",
                     background: "rgba(255,107,138,.08)",
                     color: "#ff6b8a", fontSize: 13, cursor: "pointer",
                   }}
                 >
-                  삭제
+                    삭제
                 </button>
               </div>
             ))
@@ -552,6 +566,16 @@ export default function MyPage({ apiUrl, token, onBack }: MyPageProps) {
             </button>
           </div>
         </div>
+      )}
+
+      {showImageModal && (
+        <CharacterImageModal
+          apiUrl={apiUrl}
+          token={token}
+          characterId={showImageModal}
+          characterName={myCharacters.find(c => c.id === showImageModal)?.name ?? ""}
+          onClose={() => setShowImageModal(null)}
+        />
       )}
     </div>
   );
