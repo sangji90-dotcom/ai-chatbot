@@ -26,7 +26,7 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
   const [messages, setMessages] = useState<PartyMessage[]>([]);
   const [input, setInput] = useState("");
   const [members, setMembers] = useState<string[]>([]);
-  const [hostId, setHostId] = useState<number | null>(null);
+  const [_, setHostId] = useState<number | null>(null);
   const [room, setRoom] = useState<any>(null);
   const [started, setStarted] = useState(false);
   const [kickVotes, setKickVotes] = useState<Record<number, { yes: number; no: number; total: number }>>({});

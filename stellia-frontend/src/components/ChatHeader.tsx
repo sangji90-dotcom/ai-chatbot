@@ -17,7 +17,7 @@ interface ChatHeaderProps {
 }
 
 export default function ChatHeader({
-  character, apiUrl, token, sessionId, coins,
+  character, apiUrl, token, coins,
   showPanel, onSelectCharacter, onBack,
   onShowProfile, onShowRoomModal, onTogglePanel
 }: ChatHeaderProps) {

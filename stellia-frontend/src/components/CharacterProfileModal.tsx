@@ -11,7 +11,6 @@ interface CharacterProfileModalProps {
 
 export default function CharacterProfileModal({ character, apiUrl, token, onClose }: CharacterProfileModalProps) {
   const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -20,11 +19,9 @@ export default function CharacterProfileModal({ character, apiUrl, token, onClos
       if (liked) {
         await axios.delete(`${apiUrl}/likes/${character.id}`, { headers });
         setLiked(false);
-        setLikeCount(prev => prev - 1);
       } else {
         await axios.post(`${apiUrl}/likes/${character.id}`, {}, { headers });
         setLiked(true);
-        setLikeCount(prev => prev + 1);
       }
     } catch {
       console.error("좋아요 실패");

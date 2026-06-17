@@ -263,3 +263,132 @@ async def purchase_token(
         result["message"] += f" + 페이백 {payback}토큰!"
 
     return result
+
+MEMORY_PASS_30DAY_COINS = 24900
+
+@router.post("/memory-pass/purchase", summary="메모리 패스 구매 (금화)")
+async def purchase_memory_pass(current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT token_purchased, token_balance, memory_pass_expires_at FROM users WHERE id = ?",
+                   (current_user["id"],))
+    user = cursor.fetchone()
+
+    if user["token_purchased"] < MEMORY_PASS_30DAY_COINS:
+        conn.close()
+        raise HTTPException(status_code=400, detail="금화가 부족해요. 금화로만 구매 가능해요.")
+
+    now = datetime.now()
+    if user["memory_pass_expires_at"]:
+        try:
+            existing = datetime.fromisoformat(user["memory_pass_expires_at"])
+            base = existing if existing > now else now
+        except:
+            base = now
+    else:
+        base = now
+
+    new_expires = base + timedelta(days=30)
+
+    cursor.execute("""
+        UPDATE users
+        SET token_purchased = token_purchased - ?,
+            token_balance = token_balance - ?,
+            memory_pass_expires_at = ?
+        WHERE id = ?
+    """, (MEMORY_PASS_30DAY_COINS, MEMORY_PASS_30DAY_COINS,
+          new_expires.isoformat(), current_user["id"]))
+
+    cursor.execute("""
+        INSERT INTO token_history (user_id, amount, token_type, reason)
+        VALUES (?, ?, ?, ?)
+    """, (current_user["id"], -MEMORY_PASS_30DAY_COINS, "purchased", "메모리 패스 30일권 구매"))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "message": "메모리 패스 30일권 구매 완료",
+        "expires_at": new_expires.strftime("%Y-%m-%d"),
+    }
+
+
+@router.get("/memory-pass/status", summary="메모리 패스 상태 확인")
+async def get_memory_pass_status(current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT memory_pass_expires_at, memory_chunk_limit FROM users WHERE id = ?",
+                   (current_user["id"],))
+    user = cursor.fetchone()
+    conn.close()
+
+    expires_at = user["memory_pass_expires_at"]
+    if not expires_at:
+        return {"active": False, "expires_at": None, "chunk_limit": 0}
+
+    try:
+        expires = datetime.fromisoformat(expires_at)
+        active = expires > datetime.now()
+    except:
+        active = False
+
+    return {
+        "active": active,
+        "expires_at": expires_at[:10] if expires_at else None,
+        "chunk_limit": user["memory_chunk_limit"] or 20,
+    }
+
+
+@router.post("/memory-pass/add-chunk", summary="메모리 청크 추가 (금화)")
+async def add_memory_chunk(
+        amount: int = 1,
+        current_user: dict = Depends(get_current_user)):
+    if amount < 1 or amount > 50:
+        raise HTTPException(status_code=400, detail="1~50개 사이로 추가 가능해요.")
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT memory_pass_expires_at, token_purchased, token_balance, memory_chunk_limit
+        FROM users WHERE id = ?
+    """, (current_user["id"],))
+    user = cursor.fetchone()
+
+    if not user["memory_pass_expires_at"]:
+        conn.close()
+        raise HTTPException(status_code=403, detail="메모리 패스가 없어요.")
+
+    try:
+        expires = datetime.fromisoformat(user["memory_pass_expires_at"])
+        if expires <= datetime.now():
+            conn.close()
+            raise HTTPException(status_code=403, detail="메모리 패스가 만료됐어요.")
+    except ValueError:
+        conn.close()
+        raise HTTPException(status_code=403, detail="메모리 패스가 만료됐어요.")
+
+    cost = amount  # 금화 1개 = 청크 1개
+    if user["token_purchased"] < cost:
+        conn.close()
+        raise HTTPException(status_code=400, detail="금화가 부족해요.")
+
+    current_limit = user["memory_chunk_limit"] or 20
+    if current_limit + amount > 100:
+        conn.close()
+        raise HTTPException(status_code=400, detail="최대 100청크까지 추가 가능해요.")
+
+    cursor.execute("""
+        UPDATE users
+        SET token_purchased = token_purchased - ?,
+            token_balance = token_balance - ?,
+            memory_chunk_limit = memory_chunk_limit + ?
+        WHERE id = ?
+    """, (cost, cost, amount, current_user["id"]))
+    conn.commit()
+    conn.close()
+
+    return {
+        "message": f"메모리 청크 {amount}개 추가 완료",
+        "new_limit": current_limit + amount,
+    }

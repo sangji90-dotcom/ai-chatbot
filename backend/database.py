@@ -314,18 +314,6 @@ def init_db():
     """)
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS character_reports (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        character_id TEXT NOT NULL,
-        reason TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id, character_id),
-        FOREIGN KEY (user_id) REFERENCES users(id)
-        )
-    """)
-
-    cursor.execute("""
     CREATE TABLE IF NOT EXISTS user_blocks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         blocker_id INTEGER NOT NULL,
@@ -334,20 +322,6 @@ def init_db():
         UNIQUE(blocker_id, blocked_id),
         FOREIGN KEY (blocker_id) REFERENCES users(id),
         FOREIGN KEY (blocked_id) REFERENCES users(id)
-        )
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS party_invitations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        room_code TEXT NOT NULL,
-        inviter_id INTEGER NOT NULL,
-        invitee_id INTEGER NOT NULL,
-        status TEXT DEFAULT 'pending',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(room_code, invitee_id),
-        FOREIGN KEY (inviter_id) REFERENCES users(id),
-        FOREIGN KEY (invitee_id) REFERENCES users(id)
         )
     """)
     
@@ -379,18 +353,6 @@ def init_db():
     """)
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS user_blocks (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        blocker_id INTEGER NOT NULL,
-        blocked_id INTEGER NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(blocker_id, blocked_id),
-        FOREIGN KEY (blocker_id) REFERENCES users(id),
-        FOREIGN KEY (blocked_id) REFERENCES users(id)
-        )
-    """)
-
-    cursor.execute("""
     CREATE TABLE IF NOT EXISTS party_invitations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         room_code TEXT NOT NULL,
@@ -404,19 +366,6 @@ def init_db():
         )
     """)
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS notifications (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER NOT NULL,
-        type TEXT NOT NULL,
-        title TEXT NOT NULL,
-        message TEXT NOT NULL,
-        link TEXT DEFAULT '',
-        is_read INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id)
-        )
-    """)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS refresh_tokens (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -474,6 +423,47 @@ def init_db():
         conn.commit()
     except:
         pass
+    
+    try:
+        cursor.execute("ALTER TABLE characters ADD COLUMN category TEXT DEFAULT '기타'")
+        conn.commit()
+    except:
+        pass
+    
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0")
+        conn.commit()
+    except:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN suspended INTEGER DEFAULT 0")
+        conn.commit()
+    except:
+        pass
+    
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS character_images (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        character_id TEXT NOT NULL,
+        emotion TEXT NOT NULL DEFAULT 'neutral',
+        image_url TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (character_id) REFERENCES characters(id)
+        )
+    """)
+
+# 캐릭터 상황별 배경
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS character_backgrounds (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        character_id TEXT NOT NULL,
+        situation TEXT NOT NULL DEFAULT 'default',
+        image_url TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (character_id) REFERENCES characters(id)
+        )
+    """)
     
     
     conn.commit()

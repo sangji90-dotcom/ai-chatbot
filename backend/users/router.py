@@ -313,10 +313,12 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT id, email, username, is_adult, safety_mode,
-               token_balance, token_purchased, token_event,
-               attendance_streak, last_attendance_date, created_at
-        FROM users WHERE id = ?
+    SELECT id, email, username, is_adult, safety_mode,
+           token_balance, token_purchased, token_event,
+           attendance_streak, last_attendance_date, created_at,
+           equipped_prefix, equipped_suffix, memory_pass_expires_at,
+           output_length, profile_image_url
+    FROM users WHERE id = ?
     """, (current_user["id"],))
     user = cursor.fetchone()
 

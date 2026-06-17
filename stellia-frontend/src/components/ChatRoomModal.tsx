@@ -11,7 +11,7 @@ interface ChatRoomModalProps {
 }
 
 export default function ChatRoomModal({
-  apiUrl, token, characterId, sessionId, onClose, onExportPdf
+  apiUrl, token, characterId, onClose, onExportPdf
 }: ChatRoomModalProps) {
   const [activeSection, setActiveSection] = useState<"main" | "usernote" | "persona" | "memorybook" | "output">("main");
   const [user, setUser] = useState<any>(null);

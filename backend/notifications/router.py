@@ -44,6 +44,19 @@ async def get_unread_count(current_user: dict = Depends(get_current_user)):
     return {"count": row["count"]}
 
 
+@router.patch("/read-all", summary="전체 알림 읽음 처리")
+async def read_all_notifications(current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE notifications SET is_read = 1
+        WHERE user_id = ?
+    """, (current_user["id"],))
+    conn.commit()
+    conn.close()
+    return {"message": "전체 읽음 처리 완료"}
+
+
 @router.patch("/{notification_id}/read", summary="알림 읽음 처리")
 async def read_notification(
         notification_id: int,
@@ -59,18 +72,14 @@ async def read_notification(
     return {"message": "읽음 처리 완료"}
 
 
-@router.patch("/read-all", summary="전체 알림 읽음 처리")
-async def read_all_notifications(current_user: dict = Depends(get_current_user)):
+@router.delete("", summary="전체 알림 삭제")
+async def delete_all_notifications(current_user: dict = Depends(get_current_user)):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("""
-        UPDATE notifications SET is_read = 1
-        WHERE user_id = ?
-    """, (current_user["id"],))
+    cursor.execute("DELETE FROM notifications WHERE user_id = ?", (current_user["id"],))
     conn.commit()
     conn.close()
-    return {"message": "전체 읽음 처리 완료"}
-
+    return {"message": "전체 알림 삭제 완료"}
 
 @router.delete("/{notification_id}", summary="알림 삭제")
 async def delete_notification(
@@ -84,13 +93,3 @@ async def delete_notification(
     conn.commit()
     conn.close()
     return {"message": "알림 삭제 완료"}
-
-
-@router.delete("", summary="전체 알림 삭제")
-async def delete_all_notifications(current_user: dict = Depends(get_current_user)):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM notifications WHERE user_id = ?", (current_user["id"],))
-    conn.commit()
-    conn.close()
-    return {"message": "전체 알림 삭제 완료"}

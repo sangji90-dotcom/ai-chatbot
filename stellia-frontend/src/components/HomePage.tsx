@@ -4,7 +4,6 @@ import type { Character, User } from "../App";
 import CoinModal from "./CoinModal";
 import NotificationModal from "./NotificationModal";
 
-
 interface HomePageProps {
   apiUrl: string;
   token: string;
@@ -28,7 +27,7 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
   const [coins, setCoins] = useState<number>(user?.token_balance ?? 0);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const headers = { Authorization: `Bearer ${token}` };
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
   const formatChar = (c: any): Character => ({
     id: c.id,
@@ -39,6 +38,7 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
     online: true,
     tags: c.tags || [],
     user_id: c.user_id,
+    first_message: c.first_message || "",
   });
 
   useEffect(() => {
@@ -54,9 +54,12 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
       .catch(console.error)
       .finally(() => setLoading(false));
 
-    axios.get(`${apiUrl}/notifications/unread-count`, { headers })
+    // 로그인 유저만 알림 조회
+    if (token && token !== "") {
+      axios.get(`${apiUrl}/notifications/unread-count`, { headers })
       .then(res => setUnreadCount(res.data.count))
       .catch(console.error);
+    }
   }, []);
 
   const handleCategoryChange = (cat: string) => {
@@ -129,87 +132,115 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
         </div>
 
         {/* 우측 */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          {/* 캐릭터 만들기 */}
-        <button
-            onClick={onCreateCharacter}
-        style={{
-            padding: "8px 14px", borderRadius: 10,
-            border: "1px solid rgba(95,214,255,.4)",
-            background: "rgba(95,214,255,.08)",
-            color: "var(--secondary)", fontSize: 13,
-            fontWeight: 600, cursor: "pointer",
-          }}
-        >
-          ✦ 캐릭터 만들기
-        </button>
-          {/* 알림 */}
-          <div
-            onClick={() => { setShowNotification(true); setUnreadCount(0); }}
-            style={{ position: "relative", cursor: "pointer" }}
-          >
-            <span style={{ fontSize: 20 }}>🔔</span>
-            {unreadCount > 0 && (
-              <span
-                style={{
-                  position: "absolute", top: -6, right: -6,
-                  width: 16, height: 16, borderRadius: "50%",
-                  background: "var(--primary)", color: "#fff",
-                  fontSize: 10, fontWeight: 700,
-                  display: "grid", placeItems: "center",
-                }}
-              >
-                {unreadCount}
-              </span>
-            )}
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
 
-          {/* 코인 */}
-          <div
-            onClick={() => setShowCoinModal(true)}
-            style={{ color: "var(--gold)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
-          >
-            ✦ {coins.toLocaleString()}
-          </div>
+          {/* 캐릭터 만들기 - 로그인 시만 */}
+          {user && (
+            <button
+              onClick={onCreateCharacter}
+              style={{
+                padding: "8px 14px", borderRadius: 10,
+                border: "1px solid rgba(95,214,255,.4)",
+                background: "rgba(95,214,255,.08)",
+                color: "var(--secondary)", fontSize: 13,
+                fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              ✦ 캐릭터 만들기
+            </button>
+          )}
 
-          {/* 프로필 */}
-          <div
-            style={{
-              width: 38, height: 38, borderRadius: "50%",
-              background: "var(--gradient-cosmic)",
-              display: "grid", placeItems: "center",
-              fontWeight: 700, cursor: "pointer",
-              boxShadow: "var(--shadow-glow-primary)",
-            }}
-          >
-            {user?.username?.[0]?.toUpperCase()}
-          </div>
+          {/* 파티챗 - 로그인 시만 */}
+          {user && (
+            <button
+              onClick={onGoParty}
+              style={{
+                padding: "8px 14px", borderRadius: 10,
+                border: "1px solid rgba(139,124,255,.4)",
+                background: "rgba(139,124,255,.12)",
+                color: "var(--primary)", fontSize: 13,
+                fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              ⚔ 파티챗
+            </button>
+          )}
 
-          <button
-          onClick={onGoParty}
-            style={{
-          padding: "8px 14px", borderRadius: 10,
-          border: "1px solid rgba(139,124,255,.4)",
-          background: "rgba(139,124,255,.12)",
-          color: "var(--primary)", fontSize: 13,
-          fontWeight: 600, cursor: "pointer",
-        }}
-        >
-          ⚔ 파티챗
-      </button>
+          {/* 알림 - 로그인 시만 */}
+          {user && (
+            <div
+              onClick={() => { setShowNotification(true); setUnreadCount(0); }}
+              style={{ position: "relative", cursor: "pointer" }}
+            >
+              <span style={{ fontSize: 20 }}>🔔</span>
+              {unreadCount > 0 && (
+                <span
+                  style={{
+                    position: "absolute", top: -6, right: -6,
+                    width: 16, height: 16, borderRadius: "50%",
+                    background: "var(--primary)", color: "#fff",
+                    fontSize: 10, fontWeight: 700,
+                    display: "grid", placeItems: "center",
+                  }}
+                >
+                  {unreadCount}
+                </span>
+              )}
+            </div>
+          )}
 
-          {/* 로그아웃 */}
-          <button
-            onClick={onLogout}
-            style={{
-              padding: "8px 14px", borderRadius: 10,
-              border: "1px solid var(--border-default)",
-              background: "rgba(255,255,255,.04)",
-              color: "var(--text-muted)", fontSize: 13, cursor: "pointer",
-            }}
-          >
-            로그아웃
-          </button>
+          {/* 코인 - 로그인 시만 */}
+          {user && (
+            <div
+              onClick={() => setShowCoinModal(true)}
+              style={{ color: "var(--gold)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
+            >
+              ✦ {coins.toLocaleString()}
+            </div>
+          )}
+
+          {/* 프로필 아바타 - 로그인 시만 */}
+          {user && (
+            <div
+              style={{
+                width: 38, height: 38, borderRadius: "50%",
+                background: "var(--gradient-cosmic)",
+                display: "grid", placeItems: "center",
+                fontWeight: 700, cursor: "pointer",
+                boxShadow: "var(--shadow-glow-primary)",
+              }}
+            >
+              {user.username?.[0]?.toUpperCase()}
+            </div>
+          )}
+
+          {/* 로그인/로그아웃 버튼 */}
+          {user ? (
+            <button
+              onClick={onLogout}
+              style={{
+                padding: "8px 14px", borderRadius: 10,
+                border: "1px solid var(--border-default)",
+                background: "rgba(255,255,255,.04)",
+                color: "var(--text-muted)", fontSize: 13, cursor: "pointer",
+              }}
+            >
+              로그아웃
+            </button>
+          ) : (
+            <button
+              onClick={onLogout}
+              style={{
+                padding: "8px 14px", borderRadius: 10,
+                border: "1px solid var(--primary)",
+                background: "rgba(139,124,255,.12)",
+                color: "var(--primary)", fontSize: 13,
+                fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              로그인
+            </button>
+          )}
         </div>
       </nav>
 
@@ -286,7 +317,7 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
       </div>
 
       {/* 코인 모달 */}
-      {showCoinModal && (
+      {showCoinModal && token && (
         <CoinModal
           apiUrl={apiUrl}
           token={token}
@@ -296,7 +327,7 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
       )}
 
       {/* 알림 모달 */}
-      {showNotification && (
+      {showNotification && token && (
         <NotificationModal
           apiUrl={apiUrl}
           token={token}

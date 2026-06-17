@@ -8,6 +8,20 @@ router = APIRouter(
     responses={404: {"description": "찾을 수 없습니다"}}
 )
 
+@router.get("/me", summary="내 좋아요 목록", description="내가 좋아요한 캐릭터 목록을 반환합니다.")
+async def get_my_likes(current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT c.* FROM characters c
+        JOIN character_likes cl ON c.id = cl.character_id
+        WHERE cl.user_id = ?
+        ORDER BY cl.created_at DESC
+    """, (current_user["id"],))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
 @router.post("/{character_id}", summary="캐릭터 좋아요", description="캐릭터에 좋아요를 누릅니다.")
 async def like_character(
         character_id: str,
@@ -60,17 +74,3 @@ async def unlike_character(
     conn.commit()
     conn.close()
     return {"message": "좋아요 취소 완료"}
-
-@router.get("/me", summary="내 좋아요 목록", description="내가 좋아요한 캐릭터 목록을 반환합니다.")
-async def get_my_likes(current_user: dict = Depends(get_current_user)):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT c.* FROM characters c
-        JOIN character_likes cl ON c.id = cl.character_id
-        WHERE cl.user_id = ?
-        ORDER BY cl.created_at DESC
-    """, (current_user["id"],))
-    rows = cursor.fetchall()
-    conn.close()
-    return [dict(row) for row in rows]

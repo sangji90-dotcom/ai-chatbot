@@ -93,16 +93,6 @@ export default function MyPage({ apiUrl, token, onBack }: MyPageProps) {
     }
   };
 
-  const handleUnequipTitle = async () => {
-    try {
-      await axios.delete(`${apiUrl}/achievements/me/equip-title`, { headers });
-      setUser((prev: any) => ({ ...prev, equipped_prefix: "", equipped_suffix: "" }));
-      setEquipMessage("칭호가 해제됐어요.");
-    } catch {
-      setEquipMessage("칭호 해제에 실패했어요.");
-    }
-  };
-
   const tabs = [
     { id: "profile", label: "프로필" },
     { id: "characters", label: "내 캐릭터" },

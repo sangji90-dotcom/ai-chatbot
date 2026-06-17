@@ -46,6 +46,62 @@ class UpdateCharacterRequest(BaseModel):
 
 class ReportRequest(BaseModel):
     reason: str
+    
+    
+class AutoCompleteRequest(BaseModel):
+    name: str
+    description: str = ""
+    job: str = ""
+    age: int = 20
+    
+@router.post("/auto-complete", summary="캐릭터 자동완성")
+async def auto_complete_character(
+        request: AutoCompleteRequest,
+        current_user: dict = Depends(get_current_user)):
+    from google import genai
+    import os
+    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+    prompt = f"""
+캐릭터 정보:
+- 이름: {request.name}
+- 나이: {request.age}세
+- 직업: {request.job}
+- 소개: {request.description}
+
+위 정보를 바탕으로 아래 항목을 JSON으로 생성해줘. 반드시 JSON만 출력하고 다른 텍스트는 없어야 해.
+
+절대 규칙:
+- 미성년자(18세 미만) 캐릭터의 성적/로맨틱 묘사 절대 금지
+- 아동 성적 콘텐츠(로리, 쇼타 등) 절대 생성 금지
+- 혐오, 차별, 폭력적 표현 금지
+- 특정 실존 인물 사칭 금지
+
+{{
+  "personality": "성격 설명 (3~5문장)",
+  "speech_style": "말투 설명 (2~3문장)",
+  "likes": "좋아하는 것 (쉼표로 구분)",
+  "dislikes": "싫어하는 것 (쉼표로 구분)",
+  "first_message": "첫 대사 (1~2문장)",
+  "situation": "시작 상황 설명 (2~3문장)"
+}}
+"""
+
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=[{"role": "user", "parts": [{"text": prompt}]}],
+        config={"max_output_tokens": 800}
+    )
+
+    import json, re
+    text = response.text.strip()
+    text = re.sub(r'```json\s*|\s*```', '', text).strip()
+
+    try:
+        data = json.loads(text)
+        return data
+    except:
+        raise HTTPException(status_code=500, detail="AI 자동완성 실패")
 
 
 @router.post("", summary="캐릭터 생성")
@@ -78,6 +134,9 @@ async def create_character(
 절대 규칙:
 - AI라고 절대 말하지 않음
 - 캐릭터를 절대 벗어나지 않음
+- 미성년자(18세 미만) 캐릭터와의 성적/로맨틱/신체적 묘사 절대 금지
+- 아동 성적 콘텐츠(로리, 쇼타 포함) 절대 생성 금지
+- 위 요청이 들어오면 단호하게 거절하고 대화 주제를 바꿀 것
 """
 
     conn = get_db()
@@ -450,6 +509,9 @@ async def update_character(
 절대 규칙:
 - AI라고 절대 말하지 않음
 - 캐릭터를 절대 벗어나지 않음
+- 미성년자(18세 미만) 캐릭터와의 성적/로맨틱/신체적 묘사 절대 금지
+- 아동 성적 콘텐츠(로리, 쇼타 포함) 절대 생성 금지
+- 위 요청이 들어오면 단호하게 거절하고 대화 주제를 바꿀 것
 """
         fields.append("prompt = ?"); params.append(new_prompt)
     if fields:
@@ -483,6 +545,156 @@ async def delete_character(
     conn.close()
     return {"message": "캐릭터 삭제 완료"}
 
+
+# 감정 태그 목록
+EMOTIONS = ["neutral", "happy", "sad", "angry", "shy", "surprised", "love", "embarrassed", "crying", "serious"]
+# 상황 태그 목록
+SITUATIONS = ["default", "indoor", "outdoor", "night", "cafe", "forest", "rain", "sunny", "fantasy", "dramatic"]
+
+
+@router.post("/{character_id}/emotions/{emotion}", summary="감정별 이미지 업로드")
+async def upload_emotion_image(
+        character_id: str,
+        emotion: str,
+        file: UploadFile = File(...),
+        current_user: dict = Depends(get_current_user)):
+
+    if emotion not in EMOTIONS:
+        raise HTTPException(status_code=400, detail=f"유효하지 않은 감정 태그예요. 가능: {EMOTIONS}")
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM characters WHERE id = ?", (character_id,))
+    char = cursor.fetchone()
+    if not char:
+        conn.close()
+        raise HTTPException(status_code=404, detail="캐릭터를 찾을 수 없습니다.")
+    if char["user_id"] != current_user["id"]:
+        conn.close()
+        raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
+
+    allowed_types = ["image/jpeg", "image/png", "image/webp"]
+    if file.content_type not in allowed_types:
+        conn.close()
+        raise HTTPException(status_code=400, detail="허용되지 않는 파일 형식입니다.")
+
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        conn.close()
+        raise HTTPException(status_code=400, detail="파일 크기는 5MB 이하여야 합니다.")
+
+    ext = file.filename.split(".")[-1]
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    save_dir = "../frontend/images/emotions"
+    os.makedirs(save_dir, exist_ok=True)
+
+    with open(f"{save_dir}/{filename}", "wb") as f:
+        f.write(contents)
+
+    image_url = f"/images/emotions/{filename}"
+
+    # 기존 감정 이미지 있으면 교체
+    cursor.execute("""
+        SELECT id FROM character_images WHERE character_id = ? AND emotion = ?
+    """, (character_id, emotion))
+    existing = cursor.fetchone()
+
+    if existing:
+        cursor.execute("UPDATE character_images SET image_url = ? WHERE id = ?",
+                       (image_url, existing["id"]))
+    else:
+        cursor.execute("""
+            INSERT INTO character_images (character_id, emotion, image_url)
+            VALUES (?, ?, ?)
+        """, (character_id, emotion, image_url))
+
+    conn.commit()
+    conn.close()
+    return {"emotion": emotion, "image_url": image_url, "message": "감정 이미지 업로드 완료"}
+
+
+@router.get("/{character_id}/emotions", summary="감정별 이미지 목록")
+async def get_emotion_images(character_id: str):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT emotion, image_url FROM character_images WHERE character_id = ?
+    """, (character_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return {row["emotion"]: row["image_url"] for row in rows}
+
+
+@router.post("/{character_id}/backgrounds/{situation}", summary="상황별 배경 업로드")
+async def upload_background_image(
+        character_id: str,
+        situation: str,
+        file: UploadFile = File(...),
+        current_user: dict = Depends(get_current_user)):
+
+    if situation not in SITUATIONS:
+        raise HTTPException(status_code=400, detail=f"유효하지 않은 상황 태그예요. 가능: {SITUATIONS}")
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM characters WHERE id = ?", (character_id,))
+    char = cursor.fetchone()
+    if not char:
+        conn.close()
+        raise HTTPException(status_code=404, detail="캐릭터를 찾을 수 없습니다.")
+    if char["user_id"] != current_user["id"]:
+        conn.close()
+        raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
+
+    allowed_types = ["image/jpeg", "image/png", "image/webp"]
+    if file.content_type not in allowed_types:
+        conn.close()
+        raise HTTPException(status_code=400, detail="허용되지 않는 파일 형식입니다.")
+
+    contents = await file.read()
+    if len(contents) > 10 * 1024 * 1024:
+        conn.close()
+        raise HTTPException(status_code=400, detail="파일 크기는 10MB 이하여야 합니다.")
+
+    ext = file.filename.split(".")[-1]
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    save_dir = "../frontend/images/backgrounds"
+    os.makedirs(save_dir, exist_ok=True)
+
+    with open(f"{save_dir}/{filename}", "wb") as f:
+        f.write(contents)
+
+    image_url = f"/images/backgrounds/{filename}"
+
+    cursor.execute("""
+        SELECT id FROM character_backgrounds WHERE character_id = ? AND situation = ?
+    """, (character_id, situation))
+    existing = cursor.fetchone()
+
+    if existing:
+        cursor.execute("UPDATE character_backgrounds SET image_url = ? WHERE id = ?",
+                       (image_url, existing["id"]))
+    else:
+        cursor.execute("""
+            INSERT INTO character_backgrounds (character_id, situation, image_url)
+            VALUES (?, ?, ?)
+        """, (character_id, situation, image_url))
+
+    conn.commit()
+    conn.close()
+    return {"situation": situation, "image_url": image_url, "message": "배경 이미지 업로드 완료"}
+
+
+@router.get("/{character_id}/backgrounds", summary="상황별 배경 목록")
+async def get_background_images(character_id: str):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT situation, image_url FROM character_backgrounds WHERE character_id = ?
+    """, (character_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return {row["situation"]: row["image_url"] for row in rows}
 
 def _format_character(row) -> dict:
     return {

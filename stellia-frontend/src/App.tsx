@@ -8,7 +8,8 @@ import PartyRoomPage from "./components/PartyRoomPage";
 import PartyChatPage from "./components/PartyChatPage";
 import CreateCharacterPage from "./components/CreateCharacterPage";
 import TermsPage from "./components/TermsPage";
-import PrivacyPage from "./components/PrivacyPage"
+import PrivacyPage from "./components/PrivacyPage";
+import LoginPromptModal from "./components/LoginPromptModal";
 
 export interface Character {
   id: string;
@@ -38,22 +39,24 @@ export interface User {
   output_length?: string;
 }
 
-const API_URL = "http://localhost:8000";
+const API_URL = "";
 
 export default function App() {
   const [token, setToken] = useState<string | null>(
     localStorage.getItem("access_token")
   );
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "terms" | "privacy">("home");
+  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "terms" | "privacy" | "login">("home");
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [partyRoomCode, setPartyRoomCode] = useState<string>("");
-  const [prevView, setPrevView] = useState<"home" | "login">("home");
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  
 
   const handleLogin = (accessToken: string, userData: User) => {
     localStorage.setItem("access_token", accessToken);
     setToken(accessToken);
     setUser(userData);
+    setView("home");
   };
 
   const handleLogout = () => {
@@ -84,19 +87,40 @@ export default function App() {
   return (
     <>
       <StarBackground />
-      {!token ? (
-        <LoginPage
-          apiUrl={API_URL}
-          onLogin={handleLogin}
-          onShowTerms={() => {
-             setPrevView(token ? "home" : "login");
-             setView("terms");
-            }}
-          onShowPrivacy={() => {
-            setPrevView(token ? "home" : "login");
-            setView("privacy")
-          }}
+
+      {showLoginPrompt && (
+        <LoginPromptModal
+          onClose={() => setShowLoginPrompt(false)}
+          onLogin={() => { setShowLoginPrompt(false); setView("login"); }}
+          onRegister={() => { setShowLoginPrompt(false); setView("login"); }}
         />
+      )}
+
+      {view === "terms" ? (
+        <TermsPage onBack={() => setView("home")} />
+      ) : view === "privacy" ? (
+        <PrivacyPage onBack={() => setView("home")} />
+      ) : !token ? (
+        <>
+          {view === "login" ? (
+            <LoginPage
+              apiUrl={API_URL}
+              onLogin={handleLogin}
+              onShowTerms={() => setView("terms")}
+              onShowPrivacy={() => setView("privacy")}
+            />
+          ) : (
+            <HomePage
+              apiUrl={API_URL}
+              token=""
+              user={null}
+              onSelectCharacter={() => setShowLoginPrompt(true)}
+              onLogout={() => setView("login")}
+              onGoParty={() => setShowLoginPrompt(true)}
+              onCreateCharacter={() => setShowLoginPrompt(true)}
+            />
+          )}
+        </>
       ) : view === "home" ? (
         <HomePage
           apiUrl={API_URL}
@@ -116,30 +140,13 @@ export default function App() {
           onBack={() => setView("home")}
           onSelectCharacter={handleSelectCharacter}
         />
-
-      )  : view === "create" ? (
-       <CreateCharacterPage
-         apiUrl={API_URL}
-         token={token}
-         onBack={() => setView("home")}
-         onCreated={() => setView("home")}
-         
-       />
-        
-       )  : view === "terms" ? (
-       <TermsPage onBack={() => {
-        if (prevView === "login") setToken(null);
-        setView("home")
-      }} 
-       />
-
-      ) : view === "privacy" ? (
-      <PrivacyPage onBack={() => {
-        if (prevView === "login") setToken(null);
-        setView("home")
-      }} 
-      />
-
+      ) : view === "create" ? (
+        <CreateCharacterPage
+          apiUrl={API_URL}
+          token={token}
+          onBack={() => setView("home")}
+          onCreated={() => setView("home")}
+        />
       ) : view === "party-lobby" ? (
         <PartyLobbyPage
           apiUrl={API_URL}

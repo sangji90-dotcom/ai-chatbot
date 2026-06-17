@@ -16,7 +16,7 @@ export default function PartyRoomPage({ apiUrl, token, user, roomCode, onBack, o
   const [members, setMembers] = useState<any[]>([]);
   const [story, setStory] = useState<any>(null);
   const [outputMultiplier, setOutputMultiplier] = useState(1.0);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [error, setError] = useState("");
 
   const headers = { Authorization: `Bearer ${token}` };
