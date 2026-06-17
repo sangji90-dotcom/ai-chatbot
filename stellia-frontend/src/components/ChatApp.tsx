@@ -26,6 +26,10 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
   const [showProfile, setShowProfile] = useState(false);
   const [showRoomModal, setShowRoomModal] = useState(false);
   const [showCharacterPanel, setShowCharacterPanel] = useState(false);
+  const [currentEmotion, setCurrentEmotion] = useState("neutral");
+  const [currentSituation, setCurrentSituation] = useState("default");
+  const [emotionImages, setEmotionImages] = useState<Record<string, string>>({});
+  const [backgroundImages, setBackgroundImages] = useState<Record<string, string>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const headers = { Authorization: `Bearer ${token}` };
@@ -60,6 +64,15 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
       .catch(console.error);
 
     refreshCoins();
+
+    axios.get(`${apiUrl}/characters/${character.id}/emotions`, { headers })
+      .then(res => setEmotionImages(res.data))
+      .catch(console.error);
+
+    axios.get(`${apiUrl}/characters/${character.id}/backgrounds`, { headers })
+      .then(res => setBackgroundImages(res.data))
+      .catch(console.error);
+
   }, [character.id]);
 
   useEffect(() => {
@@ -117,6 +130,9 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
         { headers }
       );
 
+      if (res.data.emotion) setCurrentEmotion(res.data.emotion);
+      if (res.data.situation) setCurrentSituation(res.data.situation);
+
       setMessages(prev => [
         ...prev,
         {
@@ -164,6 +180,7 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
 
   return (
     <div style={{ display: "flex", height: "100vh", position: "relative", zIndex: 2 }}>
+
       {/* 코인 부족 알림 */}
       {lowCoinAlert && (
         <div
@@ -199,29 +216,56 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
           display: "flex",
           flexDirection: "column",
           height: "100vh",
-          background: "linear-gradient(to bottom, rgba(17,21,40,.45), rgba(9,11,20,.75))",
+          position: "relative",
+          overflow: "hidden",
           borderRight: showCharacterPanel ? "1px solid var(--border-subtle)" : "none",
         }}
       >
-        <ChatHeader
-          character={character}
-          apiUrl={apiUrl}
-          token={token}
-          sessionId={SESSION_ID}
-          onBack={onBack}
-          onSelectCharacter={onSelectCharacter}
-          onShowProfile={() => setShowProfile(true)}
-          onShowRoomModal={() => setShowRoomModal(true)}
-          onTogglePanel={() => setShowCharacterPanel(prev => !prev)}
-          showPanel={showCharacterPanel}
-          coins={coins}
-        />
+        {/* 배경 이미지 레이어 */}
+        {backgroundImages[currentSituation] ? (
+          <div
+            style={{
+              position: "absolute", inset: 0, zIndex: 0,
+              backgroundImage: `url(${backgroundImages[currentSituation]})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              opacity: 0.3,
+              transition: "all 0.5s ease",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              position: "absolute", inset: 0, zIndex: 0,
+              background: "linear-gradient(to bottom, rgba(17,21,40,.45), rgba(9,11,20,.75))",
+            }}
+          />
+        )}
 
+        {/* 헤더 */}
+        <div style={{ position: "relative", zIndex: 3 }}>
+          <ChatHeader
+            character={character}
+            apiUrl={apiUrl}
+            token={token}
+            sessionId={SESSION_ID}
+            onBack={onBack}
+            onSelectCharacter={onSelectCharacter}
+            onShowProfile={() => setShowProfile(true)}
+            onShowRoomModal={() => setShowRoomModal(true)}
+            onTogglePanel={() => setShowCharacterPanel(prev => !prev)}
+            showPanel={showCharacterPanel}
+            coins={coins}
+          />
+        </div>
+
+        {/* 메시지 영역 */}
         <div
           style={{
             flex: 1, overflowY: "auto",
             padding: "28px",
             display: "flex", flexDirection: "column", gap: "18px",
+            position: "relative", zIndex: 1,
           }}
         >
           {messages.map((message) => (
@@ -254,7 +298,10 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
           <div ref={messagesEndRef} />
         </div>
 
-        <ChatInput onSend={handleSend} characterName={character.name} />
+        {/* 입력창 */}
+        <div style={{ position: "relative", zIndex: 3 }}>
+          <ChatInput onSend={handleSend} characterName={character.name} />
+        </div>
       </main>
 
       {/* 오른쪽 캐릭터 이미지 패널 */}
@@ -271,14 +318,16 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
             overflowY: "auto",
           }}
         >
-          {character.avatar ? (
+          {/* 감정 이미지 우선, 없으면 기본 아바타 */}
+          {(emotionImages[currentEmotion] || character.avatar) ? (
             <img
-              src={character.avatar}
+              src={emotionImages[currentEmotion] || character.avatar}
               alt={character.name}
               style={{
                 width: "100%", borderRadius: 20,
                 objectFit: "cover",
                 boxShadow: "0 0 40px rgba(139,124,255,.2)",
+                transition: "opacity 0.3s ease",
               }}
             />
           ) : (
@@ -294,7 +343,21 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
               {character.name[0]}
             </div>
           )}
+
           <div style={{ fontWeight: 700, fontSize: 18, textAlign: "center" }}>{character.name}</div>
+
+          {/* 현재 감정 표시 */}
+          <div
+            style={{
+              padding: "4px 12px", borderRadius: 999,
+              background: "rgba(139,124,255,.12)",
+              border: "1px solid rgba(139,124,255,.2)",
+              color: "var(--primary)", fontSize: 12,
+            }}
+          >
+            {currentEmotion}
+          </div>
+
           {character.description && (
             <div style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6, textAlign: "center" }}>
               {character.description}
