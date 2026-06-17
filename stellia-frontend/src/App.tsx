@@ -7,6 +7,8 @@ import PartyLobbyPage from "./components/PartyLobbyPage";
 import PartyRoomPage from "./components/PartyRoomPage";
 import PartyChatPage from "./components/PartyChatPage";
 import CreateCharacterPage from "./components/CreateCharacterPage";
+import TermsPage from "./components/TermsPage";
+import PrivacyPage from "./components/PrivacyPage"
 
 export interface Character {
   id: string;
@@ -43,7 +45,7 @@ export default function App() {
     localStorage.getItem("access_token")
   );
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create">("home");
+  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "terms" | "privacy">("home");
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [partyRoomCode, setPartyRoomCode] = useState<string>("");
 
@@ -103,14 +105,23 @@ export default function App() {
           onSelectCharacter={handleSelectCharacter}
         />
 
-        )  : view === "create" ? (
-        <CreateCharacterPage
-          apiUrl={API_URL}
-          token={token}
-          onBack={() => setView("home")}
-          onCreated={() => setView("home")}
-        />
+      )  : view === "create" ? (
+       <CreateCharacterPage
+         apiUrl={API_URL}
+         token={token}
+         onBack={() => setView("home")}
+         onCreated={() => setView("home")}
+         
+       />
         
+       )  : view === "terms" ? (
+       <TermsPage onBack={() => setView("home")} 
+       />
+
+      ) : view === "privacy" ? (
+      <PrivacyPage onBack={() => setView("home")} 
+      />
+
       ) : view === "party-lobby" ? (
         <PartyLobbyPage
           apiUrl={API_URL}
