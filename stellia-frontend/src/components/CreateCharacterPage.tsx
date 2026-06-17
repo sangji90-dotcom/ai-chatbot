@@ -53,9 +53,24 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
     setLoading(true);
     setError("");
     try {
-      await axios.post(`${apiUrl}/characters`, formData, {
+      const submitData = {
+        ...formData,
+        image_url: formData.image_url.startsWith("data:") ? "" : formData.image_url,
+      };
+      const res = await axios.post(`${apiUrl}/characters`, submitData, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // base64 이미지면 업로드
+      if (formData.image_url.startsWith("data:") && res.data.id) {
+        const blob = await fetch(formData.image_url).then(r => r.blob());
+        const fd = new FormData();
+        fd.append("file", blob, "character.jpg");
+        await axios.post(`${apiUrl}/characters/${res.data.id}/image`, fd, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+
       onCreated();
     } catch (err) {
       if (axios.isAxiosError(err)) {
@@ -114,15 +129,14 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
             border: "1px solid var(--border-default)",
             background: "rgba(255,255,255,.04)",
             color: "var(--text-primary)",
-            fontSize: 18,
+            fontSize: 18, cursor: "pointer",
           }}
         >
           ←
         </button>
         <div
           style={{
-            fontSize: 22,
-            fontWeight: 700,
+            fontSize: 22, fontWeight: 700,
             background: "var(--gradient-cosmic)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
@@ -149,14 +163,10 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             style={{
-              flex: 1,
-              padding: "12px",
-              border: "none",
+              flex: 1, padding: "12px", border: "none",
               background: activeTab === tab.id ? "var(--gradient-cosmic)" : "transparent",
               color: activeTab === tab.id ? "#fff" : "var(--text-muted)",
-              fontWeight: 600,
-              fontSize: 13,
-              transition: "all .2s ease",
+              fontWeight: 600, fontSize: 13, transition: "all .2s ease", cursor: "pointer",
             }}
           >
             {tab.label}
@@ -167,6 +177,7 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
       {/* 폼 */}
       <div className="glass-card" style={{ borderRadius: 24, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
 
+        {/* 프로필 탭 */}
         {activeTab === "profile" && (
           <>
             <div>
@@ -190,13 +201,9 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
             <button
               onClick={() => setActiveTab("detail")}
               style={{
-                padding: "14px",
-                borderRadius: 14,
-                border: "none",
+                padding: "14px", borderRadius: 14, border: "none",
                 background: "var(--gradient-cosmic)",
-                color: "#fff",
-                fontWeight: 700,
-                fontSize: 15,
+                color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer",
               }}
             >
               다음 →
@@ -204,6 +211,7 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
           </>
         )}
 
+        {/* 상세정보 탭 */}
         {activeTab === "detail" && (
           <>
             <div>
@@ -225,13 +233,9 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
             <button
               onClick={() => setActiveTab("situation")}
               style={{
-                padding: "14px",
-                borderRadius: 14,
-                border: "none",
+                padding: "14px", borderRadius: 14, border: "none",
                 background: "var(--gradient-cosmic)",
-                color: "#fff",
-                fontWeight: 700,
-                fontSize: 15,
+                color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer",
               }}
             >
               다음 →
@@ -239,6 +243,7 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
           </>
         )}
 
+        {/* 시작상황 탭 */}
         {activeTab === "situation" && (
           <>
             <div>
@@ -252,13 +257,9 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
             <button
               onClick={() => setActiveTab("setting")}
               style={{
-                padding: "14px",
-                borderRadius: 14,
-                border: "none",
+                padding: "14px", borderRadius: 14, border: "none",
                 background: "var(--gradient-cosmic)",
-                color: "#fff",
-                fontWeight: 700,
-                fontSize: 15,
+                color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer",
               }}
             >
               다음 →
@@ -266,8 +267,81 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
           </>
         )}
 
+        {/* 기타설정 탭 */}
         {activeTab === "setting" && (
           <>
+            {/* 이미지 업로드 */}
+            <div>
+              <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 8, display: "block" }}>캐릭터 이미지</label>
+              <div
+                style={{
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
+                  padding: 20, borderRadius: 16,
+                  border: "1px dashed var(--border-default)",
+                  background: "rgba(255,255,255,.02)",
+                }}
+              >
+                {formData.image_url ? (
+                  <img
+                    src={formData.image_url}
+                    alt="캐릭터 이미지"
+                    style={{ width: 120, height: 120, borderRadius: "50%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: 120, height: 120, borderRadius: "50%",
+                      background: "var(--gradient-cosmic)",
+                      display: "grid", placeItems: "center",
+                      fontSize: 40, fontWeight: 700,
+                    }}
+                  >
+                    {formData.name?.[0] || "?"}
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  id="char-image"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = () => update("image_url", reader.result as string);
+                    reader.readAsDataURL(file);
+                  }}
+                />
+                <label
+                  htmlFor="char-image"
+                  style={{
+                    padding: "10px 20px", borderRadius: 12,
+                    border: "1px solid var(--primary)",
+                    background: "rgba(139,124,255,.12)",
+                    color: "var(--primary)", fontSize: 13,
+                    fontWeight: 600, cursor: "pointer",
+                  }}
+                >
+                  이미지 선택
+                </label>
+                {formData.image_url && (
+                  <button
+                    onClick={() => update("image_url", "")}
+                    style={{
+                      background: "none", border: "none",
+                      color: "#ff6b8a", fontSize: 13, cursor: "pointer",
+                    }}
+                  >
+                    이미지 제거
+                  </button>
+                )}
+                <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
+                  JPG, PNG, WEBP · 최대 5MB
+                </div>
+              </div>
+            </div>
+
+            {/* 태그 */}
             <div>
               <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 8, display: "block" }}>태그</label>
               <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
@@ -281,12 +355,10 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
                 <button
                   onClick={addTag}
                   style={{
-                    padding: "14px 18px",
-                    borderRadius: 14,
+                    padding: "14px 18px", borderRadius: 14,
                     border: "1px solid var(--primary)",
                     background: "rgba(139,124,255,.12)",
-                    color: "var(--primary)",
-                    fontWeight: 600,
+                    color: "var(--primary)", fontWeight: 600, cursor: "pointer",
                   }}
                 >
                   추가
@@ -297,15 +369,11 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
                   <span
                     key={tag}
                     style={{
-                      padding: "6px 12px",
-                      borderRadius: 999,
+                      padding: "6px 12px", borderRadius: 999,
                       background: "rgba(139,124,255,.12)",
                       border: "1px solid rgba(139,124,255,.3)",
-                      color: "var(--primary)",
-                      fontSize: 13,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
+                      color: "var(--primary)", fontSize: 13,
+                      display: "flex", alignItems: "center", gap: 6,
                     }}
                   >
                     {tag}
@@ -320,6 +388,7 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
               </div>
             </div>
 
+            {/* 공개 설정 */}
             <div>
               <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 8, display: "block" }}>공개 설정</label>
               <div style={{ display: "flex", gap: 10 }}>
@@ -328,13 +397,11 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
                     key={v}
                     onClick={() => update("visibility", v)}
                     style={{
-                      flex: 1,
-                      padding: "12px",
-                      borderRadius: 14,
+                      flex: 1, padding: "12px", borderRadius: 14,
                       border: formData.visibility === v ? "1px solid var(--primary)" : "1px solid var(--border-default)",
                       background: formData.visibility === v ? "rgba(139,124,255,.15)" : "rgba(255,255,255,.02)",
                       color: formData.visibility === v ? "var(--primary)" : "var(--text-muted)",
-                      fontWeight: 600,
+                      fontWeight: 600, cursor: "pointer",
                     }}
                   >
                     {v === "public" ? "공개" : "비공개"}
@@ -351,13 +418,9 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
               onClick={handleSubmit}
               disabled={loading}
               style={{
-                padding: "16px",
-                borderRadius: 16,
-                border: "none",
+                padding: "16px", borderRadius: 16, border: "none",
                 background: "var(--gradient-cosmic)",
-                color: "#fff",
-                fontWeight: 700,
-                fontSize: 16,
+                color: "#fff", fontWeight: 700, fontSize: 16,
                 opacity: loading ? 0.7 : 1,
                 cursor: loading ? "not-allowed" : "pointer",
                 boxShadow: "0 0 30px rgba(139,124,255,.3)",

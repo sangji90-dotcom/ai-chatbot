@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import ChatHeader from "./ChatHeader";
 import MessageBubble from "./MessageBubble";
 import ChatInput from "./ChatInput";
-import ProfilePanel from "./ProfilePanel";
+import CharacterProfileModal from "./CharacterProfileModal";
+import ChatRoomModal from "./ChatRoomModal";
 import type { Character, Message, User } from "../App";
 
 interface ChatAppProps {
@@ -22,29 +23,48 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
   const [typing, setTyping] = useState(false);
   const [coins, setCoins] = useState<number>(user?.token_balance ?? 0);
   const [lowCoinAlert, setLowCoinAlert] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showRoomModal, setShowRoomModal] = useState(false);
+  const [showCharacterPanel, setShowCharacterPanel] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
-    // 대화 기록 불러오기
     axios.get(`${apiUrl}/chat/history/${character.id}`, { headers })
       .then(res => {
-        const history: Message[] = res.data.map((m: any) => ({
-          id: String(m.id || Math.random()),
-          sender: m.role === "user" ? "user" : "ai",
-          content: m.content,
-          timestamp: new Date(m.created_at).toLocaleTimeString("ko-KR", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        }));
-        setMessages(history);
+        const history: Message[] = res.data
+          .filter((m: any) => m.role !== "system")
+          .map((m: any) => ({
+            id: String(m.id || Math.random()),
+            sender: m.role === "user" ? "user" : "ai",
+            content: m.content,
+            timestamp: new Date(m.created_at).toLocaleTimeString("ko-KR", {
+              hour: "2-digit", minute: "2-digit",
+            }),
+          }));
+
+        if (history.length === 0 && character.first_message) {
+          setMessages([{
+            id: crypto.randomUUID(),
+            sender: "ai",
+            content: character.first_message,
+            timestamp: new Date().toLocaleTimeString("ko-KR", {
+              hour: "2-digit", minute: "2-digit",
+            }),
+          }]);
+        } else {
+          setMessages(history);
+        }
       })
       .catch(console.error);
 
-    // 코인 조회
     refreshCoins();
   }, [character.id]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const refreshCoins = () => {
     axios.get(`${apiUrl}/tokens/me`, { headers })
@@ -56,6 +76,25 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
       .catch(console.error);
   };
 
+  const handleExportPdf = async () => {
+    try {
+      const res = await axios.get(
+        `${apiUrl}/chat/export/${character.id}?session_id=${SESSION_ID}`,
+        { headers, responseType: "blob" }
+      );
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${character.name}_대화.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      alert("PDF 내보내기에 실패했어요.");
+    }
+  };
+
   const handleSend = async (text: string) => {
     if (!text.trim()) return;
 
@@ -64,8 +103,7 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
       sender: "user",
       content: text,
       timestamp: new Date().toLocaleTimeString("ko-KR", {
-        hour: "2-digit",
-        minute: "2-digit",
+        hour: "2-digit", minute: "2-digit",
       }),
     };
 
@@ -86,8 +124,7 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
           sender: "ai",
           content: res.data.message,
           timestamp: new Date().toLocaleTimeString("ko-KR", {
-            hour: "2-digit",
-            minute: "2-digit",
+            hour: "2-digit", minute: "2-digit",
           }),
         },
       ]);
@@ -103,8 +140,7 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
             sender: "ai",
             content: "럭키 코인이 부족해요. 충전 후 다시 대화해요!",
             timestamp: new Date().toLocaleTimeString("ko-KR", {
-              hour: "2-digit",
-              minute: "2-digit",
+              hour: "2-digit", minute: "2-digit",
             }),
           },
         ]);
@@ -116,8 +152,7 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
             sender: "ai",
             content: "오류가 발생했어요. 다시 시도해줘요.",
             timestamp: new Date().toLocaleTimeString("ko-KR", {
-              hour: "2-digit",
-              minute: "2-digit",
+              hour: "2-digit", minute: "2-digit",
             }),
           },
         ]);
@@ -128,7 +163,7 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
   };
 
   return (
-    <div className="stellia-app">
+    <div style={{ display: "flex", height: "100vh", position: "relative", zIndex: 2 }}>
       {/* 코인 부족 알림 */}
       {lowCoinAlert && (
         <div
@@ -157,45 +192,15 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
         </div>
       )}
 
-      {/* 뒤로가기 + 코인 표시 헤더 */}
-      <div
-        style={{
-          position: "fixed",
-          top: 0, left: 0,
-          zIndex: 10,
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "12px 20px",
-        }}
-      >
-        <button
-          onClick={onBack}
-          style={{
-            width: 40, height: 40, borderRadius: 12,
-            border: "1px solid var(--border-default)",
-            background: "rgba(9,11,20,.8)",
-            color: "var(--text-primary)",
-            fontSize: 18, cursor: "pointer",
-            backdropFilter: "blur(12px)",
-          }}
-        >
-          ←
-        </button>
-        <div style={{ color: "var(--gold)", fontWeight: 600, fontSize: 14 }}>
-          ✦ {coins.toLocaleString()}
-        </div>
-      </div>
-
+      {/* 채팅 메인 영역 */}
       <main
         style={{
-          position: "relative",
-          zIndex: 2,
+          flex: 1,
           display: "flex",
           flexDirection: "column",
           height: "100vh",
-          gridColumn: "1 / -1",
           background: "linear-gradient(to bottom, rgba(17,21,40,.45), rgba(9,11,20,.75))",
+          borderRight: showCharacterPanel ? "1px solid var(--border-subtle)" : "none",
         }}
       >
         <ChatHeader
@@ -205,6 +210,11 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
           sessionId={SESSION_ID}
           onBack={onBack}
           onSelectCharacter={onSelectCharacter}
+          onShowProfile={() => setShowProfile(true)}
+          onShowRoomModal={() => setShowRoomModal(true)}
+          onTogglePanel={() => setShowCharacterPanel(prev => !prev)}
+          showPanel={showCharacterPanel}
+          coins={coins}
         />
 
         <div
@@ -241,12 +251,79 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
               </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
 
         <ChatInput onSend={handleSend} characterName={character.name} />
       </main>
 
-      <ProfilePanel character={character} />
+      {/* 오른쪽 캐릭터 이미지 패널 */}
+      {showCharacterPanel && (
+        <aside
+          style={{
+            width: 280, flexShrink: 0,
+            height: "100vh",
+            background: "rgba(9,11,20,.95)",
+            backdropFilter: "blur(20px)",
+            display: "flex", flexDirection: "column",
+            alignItems: "center",
+            padding: 24, gap: 16,
+            overflowY: "auto",
+          }}
+        >
+          {character.avatar ? (
+            <img
+              src={character.avatar}
+              alt={character.name}
+              style={{
+                width: "100%", borderRadius: 20,
+                objectFit: "cover",
+                boxShadow: "0 0 40px rgba(139,124,255,.2)",
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: "100%", aspectRatio: "3/4",
+                borderRadius: 20,
+                background: "var(--gradient-cosmic)",
+                display: "grid", placeItems: "center",
+                fontSize: 80, fontWeight: 700,
+              }}
+            >
+              {character.name[0]}
+            </div>
+          )}
+          <div style={{ fontWeight: 700, fontSize: 18, textAlign: "center" }}>{character.name}</div>
+          {character.description && (
+            <div style={{ color: "var(--text-muted)", fontSize: 13, lineHeight: 1.6, textAlign: "center" }}>
+              {character.description}
+            </div>
+          )}
+        </aside>
+      )}
+
+      {/* 캐릭터 프로필 모달 */}
+      {showProfile && (
+        <CharacterProfileModal
+          character={character}
+          apiUrl={apiUrl}
+          token={token}
+          onClose={() => setShowProfile(false)}
+        />
+      )}
+
+      {/* 채팅방 관리 모달 */}
+      {showRoomModal && (
+        <ChatRoomModal
+          apiUrl={apiUrl}
+          token={token}
+          characterId={character.id}
+          sessionId={SESSION_ID}
+          onClose={() => setShowRoomModal(false)}
+          onExportPdf={handleExportPdf}
+        />
+      )}
 
       <style>{`
         .typing-dot { width:8px; height:8px; border-radius:50%; background:var(--primary); animation:pulse 1.2s infinite; }

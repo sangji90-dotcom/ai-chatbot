@@ -4,17 +4,20 @@ import type { Character, User } from "../App";
 import CoinModal from "./CoinModal";
 import NotificationModal from "./NotificationModal";
 
+
 interface HomePageProps {
   apiUrl: string;
   token: string;
   user: User | null;
   onSelectCharacter: (char: Character) => void;
   onLogout: () => void;
+  onGoParty: () => void;
+  onCreateCharacter: () => void;
 }
 
-const CATEGORIES = ["전체", "로맨스", "판타지", "액션", "일상", "공포", "SF", "기타"];
+const CATEGORIES = ["전체", "로맨스", "판타지", "액션", "일상", "공포", "SF", "BL", "GL", "기타"];
 
-export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLogout }: HomePageProps) {
+export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLogout, onGoParty, onCreateCharacter }: HomePageProps) {
   const [activeCategory, setActiveCategory] = useState("전체");
   const [characters, setCharacters] = useState<Character[]>([]);
   const [newCharacters, setNewCharacters] = useState<Character[]>([]);
@@ -127,6 +130,19 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
 
         {/* 우측 */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {/* 캐릭터 만들기 */}
+        <button
+            onClick={onCreateCharacter}
+        style={{
+            padding: "8px 14px", borderRadius: 10,
+            border: "1px solid rgba(95,214,255,.4)",
+            background: "rgba(95,214,255,.08)",
+            color: "var(--secondary)", fontSize: 13,
+            fontWeight: 600, cursor: "pointer",
+          }}
+        >
+          ✦ 캐릭터 만들기
+        </button>
           {/* 알림 */}
           <div
             onClick={() => { setShowNotification(true); setUnreadCount(0); }}
@@ -168,6 +184,19 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
           >
             {user?.username?.[0]?.toUpperCase()}
           </div>
+
+          <button
+          onClick={onGoParty}
+            style={{
+          padding: "8px 14px", borderRadius: 10,
+          border: "1px solid rgba(139,124,255,.4)",
+          background: "rgba(139,124,255,.12)",
+          color: "var(--primary)", fontSize: 13,
+          fontWeight: 600, cursor: "pointer",
+        }}
+        >
+          ⚔ 파티챗
+      </button>
 
           {/* 로그아웃 */}
           <button
