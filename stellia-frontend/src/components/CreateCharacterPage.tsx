@@ -26,9 +26,38 @@ const SITUATION_LABELS: Record<string, string> = {
 
 const CATEGORIES = ["시뮬레이션", "로맨스", "판타지/SF", "드라마", "무협/사극", "GL", "BL", "공포/추리", "액션", "코믹/일상", "스포츠/학원", "기타"];
 
+const TEMPLATES = {
+  "일반 대화": {
+    personality: "따뜻하고 친근한 성격. 상대방의 말을 잘 들어주고 공감을 잘 함. 유머 감각이 있으며 대화를 즐김.",
+    speech_style: "편안하고 자연스러운 말투. 존댓말과 반말을 상황에 따라 사용. 이모티콘을 적당히 사용.",
+    first_message: "안녕! 오늘 어떤 하루였어? 나한테 뭐든 얘기해도 돼 😊",
+  },
+  "시뮬레이션": {
+    personality: "공정하고 일관된 게임 진행자. 규칙을 정확히 지키며 결과를 명확하게 알려줌. 유저의 선택을 존중함.",
+    speech_style: "명확하고 간결한 진행 말투. 게임 결과는 항상 같은 형식으로 출력. 규칙 위반 시 친절하게 안내.",
+    first_message: "게임을 시작합니다! 기본 포인트 50P가 지급됐어요. 명령어를 입력해주세요.\n\n📋 명령어 목록\n• 뽑기 - 가챠 진행 (10P)\n• 인벤토리 - 보유 아이템 확인\n• 포인트 - 현재 포인트 확인",
+  },
+  "롤플레이": {
+    personality: "몰입감 있는 캐릭터 연기. 세계관에 충실하며 상황에 맞게 반응함. AI라는 사실을 절대 드러내지 않음.",
+    speech_style: "캐릭터에 맞는 말투와 어투. 세계관의 언어와 표현 방식을 사용. 감정 표현이 풍부하고 생동감 있음.",
+    first_message: "...당신이군요. 이곳까지 오다니 대단합니다. 무슨 용건으로 왔습니까?",
+  },
+  "학원물": {
+    personality: "활발하고 밝은 학생 캐릭터. 학교생활에 열정적이며 친구들과 잘 어울림. 약간의 고민도 있는 현실적인 모습.",
+    speech_style: "또래 친구에게 말하듯 자연스럽고 가벼운 말투. 학교 용어와 유행어를 자연스럽게 사용. 감탄사 적절히 활용.",
+    first_message: "야, 오늘 체육 시간에 진짜 죽는 줄 알았다ㅋㅋ 너는 어땠어?",
+  },
+  "판타지": {
+    personality: "신비롭고 강인한 판타지 세계의 존재. 특별한 능력과 과거를 지님. 인간 세계에 대한 호기심과 경계심이 공존.",
+    speech_style: "고풍스럽고 품위 있는 말투. 판타지 세계의 표현과 단어를 사용. 감정을 절제하되 깊이 있게 표현.",
+    first_message: "오랜만에 인간을 만나는군요. 이 어두운 숲에서 무엇을 찾고 있습니까?",
+  },
+};
+
 export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }: CreateCharacterPageProps) {
   const [activeTab, setActiveTab] = useState<"profile" | "detail" | "images" | "situation" | "setting">("profile");
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPolicy, setShowPolicy] = useState(true);
 
@@ -83,6 +112,31 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
     reader.onload = () => setBackgroundPreviews(prev => ({ ...prev, [situation]: reader.result as string }));
     reader.readAsDataURL(file);
   };
+
+  const handleAutoComplete = async () => {
+  if (!formData.name) return;
+      setAiLoading(true);
+      try {
+    const headers = { Authorization: `Bearer ${token}` };
+    const res = await axios.post(`${apiUrl}/characters/auto-complete`, {
+      name: formData.name,
+      description: formData.description,
+      job: formData.job,
+      age: formData.age,
+    }, { headers });
+
+        if (res.data.personality) update("personality", res.data.personality);
+        if (res.data.speech_style) update("speech_style", res.data.speech_style);
+        if (res.data.likes) update("likes", res.data.likes);
+        if (res.data.dislikes) update("dislikes", res.data.dislikes);
+        if (res.data.first_message) update("first_message", res.data.first_message);
+        if (res.data.situation) update("situation", res.data.situation);
+    } catch {
+        setError("AI 자동완성에 실패했어요.");
+    } finally {
+        setAiLoading(false);
+    }
+        };
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.personality || !formData.speech_style) {
@@ -245,6 +299,57 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
 
           {activeTab === "detail" && (
             <>
+            {/* 템플릿 선택 */}
+        <div>
+            <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 10, display: "block" }}>
+            템플릿으로 빠르게 시작하기
+          </label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {Object.keys(TEMPLATES).map(key => (
+              <button
+                key={key}
+                onClick={() => {
+                  const t = TEMPLATES[key as keyof typeof TEMPLATES];
+                  update("personality", t.personality);
+                  update("speech_style", t.speech_style);
+                  update("first_message", t.first_message);
+                }}
+                style={{
+                  padding: "8px 16px", borderRadius: 999, fontSize: 13,
+                  border: "1px solid var(--border-default)",
+                  background: "rgba(255,255,255,.04)",
+                  color: "var(--text-secondary)", cursor: "pointer",
+                  transition: "all .2s ease",
+                }}
+              >
+                {key}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* AI 자동완성 버튼 */}
+        <div>
+          <button
+            onClick={handleAutoComplete}
+            disabled={!formData.name || aiLoading}
+            style={{
+              width: "100%", padding: "12px", borderRadius: 14,
+              border: "1px solid rgba(246,198,91,.4)",
+              background: "linear-gradient(135deg, rgba(246,198,91,.15), rgba(246,198,91,.05))",
+              color: "var(--gold)", fontWeight: 600, fontSize: 14,
+              cursor: !formData.name || aiLoading ? "not-allowed" : "pointer",
+              opacity: !formData.name ? 0.5 : 1,
+            }}
+        >
+            {aiLoading ? "AI 생성 중..." : "✦ AI 자동완성 (이름/소개 기반)"}
+          </button>
+          {!formData.name && (
+            <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 6, textAlign: "center" }}>
+              프로필 탭에서 이름을 먼저 입력해주세요
+            </div>
+              )}
+            </div>
               <div>
                 <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 8, display: "block" }}>성격 *</label>
                 <textarea style={textareaStyle} placeholder="성격을 상세히 입력해주세요" value={formData.personality} onChange={e => update("personality", e.target.value)} />

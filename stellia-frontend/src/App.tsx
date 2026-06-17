@@ -48,6 +48,7 @@ export default function App() {
   const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "terms" | "privacy">("home");
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [partyRoomCode, setPartyRoomCode] = useState<string>("");
+  const [prevView, setPrevView] = useState<"home" | "login">("home");
 
   const handleLogin = (accessToken: string, userData: User) => {
     localStorage.setItem("access_token", accessToken);
@@ -84,7 +85,18 @@ export default function App() {
     <>
       <StarBackground />
       {!token ? (
-        <LoginPage apiUrl={API_URL} onLogin={handleLogin} />
+        <LoginPage
+          apiUrl={API_URL}
+          onLogin={handleLogin}
+          onShowTerms={() => {
+             setPrevView(token ? "home" : "login");
+             setView("terms");
+            }}
+          onShowPrivacy={() => {
+            setPrevView(token ? "home" : "login");
+            setView("privacy")
+          }}
+        />
       ) : view === "home" ? (
         <HomePage
           apiUrl={API_URL}
@@ -115,11 +127,17 @@ export default function App() {
        />
         
        )  : view === "terms" ? (
-       <TermsPage onBack={() => setView("home")} 
+       <TermsPage onBack={() => {
+        if (prevView === "login") setToken(null);
+        setView("home")
+      }} 
        />
 
       ) : view === "privacy" ? (
-      <PrivacyPage onBack={() => setView("home")} 
+      <PrivacyPage onBack={() => {
+        if (prevView === "login") setToken(null);
+        setView("home")
+      }} 
       />
 
       ) : view === "party-lobby" ? (
