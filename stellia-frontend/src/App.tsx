@@ -15,6 +15,7 @@ import EventsPage from "./components/EventsPage";
 import MyPage from "./components/MyPage";
 import AdminPage from "./components/AdminPage";
 import CharacterProfileModal from "./components/CharacterProfileModal";
+import RankingPage from "./components/RankingPage";
 
 export interface Character {
   id: string;
@@ -42,6 +43,8 @@ export interface User {
   email?: string;
   safety_mode?: number;
   output_length?: string;
+  profile_image_url?: string;
+  is_admin?: number;
 }
 
 const API_URL = "http://localhost:8000";
@@ -49,11 +52,23 @@ const API_URL = "http://localhost:8000";
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem("access_token"));
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "terms" | "privacy" | "login" | "events" | "mypage" | "admin">("home");
+  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "terms" | "privacy" | "login" | "events" | "mypage" |  "ranking"  | "admin">("home");
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [partyRoomCode, setPartyRoomCode] = useState<string>("");
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [sharedCharacter, setSharedCharacter] = useState<Character | null>(null);
+
+  // 앱 시작 시 토큰 있으면 유저 정보 조회
+  useEffect(() => {
+    if (token) {
+      axios.get(`${API_URL}/users/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).then(res => setUser(res.data)).catch(() => {
+        localStorage.removeItem("access_token");
+        setToken(null);
+      });
+    }
+  }, []);
 
   // 공유 링크 처리
   useEffect(() => {
@@ -65,13 +80,11 @@ export default function App() {
         .then(res => {
           const c = res.data;
           setSharedCharacter({
-            id: c.id,
-            name: c.name,
+            id: c.id, name: c.name,
             title: c.description || "",
             avatar: c.image_url || "",
             description: c.description || "",
-            online: true,
-            tags: c.tags || [],
+            online: true, tags: c.tags || [],
             user_id: c.user_id,
             first_message: c.first_message || "",
           });
@@ -83,7 +96,9 @@ export default function App() {
   const handleLogin = (accessToken: string, userData: User) => {
     localStorage.setItem("access_token", accessToken);
     setToken(accessToken);
-    setUser(userData);
+    axios.get(`${API_URL}/users/me`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    }).then(res => setUser(res.data)).catch(() => setUser(userData));
     setView("home");
   };
 
@@ -116,7 +131,6 @@ export default function App() {
     <>
       <StarBackground />
 
-      {/* 공유 링크로 접근 시 캐릭터 프로필 모달 */}
       {sharedCharacter && (
         <CharacterProfileModal
           character={sharedCharacter}
@@ -146,6 +160,13 @@ export default function App() {
           apiUrl={API_URL}
           token={token ?? ""}
           onBack={() => setView("home")}
+        />
+        ) : view === "ranking" ? (
+        <RankingPage
+          apiUrl={API_URL}
+          token={token ?? ""}
+          onBack={() => setView("home")}
+          onSelectCharacter={handleSelectCharacter}
         />
       ) : view === "mypage" ? (
         <MyPage
@@ -180,6 +201,8 @@ export default function App() {
               onCreateCharacter={() => setShowLoginPrompt(true)}
               onGoEvents={() => setShowLoginPrompt(true)}
               onGoMyPage={() => setShowLoginPrompt(true)}
+              // 비로그인
+              onGoRanking={() => setView("ranking")}
             />
           )}
         </>
@@ -194,6 +217,8 @@ export default function App() {
           onCreateCharacter={() => setView("create")}
           onGoEvents={() => setView("events")}
           onGoMyPage={() => setView("mypage")}
+          // 로그인
+          onGoRanking={() => setView("ranking")}
         />
       ) : view === "chat" ? (
         <ChatApp

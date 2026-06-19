@@ -189,19 +189,38 @@ async def create_character(
 @router.get("/ranking", summary="인기 캐릭터 랭킹")
 async def get_ranking(
         limit: int = 20,
+        sort: str = "popular",
+        period: str = "all",
         current_user: Optional[dict] = Depends(get_optional_user)):
     conn = get_db()
     cursor = conn.cursor()
     is_adult = current_user.get("is_adult", 0) if current_user else 0
     adult_filter = "" if is_adult else "AND c.is_adult = 0"
+
+    sort_map = {
+        "popular": "c.like_count DESC, c.chat_count DESC",
+        "latest": "c.created_at DESC",
+        "oldest": "c.created_at ASC",
+        "chat": "c.chat_count DESC",
+        "view": "c.view_count DESC",
+    }
+    order = sort_map.get(sort, "c.like_count DESC, c.chat_count DESC")
+
+    period_filter = ""
+    if period == "weekly":
+        period_filter = "AND c.created_at >= datetime('now', '-7 days')"
+    elif period == "monthly":
+        period_filter = "AND c.created_at >= datetime('now', '-30 days')"
+
     cursor.execute(f"""
         SELECT c.*, GROUP_CONCAT(ct.tag) as tags
         FROM characters c
         LEFT JOIN character_tags ct ON c.id = ct.character_id
         WHERE c.visibility = 'public'
         {adult_filter}
+        {period_filter}
         GROUP BY c.id
-        ORDER BY c.like_count DESC, c.chat_count DESC
+        ORDER BY {order}
         LIMIT ?
     """, (limit,))
     rows = cursor.fetchall()

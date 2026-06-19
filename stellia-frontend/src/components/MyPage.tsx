@@ -132,6 +132,7 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin }: MyPageProps
       maxWidth: 680, margin: "0 auto",
       padding: "24px", overflowY: "auto",
     }}>
+
       {/* 헤더 */}
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
         <button onClick={onBack} style={{
@@ -169,6 +170,8 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin }: MyPageProps
       {/* 프로필 탭 */}
       {activeTab === "profile" && (
         <div className="glass-card" style={{ borderRadius: 24, padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
+
+          {/* 아바타 + 기본 정보 */}
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
             <div style={{
               width: 80, height: 80, borderRadius: "50%",
@@ -176,7 +179,15 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin }: MyPageProps
               display: "grid", placeItems: "center",
               fontSize: 32, fontWeight: 700,
               boxShadow: "var(--shadow-glow-primary)",
-            }}>{username[0]?.toUpperCase()}</div>
+              overflow: "hidden",
+            }}>
+              {user?.profile_image_url ? (
+                <img src={user.profile_image_url} alt={username}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                username[0]?.toUpperCase()
+              )}
+            </div>
             <div>
               <div style={{ fontSize: 13, color: "var(--primary)", marginBottom: 4 }}>
                 {user?.equipped_prefix && <span>[{user.equipped_prefix}] </span>}
@@ -190,6 +201,41 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin }: MyPageProps
             </div>
           </div>
 
+          {/* 프로필 이미지 업로드 */}
+          <div>
+            <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 8, display: "block" }}>프로필 이미지</label>
+            <input
+              type="file"
+              accept="image/*"
+              id="profile-image-input"
+              style={{ display: "none" }}
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append("file", file);
+                try {
+                  const res = await axios.post(`${apiUrl}/users/me/profile-image`, formData, {
+                    headers: { ...headers, "Content-Type": "multipart/form-data" }
+                  });
+                  setUser((prev: any) => ({ ...prev, profile_image_url: res.data.image_url }));
+                  setMessage("프로필 이미지가 변경됐어요.");
+                } catch {
+                  setMessage("이미지 업로드에 실패했어요.");
+                }
+              }}
+            />
+            <label htmlFor="profile-image-input" style={{
+              display: "inline-block",
+              padding: "10px 18px", borderRadius: 12,
+              border: "1px solid var(--border-default)",
+              background: "rgba(255,255,255,.04)",
+              color: "var(--text-muted)", fontSize: 13,
+              cursor: "pointer",
+            }}>🖼 이미지 변경</label>
+          </div>
+
+          {/* 닉네임 수정 */}
           <div>
             <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 8, display: "block" }}>닉네임 수정</label>
             <input style={inputStyle} value={username} onChange={e => setUsername(e.target.value)} placeholder="새 닉네임" />
