@@ -25,6 +25,7 @@ class CreateCharacterRequest(BaseModel):
     is_adult: int = 0
     image_url: str = ""
     tags: List[str] = []
+    party_enabled: int = 0
 
 
 class UpdateCharacterRequest(BaseModel):
@@ -42,6 +43,7 @@ class UpdateCharacterRequest(BaseModel):
     is_adult: Optional[int] = None
     image_url: Optional[str] = None
     tags: Optional[List[str]] = None
+    party_enabled: Optional[int] = None
 
 
 class ReportRequest(BaseModel):
@@ -144,12 +146,12 @@ async def create_character(
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO characters
-        (id, user_id, name, description, prompt, first_message, situation, visibility, is_adult, image_url)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, user_id, name, description, prompt, first_message, situation, visibility, is_adult, image_url, party_enabled)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         char_id, current_user["id"], request.name, request.description,
         prompt, request.first_message, request.situation,
-        request.visibility, request.is_adult, request.image_url
+        request.visibility, request.is_adult, request.image_url, request.party_enabled
     ))
 
     for tag in request.tags:
@@ -501,7 +503,6 @@ async def get_character(
             conn.close()
             raise HTTPException(status_code=403, detail="성인 인증이 필요합니다.")
 
-    # 조회수 +1 (본인 제외)
     if not current_user or current_user["id"] != row["user_id"]:
         cursor.execute("UPDATE characters SET view_count = view_count + 1 WHERE id = ?",
                        (character_id,))
@@ -540,6 +541,8 @@ async def update_character(
         fields.append("is_adult = ?"); params.append(request.is_adult)
     if request.image_url is not None:
         fields.append("image_url = ?"); params.append(request.image_url)
+    if request.party_enabled is not None:
+        fields.append("party_enabled = ?"); params.append(request.party_enabled)
     if any([request.name, request.age, request.job, request.personality,
             request.likes, request.dislikes, request.speech_style]):
         name = request.name or char["name"]
@@ -743,6 +746,7 @@ def _format_character(row) -> dict:
         "chat_count": row["chat_count"],
         "like_count": row["like_count"],
         "view_count": row["view_count"] if "view_count" in row.keys() else 0,
+        "party_enabled": bool(row["party_enabled"]) if "party_enabled" in row.keys() else False,
         "tags": row["tags"].split(",") if row["tags"] else [],
         "created_at": row["created_at"],
     }

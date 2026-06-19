@@ -27,6 +27,7 @@ export interface Character {
   tags: string[];
   user_id?: number;
   first_message?: string;
+  party_enabled?: boolean;
 }
 
 export interface Message {
@@ -47,7 +48,7 @@ export interface User {
   is_admin?: number;
 }
 
-const API_URL = "http://localhost:8000";
+const API_URL = "https://suburb-marrow-radial.ngrok-free.dev";
 
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem("access_token"));
@@ -132,16 +133,14 @@ export default function App() {
       <StarBackground />
 
       {sharedCharacter && (
-        <CharacterProfileModal
-          character={sharedCharacter}
-          apiUrl={API_URL}
-          token={token ?? ""}
-          onClose={() => {
-            setSharedCharacter(null);
-            window.location.hash = "";
-          }}
-        />
-      )}
+  <CharacterProfileModal
+    character={sharedCharacter}
+    apiUrl={API_URL}
+    token={token ?? ""}
+    onClose={() => { setSharedCharacter(null); window.location.hash = ""; }}
+    onGoParty={(code) => { setPartyRoomCode(code); setView("party-room"); }}
+  />
+)}
 
       {showLoginPrompt && (
         <LoginPromptModal

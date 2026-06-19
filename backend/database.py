@@ -466,6 +466,12 @@ def init_db():
     except:
         pass
     
+    try:
+        cursor.execute("ALTER TABLE characters ADD COLUMN party_enabled INTEGER DEFAULT 0")
+        conn.commit()
+    except:
+        pass
+    
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS character_images (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

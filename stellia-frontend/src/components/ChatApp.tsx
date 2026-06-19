@@ -368,7 +368,7 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
 
       {/* 캐릭터 프로필 모달 */}
       {showProfile && (
-        <CharacterProfileModal
+      <CharacterProfileModal
           character={character}
           apiUrl={apiUrl}
           token={token}

@@ -17,7 +17,7 @@ const PERIODS = [
 
 const SORT_OPTIONS = [
   { label: "좋아요순", value: "popular" },
-  { label: "대화수순", value: "chat" },
+  { label: "대화 많은 순", value: "chat" },
   { label: "조회수순", value: "view" },
   { label: "최신순", value: "latest" },
 ];

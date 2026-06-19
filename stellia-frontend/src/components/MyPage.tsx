@@ -42,30 +42,30 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin }: MyPageProps
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
-    axios.get(`${apiUrl}/users/me`, { headers })
-      .then(res => { setUser(res.data); setUsername(res.data.username); })
-      .catch(console.error);
+  axios.get(`${apiUrl}/users/me`, { headers })
+    .then(res => { setUser(res.data); setUsername(res.data.username); })
+    .catch(console.error);
 
-    axios.get(`${apiUrl}/tokens/me/history?page=1&size=20`, { headers })
-      .then(res => setTokenHistory(res.data.items))
-      .catch(console.error);
+  axios.get(`${apiUrl}/tokens/me/history?page=1&size=20`, { headers })
+    .then(res => setTokenHistory(res.data.items))
+    .catch(console.error);
 
-    axios.get(`${apiUrl}/characters/me`, { headers })
-      .then(res => setMyCharacters(res.data))
-      .catch(console.error);
+  axios.get(`${apiUrl}/characters/me`, { headers })
+    .then(res => setMyCharacters(res.data))
+    .catch(console.error);
 
-    axios.get(`${apiUrl}/likes`, { headers })
-      .then(res => setLikedCharacters(res.data))
-      .catch(console.error);
+  axios.get(`${apiUrl}/likes/me`, { headers })
+    .then(res => setLikedCharacters(res.data))
+    .catch(console.error);
 
-    axios.get(`${apiUrl}/achievements/me`, { headers })
-      .then(res => setAchievements(res.data))
-      .catch(console.error);
+  axios.get(`${apiUrl}/achievements/me`, { headers })
+    .then(res => setAchievements(res.data))
+    .catch(console.error);
 
-    axios.get(`${apiUrl}/bookmarks`, { headers })
-      .then(res => setBookmarks(res.data))
-      .catch(console.error);
-  }, []);
+  axios.get(`${apiUrl}/likes/bookmarks`, { headers })
+    .then(res => setBookmarks(res.data))
+    .catch(console.error);
+}, []);
 
   const handleUpdateProfile = async () => {
     setLoading(true);

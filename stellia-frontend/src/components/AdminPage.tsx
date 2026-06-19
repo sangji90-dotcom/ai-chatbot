@@ -9,11 +9,12 @@ interface AdminPageProps {
 
 export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
   const headers = { Authorization: `Bearer ${token}` };
-  const [activeTab, setActiveTab] = useState<"stats" | "users" | "reports" | "inquiries" | "tokens">("stats");
+  const [activeTab, setActiveTab] = useState<"stats" | "users" | "reports" | "inquiries" | "banners">("stats");
   const [stats, setStats] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [inquiries, setInquiries] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
   const [searchQ, setSearchQ] = useState("");
   const [msg, setMsg] = useState("");
   const [grantModal, setGrantModal] = useState<{userId: number, username: string} | null>(null);
@@ -21,6 +22,7 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
   const [grantReason, setGrantReason] = useState("");
   const [answerModal, setAnswerModal] = useState<any | null>(null);
   const [answerText, setAnswerText] = useState("");
+  const [newBanner, setNewBanner] = useState({ title: "", image_url: "", link_url: "" });
 
   const showMsg = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3000); };
 
@@ -32,6 +34,7 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
     if (activeTab === "users") fetchUsers();
     if (activeTab === "reports") fetchReports();
     if (activeTab === "inquiries") fetchInquiries();
+    if (activeTab === "banners") fetchBanners();
   }, [activeTab]);
 
   const fetchUsers = (q?: string) => {
@@ -45,6 +48,10 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
 
   const fetchInquiries = () => {
     axios.get(`${apiUrl}/admin/inquiries`, { headers }).then(r => setInquiries(r.data)).catch(console.error);
+  };
+
+  const fetchBanners = () => {
+    axios.get(`${apiUrl}/banners`, { headers }).then(r => setBanners(r.data)).catch(console.error);
   };
 
   const handleSuspend = async (userId: number, suspended: number) => {
@@ -95,12 +102,45 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
     fetchInquiries();
   };
 
+  const handleCreateBanner = async () => {
+    if (!newBanner.title || !newBanner.image_url) return;
+    try {
+      await axios.post(`${apiUrl}/banners`, newBanner, { headers });
+      showMsg("배너 등록 완료");
+      setNewBanner({ title: "", image_url: "", link_url: "" });
+      fetchBanners();
+    } catch {
+      showMsg("배너 등록 실패");
+    }
+  };
+
+  const handleToggleBanner = async (id: number) => {
+    await axios.patch(`${apiUrl}/banners/${id}/toggle`, {}, { headers });
+    fetchBanners();
+  };
+
+  const handleDeleteBanner = async (id: number) => {
+    if (!confirm("배너를 삭제할까요?")) return;
+    await axios.delete(`${apiUrl}/banners/${id}`, { headers });
+    showMsg("배너 삭제 완료");
+    fetchBanners();
+  };
+
   const tabs = [
     { id: "stats", label: "📊 통계" },
     { id: "users", label: "👥 유저" },
     { id: "reports", label: "🚨 신고" },
     { id: "inquiries", label: "💬 문의" },
+    { id: "banners", label: "🖼 배너" },
   ] as const;
+
+  const inputStyle = {
+    width: "100%", padding: "12px 16px", borderRadius: 12,
+    border: "1px solid var(--border-default)",
+    background: "rgba(255,255,255,.04)",
+    color: "var(--text-primary)", outline: "none",
+    boxSizing: "border-box" as const,
+  };
 
   return (
     <div style={{ position: "relative", zIndex: 2, minHeight: "100vh" }}>
@@ -182,12 +222,7 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
                 onChange={e => setSearchQ(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && fetchUsers(searchQ)}
                 placeholder="이메일 / 닉네임 검색..."
-                style={{
-                  flex: 1, padding: "12px 16px", borderRadius: 12,
-                  border: "1px solid var(--border-default)",
-                  background: "rgba(255,255,255,.04)",
-                  color: "var(--text-primary)", outline: "none",
-                }}
+                style={{ ...inputStyle }}
               />
               <button onClick={() => fetchUsers(searchQ)} style={{
                 padding: "12px 20px", borderRadius: 12,
@@ -299,6 +334,88 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
             ))}
           </div>
         )}
+
+        {/* 배너 탭 */}
+        {activeTab === "banners" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+            {/* 배너 등록 */}
+            <div style={{
+              borderRadius: 20, padding: 20,
+              border: "1px solid var(--border-default)",
+              background: "rgba(17,21,40,.7)",
+              display: "flex", flexDirection: "column", gap: 12,
+            }}>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>새 배너 등록</div>
+              <input
+                value={newBanner.title}
+                onChange={e => setNewBanner(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="배너 제목"
+                style={inputStyle}
+              />
+              <input
+                value={newBanner.image_url}
+                onChange={e => setNewBanner(prev => ({ ...prev, image_url: e.target.value }))}
+                placeholder="이미지 URL"
+                style={inputStyle}
+              />
+              <input
+                value={newBanner.link_url}
+                onChange={e => setNewBanner(prev => ({ ...prev, link_url: e.target.value }))}
+                placeholder="링크 URL (선택)"
+                style={inputStyle}
+              />
+              <button onClick={handleCreateBanner} style={{
+                padding: "12px", borderRadius: 12, border: "none",
+                background: "var(--gradient-cosmic)",
+                color: "#fff", fontWeight: 700, cursor: "pointer",
+              }}>등록</button>
+            </div>
+
+            {/* 배너 목록 */}
+            {banners.length === 0 ? (
+              <div style={{ textAlign: "center", color: "var(--text-muted)", padding: 40 }}>등록된 배너가 없어요.</div>
+            ) : banners.map(b => (
+              <div key={b.id} style={{
+                borderRadius: 16, overflow: "hidden",
+                border: "1px solid var(--border-default)",
+                background: "rgba(17,21,40,.7)",
+              }}>
+                {b.image_url && (
+                  <div style={{
+                    height: 120,
+                    backgroundImage: `url(${b.image_url})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    opacity: b.is_active ? 1 : 0.4,
+                  }} />
+                )}
+                <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ fontWeight: 700 }}>{b.title}</div>
+                    <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 3 }}>
+                      {b.is_active ? "🟢 활성" : "🔴 비활성"} {b.link_url && `· ${b.link_url}`}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={() => handleToggleBanner(b.id)} style={{
+                      padding: "7px 12px", borderRadius: 10, fontSize: 12,
+                      border: "1px solid rgba(139,124,255,.3)",
+                      background: "rgba(139,124,255,.08)",
+                      color: "var(--primary)", cursor: "pointer",
+                    }}>{b.is_active ? "비활성화" : "활성화"}</button>
+                    <button onClick={() => handleDeleteBanner(b.id)} style={{
+                      padding: "7px 12px", borderRadius: 10, fontSize: 12,
+                      border: "1px solid rgba(255,107,138,.3)",
+                      background: "rgba(255,107,138,.08)",
+                      color: "#ff6b8a", cursor: "pointer",
+                    }}>삭제</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 토큰 지급 모달 */}
@@ -307,9 +424,9 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
           <div style={{ borderRadius: 24, padding: 32, background: "rgba(17,21,40,.98)", border: "1px solid var(--border-default)", width: 360 }}>
             <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 20 }}>{grantModal.username}에게 토큰 지급</div>
             <input value={grantAmount} onChange={e => setGrantAmount(e.target.value)} placeholder="수량" type="number"
-              style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "1px solid var(--border-default)", background: "rgba(255,255,255,.04)", color: "var(--text-primary)", outline: "none", marginBottom: 12, boxSizing: "border-box" as const }} />
+              style={{ ...inputStyle, marginBottom: 12 }} />
             <input value={grantReason} onChange={e => setGrantReason(e.target.value)} placeholder="지급 사유"
-              style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "1px solid var(--border-default)", background: "rgba(255,255,255,.04)", color: "var(--text-primary)", outline: "none", marginBottom: 20, boxSizing: "border-box" as const }} />
+              style={{ ...inputStyle, marginBottom: 20 }} />
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setGrantModal(null)} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "1px solid var(--border-default)", background: "none", color: "var(--text-muted)", cursor: "pointer" }}>취소</button>
               <button onClick={handleGrantToken} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "none", background: "var(--gradient-cosmic)", color: "#fff", fontWeight: 700, cursor: "pointer" }}>지급</button>
@@ -325,7 +442,7 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
             <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8 }}>{answerModal.title}</div>
             <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 20 }}>{answerModal.content}</div>
             <textarea value={answerText} onChange={e => setAnswerText(e.target.value)} placeholder="답변 내용..."
-              style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: "1px solid var(--border-default)", background: "rgba(255,255,255,.04)", color: "var(--text-primary)", outline: "none", marginBottom: 20, minHeight: 120, resize: "vertical", boxSizing: "border-box" as const }} />
+              style={{ ...inputStyle, minHeight: 120, resize: "vertical", marginBottom: 20 }} />
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setAnswerModal(null)} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "1px solid var(--border-default)", background: "none", color: "var(--text-muted)", cursor: "pointer" }}>취소</button>
               <button onClick={handleAnswer} style={{ flex: 1, padding: "12px", borderRadius: 12, border: "none", background: "var(--gradient-cosmic)", color: "#fff", fontWeight: 700, cursor: "pointer" }}>답변 전송</button>

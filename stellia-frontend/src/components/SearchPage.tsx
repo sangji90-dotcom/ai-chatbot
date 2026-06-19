@@ -15,7 +15,7 @@ const SORT_OPTIONS = [
   { label: "인기순", value: "popular" },
   { label: "최신순", value: "latest" },
   { label: "오래된순", value: "oldest" },
-  { label: "대화수", value: "chat" },
+  { label: "대화 많은 순", value: "chat" },
   { label: "조회수", value: "view" },
 ];
 

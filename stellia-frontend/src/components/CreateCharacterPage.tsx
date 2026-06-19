@@ -77,6 +77,7 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
     image_url: "",
     tags: [] as string[],
     category: "",
+    party_enabled: 0,
   });
 
   const [emotionFiles, setEmotionFiles] = useState<Record<string, File>>({});
@@ -481,6 +482,28 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
                   ))}
                 </div>
               </div>
+
+                  <div>
+              <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 12, display: "block" }}>파티챗</label>
+              <div style={{ display: "flex", gap: 10 }}>
+              {[{ label: "비활성화", value: 0 }, { label: "활성화", value: 1 }].map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => update("party_enabled", opt.value)}
+              style={{
+                  flex: 1, padding: "12px", borderRadius: 14,
+                  border: formData.party_enabled === opt.value ? "1px solid rgba(139,124,255,.6)" : "1px solid var(--border-default)",
+                  background: formData.party_enabled === opt.value ? "rgba(139,124,255,.12)" : "rgba(255,255,255,.02)",
+                  color: formData.party_enabled === opt.value ? "var(--primary)" : "var(--text-muted)",
+                  fontWeight: 600, cursor: "pointer",
+                    }}
+                  >{opt.label}</button>
+                  ))}
+              </div>
+                <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 8 }}>
+                  활성화 시 캐릭터 프로필에서 파티챗 방 만들기 버튼이 표시돼요.
+              </div>
+            </div>
 
               <div>
                 <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 12, display: "block" }}>이용 제한</label>

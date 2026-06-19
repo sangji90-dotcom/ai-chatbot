@@ -93,48 +93,52 @@ export default function PartyLobbyPage({ apiUrl, token, user, onBack, onEnterRoo
   };
 
   return (
-    <div
-      style={{
-        position: "relative", zIndex: 2,
-        minHeight: "100vh",
-        display: "flex", flexDirection: "column",
-      }}
-    >
+    <div style={{ position: "relative", zIndex: 2, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+
       {/* 헤더 */}
-      <div
-        style={{
-          display: "flex", alignItems: "center", gap: 16,
-          padding: "24px 32px",
-          background: "rgba(9,11,20,.85)",
-          backdropFilter: "blur(20px)",
-          borderBottom: "1px solid var(--border-subtle)",
-        }}
-      >
-        <button
-          onClick={onBack}
-          style={{
-            width: 40, height: 40, borderRadius: 12,
-            border: "1px solid var(--border-default)",
-            background: "rgba(255,255,255,.04)",
-            color: "var(--text-primary)", fontSize: 18, cursor: "pointer",
-          }}
-        >
-          ←
-        </button>
-        <div
-          style={{
-            fontSize: 22, fontWeight: 700,
-            background: "var(--gradient-cosmic)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}
-        >
-          ⚔ 파티챗
-        </div>
+      <div style={{
+        display: "flex", alignItems: "center", gap: 16,
+        padding: "24px 32px",
+        background: "rgba(9,11,20,.85)",
+        backdropFilter: "blur(20px)",
+        borderBottom: "1px solid var(--border-subtle)",
+      }}>
+        <button onClick={onBack} style={{
+          width: 40, height: 40, borderRadius: 12,
+          border: "1px solid var(--border-default)",
+          background: "rgba(255,255,255,.04)",
+          color: "var(--text-primary)", fontSize: 18, cursor: "pointer",
+        }}>←</button>
+        <div style={{
+          fontSize: 22, fontWeight: 700,
+          background: "var(--gradient-cosmic)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}>⚔ 파티챗</div>
       </div>
 
       <div style={{ flex: 1, padding: "32px", maxWidth: 900, margin: "0 auto", width: "100%" }}>
+
+        {/* 빠른 방 생성 */}
+        <div className="glass-card" style={{ borderRadius: 20, padding: 20, marginBottom: 24 }}>
+          <div style={{ fontWeight: 600, marginBottom: 8 }}>새 파티 만들기</div>
+          <div style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 16 }}>
+            바로 파티방을 만들어요.
+          </div>
+          <button
+            onClick={() => handleCreateRoom(1)}
+            disabled={loading}
+            style={{
+              width: "100%", padding: "14px", borderRadius: 14, border: "none",
+              background: "var(--gradient-cosmic)",
+              color: "#fff", fontWeight: 700, fontSize: 15,
+              cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.6 : 1,
+            }}
+          >⚔ 파티방 만들기</button>
+          {error && <div style={{ color: "#ff6b8a", fontSize: 13, marginTop: 8 }}>{error}</div>}
+        </div>
 
         {/* 방 코드 입력 */}
         <div className="glass-card" style={{ borderRadius: 20, padding: 20, marginBottom: 24 }}>
@@ -162,62 +166,45 @@ export default function PartyLobbyPage({ apiUrl, token, user, onBack, onEnterRoo
                 color: "#fff", fontWeight: 700, cursor: "pointer",
                 opacity: loading || !joinCode.trim() ? 0.6 : 1,
               }}
-            >
-              참가
-            </button>
+            >참가</button>
           </div>
-          {error && <div style={{ color: "#ff6b8a", fontSize: 13, marginTop: 8 }}>{error}</div>}
         </div>
 
         {/* 탭 */}
-        <div
-          style={{
-            display: "flex", borderRadius: 16,
-            background: "rgba(255,255,255,.04)",
-            border: "1px solid var(--border-default)",
-            overflow: "hidden", marginBottom: 24,
-          }}
-        >
+        <div style={{
+          display: "flex", borderRadius: 16,
+          background: "rgba(255,255,255,.04)",
+          border: "1px solid var(--border-default)",
+          overflow: "hidden", marginBottom: 24,
+        }}>
           {[
             { id: "stories", label: "스토리 목록" },
             { id: "invitations", label: `초대 ${invitations.length > 0 ? `(${invitations.length})` : ""}` },
           ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              style={{
-                flex: 1, padding: "12px", border: "none",
-                background: activeTab === tab.id ? "var(--gradient-cosmic)" : "transparent",
-                color: activeTab === tab.id ? "#fff" : "var(--text-muted)",
-                fontWeight: 600, fontSize: 14, cursor: "pointer",
-              }}
-            >
-              {tab.label}
-            </button>
+            <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} style={{
+              flex: 1, padding: "12px", border: "none",
+              background: activeTab === tab.id ? "var(--gradient-cosmic)" : "transparent",
+              color: activeTab === tab.id ? "#fff" : "var(--text-muted)",
+              fontWeight: 600, fontSize: 14, cursor: "pointer",
+            }}>{tab.label}</button>
           ))}
         </div>
 
         {/* 스토리 목록 */}
         {activeTab === "stories" && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 20 }}>
-            {stories.map(story => (
-              <div
-                key={story.id}
-                className="glass-card"
-                style={{ borderRadius: 20, overflow: "hidden" }}
-              >
+            {stories.length === 0 ? (
+              <div style={{ color: "var(--text-muted)", fontSize: 14, padding: "40px 0" }}>등록된 스토리가 없어요.</div>
+            ) : stories.map(story => (
+              <div key={story.id} className="glass-card" style={{ borderRadius: 20, overflow: "hidden" }}>
                 {story.image_url ? (
                   <img src={story.image_url} alt={story.title}
                     style={{ width: "100%", height: 140, objectFit: "cover" }} />
                 ) : (
-                  <div
-                    style={{
-                      height: 140, background: "var(--gradient-cosmic)",
-                      display: "grid", placeItems: "center", fontSize: 40,
-                    }}
-                  >
-                    ⚔
-                  </div>
+                  <div style={{
+                    height: 140, background: "var(--gradient-cosmic)",
+                    display: "grid", placeItems: "center", fontSize: 40,
+                  }}>⚔</div>
                 )}
                 <div style={{ padding: 18 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -235,9 +222,7 @@ export default function PartyLobbyPage({ apiUrl, token, user, onBack, onEnterRoo
                     background: "rgba(139,124,255,.12)",
                     color: GENRE_COLOR[story.genre] || "var(--primary)",
                     border: "1px solid rgba(139,124,255,.2)",
-                  }}>
-                    {story.genre}
-                  </span>
+                  }}>{story.genre}</span>
                   <div style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 10, lineHeight: 1.6 }}>
                     {story.background?.slice(0, 60)}...
                   </div>
@@ -254,9 +239,7 @@ export default function PartyLobbyPage({ apiUrl, token, user, onBack, onEnterRoo
                         color: "#fff", fontWeight: 600, fontSize: 13,
                         cursor: "pointer", opacity: loading ? 0.6 : 1,
                       }}
-                    >
-                      방 만들기
-                    </button>
+                    >방 만들기</button>
                   </div>
                 </div>
               </div>
@@ -271,43 +254,30 @@ export default function PartyLobbyPage({ apiUrl, token, user, onBack, onEnterRoo
               <div className="glass-card" style={{ borderRadius: 24, padding: 40, textAlign: "center", color: "var(--text-muted)" }}>
                 받은 초대가 없어요.
               </div>
-            ) : (
-              invitations.map(inv => (
-                <div key={inv.id} className="glass-card"
-                  style={{ borderRadius: 18, padding: 18, display: "flex", alignItems: "center", gap: 16 }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600 }}>{inv.inviter_name}님의 초대</div>
-                    <div style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 4 }}>
-                      방 코드: {inv.room_code}
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button
-                      onClick={() => handleAcceptInvitation(inv.id, inv.room_code)}
-                      style={{
-                        padding: "8px 16px", borderRadius: 10, border: "none",
-                        background: "var(--gradient-cosmic)",
-                        color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer",
-                      }}
-                    >
-                      수락
-                    </button>
-                    <button
-                      onClick={() => handleRejectInvitation(inv.id)}
-                      style={{
-                        padding: "8px 16px", borderRadius: 10,
-                        border: "1px solid rgba(255,107,138,.3)",
-                        background: "rgba(255,107,138,.08)",
-                        color: "#ff6b8a", fontSize: 13, cursor: "pointer",
-                      }}
-                    >
-                      거절
-                    </button>
+            ) : invitations.map(inv => (
+              <div key={inv.id} className="glass-card"
+                style={{ borderRadius: 18, padding: 18, display: "flex", alignItems: "center", gap: 16 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600 }}>{inv.inviter_name}님의 초대</div>
+                  <div style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 4 }}>
+                    방 코드: {inv.room_code}
                   </div>
                 </div>
-              ))
-            )}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => handleAcceptInvitation(inv.id, inv.room_code)} style={{
+                    padding: "8px 16px", borderRadius: 10, border: "none",
+                    background: "var(--gradient-cosmic)",
+                    color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer",
+                  }}>수락</button>
+                  <button onClick={() => handleRejectInvitation(inv.id)} style={{
+                    padding: "8px 16px", borderRadius: 10,
+                    border: "1px solid rgba(255,107,138,.3)",
+                    background: "rgba(255,107,138,.08)",
+                    color: "#ff6b8a", fontSize: 13, cursor: "pointer",
+                  }}>거절</button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

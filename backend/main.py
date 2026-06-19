@@ -85,9 +85,7 @@ app.include_router(notifications_router)
 app.include_router(events_router)
 app.include_router(purchases_router)
 
-@app.get("/", tags=["기본"])
-async def root():
-    return {"message": "AI 챗봇 API"}
 
 # ── 프론트엔드 static serve (반드시 맨 마지막) ──────────────────
-app.mount("/", StaticFiles(directory="../stellia-frontend/dist", html=True), name="frontend")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app.mount("/", StaticFiles(directory=os.path.join(BASE_DIR, "../stellia-frontend/dist"), html=True), name="frontend")

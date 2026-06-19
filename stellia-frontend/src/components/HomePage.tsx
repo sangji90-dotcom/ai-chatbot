@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import type { Character, User } from "../App";
 import CoinModal from "./CoinModal";
@@ -14,7 +14,7 @@ interface HomePageProps {
   onCreateCharacter: () => void;
   onGoEvents: () => void;
   onGoMyPage: () => void;
-  onGoRanking: () => void
+  onGoRanking: () => void;
 }
 
 const CATEGORIES = ["전체", "로맨스", "판타지", "액션", "일상", "공포", "SF", "BL", "GL", "기타"];
@@ -29,6 +29,12 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
   const [showNotification, setShowNotification] = useState(false);
   const [coins, setCoins] = useState<number>(user?.token_balance ?? 0);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [banners, setBanners] = useState<any[]>([]);
+  const [bannerIndex, setBannerIndex] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const observerRef = useRef<HTMLDivElement>(null);
 
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
@@ -57,10 +63,70 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
         .then(res => setUnreadCount(res.data.count))
         .catch(console.error);
     }
+
+    if (token && token !== "") {
+      axios.get(`${apiUrl}/notifications/unread-count`, { headers })
+        .then(res => setUnreadCount(res.data.count))
+        .catch(console.error);
+    }
+
+    axios.get(`${apiUrl}/banners`, { headers })
+      .then(res => setBanners(res.data))
+      .catch(console.error);
   }, []);
+
+  // 배너 자동 슬라이드
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const timer = setInterval(() => {
+      setBannerIndex(prev => (prev + 1) % banners.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [banners]);
+
+  // 무한 스크롤 observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    if (observerRef.current) observer.observe(observerRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, activeCategory, page]);
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    try {
+      let url = "";
+      if (activeCategory === "전체") {
+        url = `${apiUrl}/characters/ranking?limit=20&offset=${(nextPage - 1) * 20}`;
+      } else {
+        url = `${apiUrl}/characters?tag=${encodeURIComponent(activeCategory)}&size=20&page=${nextPage}`;
+      }
+      const res = await axios.get(url, { headers });
+      if (res.data.length === 0) {
+        setHasMore(false);
+      } else {
+        setCharacters(prev => [...prev, ...res.data.map(formatChar)]);
+        setPage(nextPage);
+      }
+    } catch {
+      console.error("추가 로드 실패");
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const handleCategoryChange = (cat: string) => {
     setActiveCategory(cat);
+    setPage(1);
+    setHasMore(true);
     if (cat === "전체") {
       axios.get(`${apiUrl}/characters/ranking?limit=20`, { headers })
         .then(res => setCharacters(res.data.map(formatChar)));
@@ -147,8 +213,7 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
               padding: "8px 14px", borderRadius: 10,
               border: "1px solid rgba(73,216,154,.4)",
               background: "rgba(73,216,154,.08)",
-              color: "#49d89a", fontSize: 13,
-              fontWeight: 600, cursor: "pointer",
+              color: "#49d89a", fontSize: 13, fontWeight: 600, cursor: "pointer",
             }}>🏆 랭킹</button>
           )}
 
@@ -211,6 +276,49 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
         </div>
       </nav>
 
+      {/* 배너 슬라이더 */}
+      {banners.length > 0 && (
+        <div style={{ position: "relative", height: 180, overflow: "hidden" }}>
+          {banners.map((banner, i) => (
+            <div
+              key={banner.id}
+              onClick={() => banner.link_url && window.open(banner.link_url, "_blank")}
+              style={{
+                position: "absolute", inset: 0,
+                backgroundImage: `url(${banner.image_url})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                cursor: banner.link_url ? "pointer" : "default",
+                opacity: i === bannerIndex ? 1 : 0,
+                transition: "opacity 0.6s ease",
+              }}
+            >
+              <div style={{
+                position: "absolute", inset: 0,
+                background: "linear-gradient(to top, rgba(9,11,20,.8), transparent 50%)",
+              }} />
+              <div style={{
+                position: "absolute", bottom: 20, left: 32,
+                fontSize: 18, fontWeight: 700, color: "#fff",
+                textShadow: "0 2px 8px rgba(0,0,0,.5)",
+              }}>{banner.title}</div>
+            </div>
+          ))}
+          {banners.length > 1 && (
+            <div style={{ position: "absolute", bottom: 12, right: 20, display: "flex", gap: 6 }}>
+              {banners.map((_, i) => (
+                <div key={i} onClick={() => setBannerIndex(i)} style={{
+                  width: i === bannerIndex ? 20 : 6,
+                  height: 6, borderRadius: 999,
+                  background: i === bannerIndex ? "#fff" : "rgba(255,255,255,.4)",
+                  cursor: "pointer", transition: "all .3s ease",
+                }} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* 카테고리 탭 */}
       <div style={{
         display: "flex", gap: 8, padding: "16px 32px",
@@ -264,6 +372,14 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
                   ))}
                 </div>
               )}
+
+              {/* 무한 스크롤 트리거 */}
+              <div ref={observerRef} style={{ height: 40, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 20 }}>
+                {loadingMore && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>불러오는 중...</div>}
+                {!hasMore && characters.length > 0 && (
+                  <div style={{ color: "var(--text-muted)", fontSize: 13 }}>모든 캐릭터를 불러왔어요.</div>
+                )}
+              </div>
             </section>
           </>
         )}
