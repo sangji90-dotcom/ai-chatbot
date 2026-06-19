@@ -35,7 +35,7 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const wsUrl = apiUrl.replace("http", "ws");
+  const wsUrl = apiUrl.replace("https://", "wss://").replace("http://", "ws://");
 
   useEffect(() => {
     // 방 정보 먼저 로드

@@ -105,7 +105,16 @@ async def create_room(
     """, (code, request.story_id, current_user["id"], request.max_members))
     conn.commit()
     room_id = cursor.lastrowid
+
+    # 방장을 멤버로 자동 추가
+    cursor.execute("""
+        INSERT INTO party_members (room_id, user_id, character_stats, is_ready)
+        VALUES (?, ?, ?, 1)
+    """, (room_id, current_user["id"],
+          json.dumps({"name": current_user["username"]}, ensure_ascii=False)))
+    conn.commit()
     conn.close()
+
     return {"room_id": room_id, "code": code, "message": "방 생성 완료"}
 
 
