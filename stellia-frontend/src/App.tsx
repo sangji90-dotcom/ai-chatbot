@@ -10,6 +10,9 @@ import CreateCharacterPage from "./components/CreateCharacterPage";
 import TermsPage from "./components/TermsPage";
 import PrivacyPage from "./components/PrivacyPage";
 import LoginPromptModal from "./components/LoginPromptModal";
+import EventsPage from "./components/EventsPage";
+import MyPage from "./components/MyPage";
+import AdminPage from "./components/AdminPage";
 
 export interface Character {
   id: string;
@@ -39,18 +42,15 @@ export interface User {
   output_length?: string;
 }
 
-const API_URL = "";
+const API_URL = "http://localhost:8000";
 
 export default function App() {
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("access_token")
-  );
+  const [token, setToken] = useState<string | null>(localStorage.getItem("access_token"));
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "terms" | "privacy" | "login">("home");
+  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "terms" | "privacy" | "login" | "events" | "admin" | "mypage">("home");
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [partyRoomCode, setPartyRoomCode] = useState<string>("");
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  
 
   const handleLogin = (accessToken: string, userData: User) => {
     localStorage.setItem("access_token", accessToken);
@@ -98,8 +98,32 @@ export default function App() {
 
       {view === "terms" ? (
         <TermsPage onBack={() => setView("home")} />
+
       ) : view === "privacy" ? (
         <PrivacyPage onBack={() => setView("home")} />
+
+      ) : view === "events" ? (
+        <EventsPage
+          apiUrl={API_URL}
+          token={token ?? ""}
+          onBack={() => setView("home")}
+        />
+
+        ) : view === "admin" ? (
+        <AdminPage
+          apiUrl={API_URL}
+          token={token ?? ""}
+          onBack={() => setView("home")}
+        />
+
+      ) : view === "mypage" ? (
+        <MyPage
+          apiUrl={API_URL}
+          token={token ?? ""}
+          onBack={() => setView("home")}
+          onGoAdmin={() => setView("admin")}
+        />
+
       ) : !token ? (
         <>
           {view === "login" ? (
@@ -109,6 +133,7 @@ export default function App() {
               onShowTerms={() => setView("terms")}
               onShowPrivacy={() => setView("privacy")}
             />
+
           ) : (
             <HomePage
               apiUrl={API_URL}
@@ -118,9 +143,12 @@ export default function App() {
               onLogout={() => setView("login")}
               onGoParty={() => setShowLoginPrompt(true)}
               onCreateCharacter={() => setShowLoginPrompt(true)}
+              onGoEvents={() => setShowLoginPrompt(true)}
+              onGoMyPage={() => setShowLoginPrompt(true)}
             />
           )}
         </>
+
       ) : view === "home" ? (
         <HomePage
           apiUrl={API_URL}
@@ -130,7 +158,10 @@ export default function App() {
           onLogout={handleLogout}
           onGoParty={() => setView("party-lobby")}
           onCreateCharacter={() => setView("create")}
+          onGoEvents={() => setView("events")}
+          onGoMyPage={() => setView("mypage")}
         />
+
       ) : view === "chat" ? (
         <ChatApp
           apiUrl={API_URL}
@@ -140,6 +171,7 @@ export default function App() {
           onBack={() => setView("home")}
           onSelectCharacter={handleSelectCharacter}
         />
+
       ) : view === "create" ? (
         <CreateCharacterPage
           apiUrl={API_URL}
@@ -147,6 +179,7 @@ export default function App() {
           onBack={() => setView("home")}
           onCreated={() => setView("home")}
         />
+
       ) : view === "party-lobby" ? (
         <PartyLobbyPage
           apiUrl={API_URL}
@@ -155,6 +188,7 @@ export default function App() {
           onBack={() => setView("home")}
           onEnterRoom={handleEnterParty}
         />
+
       ) : view === "party-room" ? (
         <PartyRoomPage
           apiUrl={API_URL}
@@ -164,6 +198,7 @@ export default function App() {
           onBack={() => setView("party-lobby")}
           onStartChat={handleStartPartyChat}
         />
+
       ) : view === "party-chat" ? (
         <PartyChatPage
           apiUrl={API_URL}
@@ -173,6 +208,7 @@ export default function App() {
           onBack={() => setView("party-room")}
           onLeave={() => setView("home")}
         />
+        
       ) : null}
     </>
   );

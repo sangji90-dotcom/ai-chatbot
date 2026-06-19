@@ -12,11 +12,13 @@ interface HomePageProps {
   onLogout: () => void;
   onGoParty: () => void;
   onCreateCharacter: () => void;
+  onGoEvents: () => void;  // 추가
+  onGoMyPage: () => void;
 }
 
 const CATEGORIES = ["전체", "로맨스", "판타지", "액션", "일상", "공포", "SF", "BL", "GL", "기타"];
 
-export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLogout, onGoParty, onCreateCharacter }: HomePageProps) {
+export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLogout, onGoParty, onCreateCharacter, onGoEvents, onGoMyPage }: HomePageProps) {
   const [activeCategory, setActiveCategory] = useState("전체");
   const [characters, setCharacters] = useState<Character[]>([]);
   const [newCharacters, setNewCharacters] = useState<Character[]>([]);
@@ -166,6 +168,22 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
             </button>
           )}
 
+          {/* 이벤트 - 로그인 시만 */}
+          {user && (
+            <button
+              onClick={onGoEvents}
+              style={{
+                padding: "8px 14px", borderRadius: 10,
+                border: "1px solid rgba(255,200,80,.4)",
+                background: "rgba(255,200,80,.08)",
+                color: "#ffc850", fontSize: 13,
+                fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              🎁 이벤트
+            </button>
+          )}
+
           {/* 알림 - 로그인 시만 */}
           {user && (
             <div
@@ -201,18 +219,19 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
 
           {/* 프로필 아바타 - 로그인 시만 */}
           {user && (
-            <div
-              style={{
-                width: 38, height: 38, borderRadius: "50%",
-                background: "var(--gradient-cosmic)",
-                display: "grid", placeItems: "center",
-                fontWeight: 700, cursor: "pointer",
-                boxShadow: "var(--shadow-glow-primary)",
-              }}
-            >
-              {user.username?.[0]?.toUpperCase()}
-            </div>
-          )}
+          <div
+            onClick={onGoMyPage}
+            style={{
+              width: 38, height: 38, borderRadius: "50%",
+              background: "var(--gradient-cosmic)",
+              display: "grid", placeItems: "center",
+              fontWeight: 700, cursor: "pointer",
+              boxShadow: "var(--shadow-glow-primary)",
+            }}
+          >
+            {user.username?.[0]?.toUpperCase()}
+          </div>
+        )}
 
           {/* 로그인/로그아웃 버튼 */}
           {user ? (
