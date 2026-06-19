@@ -46,14 +46,15 @@ class UpdateCharacterRequest(BaseModel):
 
 class ReportRequest(BaseModel):
     reason: str
-    
-    
+
+
 class AutoCompleteRequest(BaseModel):
     name: str
     description: str = ""
     job: str = ""
     age: int = 20
-    
+
+
 @router.post("/auto-complete", summary="캐릭터 자동완성")
 async def auto_complete_character(
         request: AutoCompleteRequest,
@@ -262,11 +263,22 @@ async def get_characters(
         tag: Optional[str] = None,
         page: int = 1,
         size: int = 20,
+        sort: str = "popular",
         current_user: Optional[dict] = Depends(get_optional_user)):
     conn = get_db()
     cursor = conn.cursor()
     is_adult = current_user.get("is_adult", 0) if current_user else 0
     adult_filter = "" if is_adult else "AND c.is_adult = 0"
+
+    sort_map = {
+        "popular": "c.like_count DESC, c.chat_count DESC",
+        "latest": "c.created_at DESC",
+        "oldest": "c.created_at ASC",
+        "chat": "c.chat_count DESC",
+        "view": "c.view_count DESC",
+    }
+    order = sort_map.get(sort, "c.like_count DESC, c.chat_count DESC")
+
     if tag:
         cursor.execute(f"""
             SELECT c.*, GROUP_CONCAT(ct.tag) as tags
@@ -276,7 +288,7 @@ async def get_characters(
             AND c.id IN (SELECT character_id FROM character_tags WHERE tag = ?)
             {adult_filter}
             GROUP BY c.id
-            ORDER BY c.chat_count DESC, c.created_at DESC
+            ORDER BY {order}
             LIMIT ? OFFSET ?
         """, (tag, size, (page - 1) * size))
     else:
@@ -287,9 +299,10 @@ async def get_characters(
             WHERE c.visibility = 'public'
             {adult_filter}
             GROUP BY c.id
-            ORDER BY c.chat_count DESC, c.created_at DESC
+            ORDER BY {order}
             LIMIT ? OFFSET ?
         """, (size, (page - 1) * size))
+
     rows = cursor.fetchall()
     conn.close()
     return [_format_character(row) for row in rows]
@@ -318,22 +331,43 @@ async def search_characters(
         q: str,
         page: int = 1,
         size: int = 20,
+        sort: str = "popular",
+        tag: Optional[str] = None,
         current_user: Optional[dict] = Depends(get_optional_user)):
     conn = get_db()
     cursor = conn.cursor()
     is_adult = current_user.get("is_adult", 0) if current_user else 0
     adult_filter = "" if is_adult else "AND c.is_adult = 0"
+
+    sort_map = {
+        "popular": "c.like_count DESC, c.chat_count DESC",
+        "latest": "c.created_at DESC",
+        "oldest": "c.created_at ASC",
+        "chat": "c.chat_count DESC",
+        "view": "c.view_count DESC",
+    }
+    order = sort_map.get(sort, "c.like_count DESC, c.chat_count DESC")
+
+    tag_filter = ""
+    params = [f"%{q}%", f"%{q}%"]
+    if tag:
+        tag_filter = "AND c.id IN (SELECT character_id FROM character_tags WHERE tag = ?)"
+        params.append(tag)
+
+    params += [size, (page - 1) * size]
+
     cursor.execute(f"""
         SELECT c.*, GROUP_CONCAT(ct.tag) as tags
         FROM characters c
         LEFT JOIN character_tags ct ON c.id = ct.character_id
         WHERE c.visibility = 'public'
         AND (c.name LIKE ? OR c.description LIKE ?)
+        {tag_filter}
         {adult_filter}
         GROUP BY c.id
-        ORDER BY c.chat_count DESC
+        ORDER BY {order}
         LIMIT ? OFFSET ?
-    """, (f"%{q}%", f"%{q}%", size, (page - 1) * size))
+    """, params)
     rows = cursor.fetchall()
     conn.close()
     return [_format_character(row) for row in rows]
@@ -436,15 +470,25 @@ async def get_character(
         GROUP BY c.id
     """, (character_id,))
     row = cursor.fetchone()
-    conn.close()
     if not row:
+        conn.close()
         raise HTTPException(status_code=404, detail="캐릭터를 찾을 수 없습니다.")
     if row["visibility"] == "private":
         if not current_user or row["user_id"] != current_user["id"]:
+            conn.close()
             raise HTTPException(status_code=403, detail="접근 권한이 없습니다.")
     if row["is_adult"]:
         if not current_user or not current_user.get("is_adult"):
+            conn.close()
             raise HTTPException(status_code=403, detail="성인 인증이 필요합니다.")
+
+    # 조회수 +1 (본인 제외)
+    if not current_user or current_user["id"] != row["user_id"]:
+        cursor.execute("UPDATE characters SET view_count = view_count + 1 WHERE id = ?",
+                       (character_id,))
+        conn.commit()
+
+    conn.close()
     return _format_character(row)
 
 
@@ -546,9 +590,7 @@ async def delete_character(
     return {"message": "캐릭터 삭제 완료"}
 
 
-# 감정 태그 목록
 EMOTIONS = ["neutral", "happy", "sad", "angry", "shy", "surprised", "love", "embarrassed", "crying", "serious"]
-# 상황 태그 목록
 SITUATIONS = ["default", "indoor", "outdoor", "night", "cafe", "forest", "rain", "sunny", "fantasy", "dramatic"]
 
 
@@ -558,10 +600,8 @@ async def upload_emotion_image(
         emotion: str,
         file: UploadFile = File(...),
         current_user: dict = Depends(get_current_user)):
-
     if emotion not in EMOTIONS:
         raise HTTPException(status_code=400, detail=f"유효하지 않은 감정 태그예요. 가능: {EMOTIONS}")
-
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM characters WHERE id = ?", (character_id,))
@@ -572,42 +612,30 @@ async def upload_emotion_image(
     if char["user_id"] != current_user["id"]:
         conn.close()
         raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
-
     allowed_types = ["image/jpeg", "image/png", "image/webp"]
     if file.content_type not in allowed_types:
         conn.close()
         raise HTTPException(status_code=400, detail="허용되지 않는 파일 형식입니다.")
-
     contents = await file.read()
     if len(contents) > 5 * 1024 * 1024:
         conn.close()
         raise HTTPException(status_code=400, detail="파일 크기는 5MB 이하여야 합니다.")
-
     ext = file.filename.split(".")[-1]
     filename = f"{uuid.uuid4().hex}.{ext}"
     save_dir = "../frontend/images/emotions"
     os.makedirs(save_dir, exist_ok=True)
-
     with open(f"{save_dir}/{filename}", "wb") as f:
         f.write(contents)
-
     image_url = f"/images/emotions/{filename}"
-
-    # 기존 감정 이미지 있으면 교체
-    cursor.execute("""
-        SELECT id FROM character_images WHERE character_id = ? AND emotion = ?
-    """, (character_id, emotion))
+    cursor.execute("SELECT id FROM character_images WHERE character_id = ? AND emotion = ?",
+                   (character_id, emotion))
     existing = cursor.fetchone()
-
     if existing:
         cursor.execute("UPDATE character_images SET image_url = ? WHERE id = ?",
                        (image_url, existing["id"]))
     else:
-        cursor.execute("""
-            INSERT INTO character_images (character_id, emotion, image_url)
-            VALUES (?, ?, ?)
-        """, (character_id, emotion, image_url))
-
+        cursor.execute("INSERT INTO character_images (character_id, emotion, image_url) VALUES (?, ?, ?)",
+                       (character_id, emotion, image_url))
     conn.commit()
     conn.close()
     return {"emotion": emotion, "image_url": image_url, "message": "감정 이미지 업로드 완료"}
@@ -617,9 +645,8 @@ async def upload_emotion_image(
 async def get_emotion_images(character_id: str):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT emotion, image_url FROM character_images WHERE character_id = ?
-    """, (character_id,))
+    cursor.execute("SELECT emotion, image_url FROM character_images WHERE character_id = ?",
+                   (character_id,))
     rows = cursor.fetchall()
     conn.close()
     return {row["emotion"]: row["image_url"] for row in rows}
@@ -631,10 +658,8 @@ async def upload_background_image(
         situation: str,
         file: UploadFile = File(...),
         current_user: dict = Depends(get_current_user)):
-
     if situation not in SITUATIONS:
         raise HTTPException(status_code=400, detail=f"유효하지 않은 상황 태그예요. 가능: {SITUATIONS}")
-
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM characters WHERE id = ?", (character_id,))
@@ -645,41 +670,30 @@ async def upload_background_image(
     if char["user_id"] != current_user["id"]:
         conn.close()
         raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
-
     allowed_types = ["image/jpeg", "image/png", "image/webp"]
     if file.content_type not in allowed_types:
         conn.close()
         raise HTTPException(status_code=400, detail="허용되지 않는 파일 형식입니다.")
-
     contents = await file.read()
     if len(contents) > 10 * 1024 * 1024:
         conn.close()
         raise HTTPException(status_code=400, detail="파일 크기는 10MB 이하여야 합니다.")
-
     ext = file.filename.split(".")[-1]
     filename = f"{uuid.uuid4().hex}.{ext}"
     save_dir = "../frontend/images/backgrounds"
     os.makedirs(save_dir, exist_ok=True)
-
     with open(f"{save_dir}/{filename}", "wb") as f:
         f.write(contents)
-
     image_url = f"/images/backgrounds/{filename}"
-
-    cursor.execute("""
-        SELECT id FROM character_backgrounds WHERE character_id = ? AND situation = ?
-    """, (character_id, situation))
+    cursor.execute("SELECT id FROM character_backgrounds WHERE character_id = ? AND situation = ?",
+                   (character_id, situation))
     existing = cursor.fetchone()
-
     if existing:
         cursor.execute("UPDATE character_backgrounds SET image_url = ? WHERE id = ?",
                        (image_url, existing["id"]))
     else:
-        cursor.execute("""
-            INSERT INTO character_backgrounds (character_id, situation, image_url)
-            VALUES (?, ?, ?)
-        """, (character_id, situation, image_url))
-
+        cursor.execute("INSERT INTO character_backgrounds (character_id, situation, image_url) VALUES (?, ?, ?)",
+                       (character_id, situation, image_url))
     conn.commit()
     conn.close()
     return {"situation": situation, "image_url": image_url, "message": "배경 이미지 업로드 완료"}
@@ -689,12 +703,12 @@ async def upload_background_image(
 async def get_background_images(character_id: str):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT situation, image_url FROM character_backgrounds WHERE character_id = ?
-    """, (character_id,))
+    cursor.execute("SELECT situation, image_url FROM character_backgrounds WHERE character_id = ?",
+                   (character_id,))
     rows = cursor.fetchall()
     conn.close()
     return {row["situation"]: row["image_url"] for row in rows}
+
 
 def _format_character(row) -> dict:
     return {
@@ -709,6 +723,7 @@ def _format_character(row) -> dict:
         "image_url": row["image_url"],
         "chat_count": row["chat_count"],
         "like_count": row["like_count"],
+        "view_count": row["view_count"] if "view_count" in row.keys() else 0,
         "tags": row["tags"].split(",") if row["tags"] else [],
         "created_at": row["created_at"],
     }

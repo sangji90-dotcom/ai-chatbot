@@ -20,6 +20,8 @@ from scheduler import start_scheduler
 from support.router import router as support_router
 from admin.router import router as admin_router
 from notifications.router import router as notifications_router
+from events.router import router as events_router
+from purchases.router import router as purchases_router
 
 load_dotenv()
 
@@ -46,6 +48,8 @@ app = FastAPI(
         {"name": "토큰", "description": "토큰 조회 / 출석 / 광고 시청 / 내역"},
         {"name": "업적", "description": "업적 목록 / 달성 현황 / 토큰 보상"},
         {"name": "알림", "description": "알림 목록 / 읽음 처리 / 삭제"},
+        {"name": "이벤트", "description": "친구 초대 / 출석 streak / 연속 결제 보상"},
+        {"name": "결제", "description": "구매 내역 / 토큰 구매"},
     ]
 )
 
@@ -63,6 +67,7 @@ app.mount("/static", StaticFiles(directory="../frontend"), name="static")
 init_db()
 init_achievements()
 
+# ── API 라우터 등록 (반드시 static mount "/" 보다 먼저) ──────────
 app.include_router(auth_router)
 app.include_router(characters_router)
 app.include_router(chat_router)
@@ -77,12 +82,12 @@ app.include_router(achievements_router)
 app.include_router(support_router)
 app.include_router(admin_router)
 app.include_router(notifications_router)
+app.include_router(events_router)
+app.include_router(purchases_router)
 
 @app.get("/", tags=["기본"])
 async def root():
     return {"message": "AI 챗봇 API"}
 
-
-
-from fastapi.staticfiles import StaticFiles
+# ── 프론트엔드 static serve (반드시 맨 마지막) ──────────────────
 app.mount("/", StaticFiles(directory="../stellia-frontend/dist", html=True), name="frontend")

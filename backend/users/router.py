@@ -310,14 +310,16 @@ async def get_block_list(current_user: dict = Depends(get_current_user)):
 # ===== 내 정보 조회 =====
 @router.get("/me", summary="내 정보 조회")
 async def get_me(current_user: dict = Depends(get_current_user)):
+    from datetime import datetime, timedelta
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
     SELECT id, email, username, is_adult, safety_mode,
            token_balance, token_purchased, token_event,
-           attendance_streak, last_attendance_date, created_at,
-           equipped_prefix, equipped_suffix, memory_pass_expires_at,
-           output_length, profile_image_url
+           attendance_streak, last_attendance_date, streak_reward_claimed_at,
+           consecutive_purchase_days, purchase_streak_total_tokens,
+           created_at, equipped_prefix, equipped_suffix,
+           memory_pass_expires_at, output_length, profile_image_url
     FROM users WHERE id = ?
     """, (current_user["id"],))
     user = cursor.fetchone()
@@ -334,12 +336,37 @@ async def get_me(current_user: dict = Depends(get_current_user)):
                    (current_user["id"],))
     following_count = cursor.fetchone()["cnt"]
 
+    # 은화 만료 임박 체크 (7일 이내)
+    now = datetime.utcnow()
+    seven_days_later = (now + timedelta(days=7)).isoformat()
+    cursor.execute("""
+        SELECT SUM(amount) as total, MIN(expires_at) as nearest_expiry
+        FROM token_history
+        WHERE user_id = ?
+          AND token_type = 'silver'
+          AND expires_at IS NOT NULL
+          AND expires_at > ?
+          AND expires_at <= ?
+          AND amount > 0
+    """, (current_user["id"], now.isoformat(), seven_days_later))
+    expiry_row = cursor.fetchone()
+
+    silver_expiring = {
+        "amount": expiry_row["total"] or 0,
+        "nearest_expiry": expiry_row["nearest_expiry"],
+        "days_left": None
+    }
+    if expiry_row["nearest_expiry"]:
+        expiry_dt = datetime.fromisoformat(expiry_row["nearest_expiry"])
+        silver_expiring["days_left"] = max(0, (expiry_dt - now).days)
+
     conn.close()
     return {
         **dict(user),
         "character_count": char_count,
         "follower_count": follower_count,
-        "following_count": following_count
+        "following_count": following_count,
+        "silver_expiring": silver_expiring  # 프론트에서 배지 표시용
     }
 
 

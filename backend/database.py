@@ -442,6 +442,30 @@ def init_db():
     except:
         pass
     
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN streak_reward_claimed_at TIMESTAMP DEFAULT NULL")
+        conn.commit()
+    except:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN consecutive_purchase_start_date TEXT DEFAULT NULL")
+        conn.commit()
+    except:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN purchase_streak_total_tokens INTEGER DEFAULT 0")
+        conn.commit()
+    except:
+        pass
+    
+    try:
+        cursor.execute("ALTER TABLE characters ADD COLUMN view_count INTEGER DEFAULT 0")
+        conn.commit()
+    except:
+        pass
+    
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS character_images (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -465,6 +489,51 @@ def init_db():
         )
     """)
     
+     # 친구 초대
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS referrals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            referrer_id INTEGER NOT NULL,
+            referred_id INTEGER NOT NULL UNIQUE,
+            referrer_ip TEXT NOT NULL,
+            referred_ip TEXT NOT NULL,
+            reward_given INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (referrer_id) REFERENCES users(id),
+            FOREIGN KEY (referred_id) REFERENCES users(id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS ip_registrations (
+            ip TEXT PRIMARY KEY,
+            count INTEGER DEFAULT 1,
+            last_registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    # 초대 코드
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS referral_codes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            code TEXT NOT NULL UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+    
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS character_bookmarks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        character_id TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, character_id),
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (character_id) REFERENCES characters(id)
+        )
+    """)
     
     conn.commit()
     conn.close()

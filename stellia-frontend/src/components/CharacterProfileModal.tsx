@@ -117,13 +117,19 @@ export default function CharacterProfileModal({ character, apiUrl, token, onClos
             }}>
               {bookmarked ? "★" : "☆"} 북마크
             </button>
-            <button onClick={() => navigator.clipboard.writeText(window.location.href)} style={{
-              flex: 1, padding: "12px", borderRadius: 14,
-              border: "1px solid var(--border-default)",
-              background: "rgba(255,255,255,.04)",
-              color: "var(--text-muted)",
-              fontWeight: 600, fontSize: 14, cursor: "pointer",
-            }}>
+            <button
+              onClick={() => {
+                window.location.hash = `#/characters/${character.id}`;
+                navigator.clipboard.writeText(window.location.href);
+              }}
+              style={{
+                flex: 1, padding: "12px", borderRadius: 14,
+                border: "1px solid var(--border-default)",
+                background: "rgba(255,255,255,.04)",
+                color: "var(--text-muted)",
+                fontWeight: 600, fontSize: 14, cursor: "pointer",
+              }}
+            >
               ⤴ 공유
             </button>
           </div>

@@ -121,28 +121,66 @@ async def get_my_tokens(current_user: dict = Depends(get_current_user)):
     return dict(row)
 
 @router.get("/me/history", summary="토큰 내역", description="토큰 충전/사용 내역을 반환합니다.")
-async def get_token_history(current_user: dict = Depends(get_current_user)):
+async def get_token_history(
+        page: int = 1,
+        size: int = 20,
+        token_type: str = None,
+        current_user: dict = Depends(get_current_user)):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT * FROM token_history WHERE user_id = ?
-        ORDER BY created_at DESC LIMIT 50
-    """, (current_user["id"],))
+
+    where = "WHERE user_id = ?"
+    params = [current_user["id"]]
+
+    if token_type:
+        where += " AND token_type = ?"
+        params.append(token_type)
+
+    cursor.execute(f"SELECT COUNT(*) as total FROM token_history {where}", params)
+    total = cursor.fetchone()["total"]
+
+    params += [size, (page - 1) * size]
+    cursor.execute(f"""
+        SELECT * FROM token_history {where}
+        ORDER BY created_at DESC
+        LIMIT ? OFFSET ?
+    """, params)
     rows = cursor.fetchall()
     conn.close()
-    return [dict(row) for row in rows]
+
+    return {
+        "total": total,
+        "page": page,
+        "size": size,
+        "items": [dict(row) for row in rows]
+    }
 
 @router.post("/attendance", summary="출석 체크", description="출석 체크 후 이벤트 토큰을 지급합니다. (21일 유효)")
 async def attendance_check(current_user: dict = Depends(get_current_user)):
     today = str(date.today())
+    yesterday = str(date.today() - timedelta(days=1))
+
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT last_attendance_date FROM users WHERE id = ?", (current_user["id"],))
+    cursor.execute("""
+        SELECT last_attendance_date, attendance_streak FROM users WHERE id = ?
+    """, (current_user["id"],))
     user = cursor.fetchone()
     conn.close()
 
     if user["last_attendance_date"] == today:
         raise HTTPException(status_code=400, detail="오늘 이미 출석했습니다.")
+
+    # streak 계산
+    last = user["last_attendance_date"]
+    current_streak = user["attendance_streak"] or 0
+
+    if last == yesterday:
+        # 연속 출석
+        new_streak = current_streak + 1
+    else:
+        # 하루라도 빠지면 리셋
+        new_streak = 1
 
     expires_at = datetime.now() + timedelta(days=EVENT_EXPIRE_DAYS)
     add_token(current_user["id"], ATTENDANCE_TOKEN, "event", "출석 체크", expires_at)
@@ -150,14 +188,18 @@ async def attendance_check(current_user: dict = Depends(get_current_user)):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
-        UPDATE users SET last_attendance_date = ?,
-        attendance_streak = attendance_streak + 1 WHERE id = ?
-    """, (today, current_user["id"]))
+        UPDATE users SET
+            last_attendance_date = ?,
+            attendance_streak = ?,
+            streak_reward_claimed_at = CASE WHEN ? < 7 THEN NULL ELSE streak_reward_claimed_at END
+        WHERE id = ?
+    """, (today, new_streak, new_streak, current_user["id"]))
     conn.commit()
     conn.close()
 
     return {
         "message": f"출석 완료! {ATTENDANCE_TOKEN}토큰 지급 (21일 유효)",
+        "attendance_streak": new_streak,
         "expires_at": expires_at.strftime("%Y-%m-%d")
     }
 

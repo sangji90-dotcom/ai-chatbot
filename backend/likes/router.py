@@ -74,3 +74,48 @@ async def unlike_character(
     conn.commit()
     conn.close()
     return {"message": "좋아요 취소 완료"}
+
+# ===== 북마크 =====
+@router.post("/bookmarks/{character_id}", summary="북마크 추가")
+async def add_bookmark(character_id: str, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    try:
+        db.execute(
+            "INSERT INTO character_bookmarks (user_id, character_id) VALUES (?, ?)",
+            (current_user["id"], character_id)
+        )
+        db.commit()
+        return {"message": "북마크 추가 완료", "bookmarked": True}
+    except:
+        raise HTTPException(400, "이미 북마크한 캐릭터입니다.")
+
+@router.delete("/bookmarks/{character_id}", summary="북마크 취소")
+async def remove_bookmark(character_id: str, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    db.execute(
+        "DELETE FROM character_bookmarks WHERE user_id = ? AND character_id = ?",
+        (current_user["id"], character_id)
+    )
+    db.commit()
+    return {"message": "북마크 취소 완료", "bookmarked": False}
+
+@router.get("/bookmarks", summary="내 북마크 목록")
+async def get_bookmarks(current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    rows = db.execute("""
+        SELECT c.*, cb.created_at as bookmarked_at
+        FROM character_bookmarks cb
+        JOIN characters c ON cb.character_id = c.id
+        WHERE cb.user_id = ?
+        ORDER BY cb.created_at DESC
+    """, (current_user["id"],)).fetchall()
+    return [dict(r) for r in rows]
+
+@router.get("/bookmarks/{character_id}/status", summary="북마크 여부 확인")
+async def check_bookmark(character_id: str, current_user: dict = Depends(get_current_user)):
+    db = get_db()
+    row = db.execute(
+        "SELECT id FROM character_bookmarks WHERE user_id = ? AND character_id = ?",
+        (current_user["id"], character_id)
+    ).fetchone()
+    return {"bookmarked": row is not None}

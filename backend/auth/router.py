@@ -5,6 +5,7 @@ from database import get_db
 from auth.jwt import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
 from datetime import datetime, timedelta
 from deps import get_current_user, get_optional_user
+from fastapi import APIRouter, HTTPException, Depends, Request
 
 router = APIRouter(prefix="/auth", tags=["인증"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -39,7 +40,7 @@ def _issue_tokens(user_id: int, email: str, username: str, cursor, conn) -> Toke
 
 
 @router.post("/register", summary="회원가입")
-async def register(request: RegisterRequest):
+async def register(request: RegisterRequest, req: Request):
     from achievements.router import check_and_grant
 
     conn = get_db()
@@ -49,6 +50,21 @@ async def register(request: RegisterRequest):
     if cursor.fetchone():
         conn.close()
         raise HTTPException(status_code=400, detail="이미 사용 중인 이메일입니다.")
+    
+    client_ip = req.client.host
+    cursor.execute("SELECT count FROM ip_registrations WHERE ip = ?", (client_ip,))
+    ip_row = cursor.fetchone()
+    if ip_row:
+        cursor.execute(
+            "UPDATE ip_registrations SET count = count + 1, last_registered_at = ? WHERE ip = ?",
+            (datetime.now().isoformat(), client_ip)
+        )
+    else:
+        cursor.execute(
+            "INSERT INTO ip_registrations (ip, count) VALUES (?, 1)",
+            (client_ip,)
+        )
+    conn.commit()
 
     hashed = hash_password(request.password)
     cursor.execute(
