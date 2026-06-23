@@ -314,6 +314,31 @@ async def chat(
 
     raw_message = response.text
 
+    # MAX_TOKENS로 잘린 경우 자동으로 이어서 생성 (최대 3회)
+    MAX_CONTINUATIONS = 3
+    continuation_count = 0
+
+    while (
+        response.candidates and
+        response.candidates[0].finish_reason.name == "MAX_TOKENS" and
+        continuation_count < MAX_CONTINUATIONS
+    ):
+        continuation_count += 1
+        continuation_contents = contents + [
+            {"role": "model", "parts": [{"text": raw_message}]},
+            {"role": "user", "parts": [{"text": "(이어서 작성)"}]},
+        ]
+        continuation_response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=continuation_contents,
+            config={
+                "system_instruction": system_instruction + TAG_INSTRUCTION,
+                "max_output_tokens": max_tokens,
+            }
+        )
+        raw_message += continuation_response.text
+        response = continuation_response
+
     # 태그 추출
     emotion = "neutral"
     situation = "default"
