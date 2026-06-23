@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useToast } from "./Toast";
 
 interface EditCharacterPageProps {
   apiUrl: string;
@@ -27,25 +28,17 @@ const SITUATION_LABELS: Record<string, string> = {
 const CATEGORIES = ["시뮬레이션", "로맨스", "판타지/SF", "드라마", "무협/사극", "GL", "BL", "공포/추리", "액션", "코믹/일상", "스포츠/학원", "기타"];
 
 export default function EditCharacterPage({ apiUrl, token, characterId, onBack, onSaved }: EditCharacterPageProps) {
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<"profile" | "detail" | "images" | "situation" | "setting">("profile");
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
-  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    personality: "",
-    likes: "",
-    dislikes: "",
-    speech_style: "",
-    situation: "",
-    first_message: "",
-    visibility: "public",
-    is_adult: 0,
-    tags: [] as string[],
-    category: "",
-    party_enabled: 0,
+    name: "", description: "", personality: "",
+    likes: "", dislikes: "", speech_style: "",
+    situation: "", first_message: "",
+    visibility: "public", is_adult: 0,
+    tags: [] as string[], category: "", party_enabled: 0,
   });
 
   const [emotionImages, setEmotionImages] = useState<Record<string, string>>({});
@@ -61,35 +54,25 @@ export default function EditCharacterPage({ apiUrl, token, characterId, onBack, 
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
-    // 캐릭터 정보 로드
     axios.get(`${apiUrl}/characters/${characterId}`, { headers })
       .then(res => {
         const c = res.data;
         setFormData({
-          name: c.name || "",
-          description: c.description || "",
-          personality: "",
-          likes: "",
-          dislikes: "",
-          speech_style: "",
-          situation: c.situation || "",
-          first_message: c.first_message || "",
-          visibility: c.visibility || "public",
-          is_adult: c.is_adult ? 1 : 0,
-          tags: c.tags || [],
-          category: c.category || "",
+          name: c.name || "", description: c.description || "",
+          personality: "", likes: "", dislikes: "", speech_style: "",
+          situation: c.situation || "", first_message: c.first_message || "",
+          visibility: c.visibility || "public", is_adult: c.is_adult ? 1 : 0,
+          tags: c.tags || [], category: c.category || "",
           party_enabled: c.party_enabled ? 1 : 0,
         });
         if (c.image_url) setMainImagePreview(c.image_url);
       })
       .catch(console.error);
 
-    // 감정 이미지 로드
     axios.get(`${apiUrl}/characters/${characterId}/emotions`, { headers })
       .then(res => setEmotionImages(res.data))
       .catch(console.error);
 
-    // 배경 이미지 로드
     axios.get(`${apiUrl}/characters/${characterId}/backgrounds`, { headers })
       .then(res => setBackgroundImages(res.data))
       .catch(console.error);
@@ -126,7 +109,6 @@ export default function EditCharacterPage({ apiUrl, token, characterId, onBack, 
 
   const handleSubmit = async () => {
     setLoading(true);
-    setError("");
     try {
       await axios.put(`${apiUrl}/characters/${characterId}`, formData, { headers });
 
@@ -148,10 +130,11 @@ export default function EditCharacterPage({ apiUrl, token, characterId, onBack, 
         await axios.post(`${apiUrl}/characters/${characterId}/backgrounds/${situation}`, fd, { headers });
       }
 
+      toast.success("캐릭터 수정 완료!");
       onSaved();
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.detail || "수정에 실패했어요.");
+        toast.error(err.response?.data?.detail || "수정에 실패했어요.");
       }
     } finally {
       setLoading(false);
@@ -193,7 +176,6 @@ export default function EditCharacterPage({ apiUrl, token, characterId, onBack, 
       maxWidth: 600, margin: "0 auto",
       padding: "24px", overflowY: "auto",
     }}>
-      {/* 헤더 */}
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
         <button onClick={onBack} style={{
           width: 40, height: 40, borderRadius: 12,
@@ -210,7 +192,6 @@ export default function EditCharacterPage({ apiUrl, token, characterId, onBack, 
         }}>캐릭터 수정</div>
       </div>
 
-      {/* 탭 */}
       <div style={{
         display: "flex", borderRadius: 16,
         background: "rgba(255,255,255,.04)",
@@ -229,7 +210,6 @@ export default function EditCharacterPage({ apiUrl, token, characterId, onBack, 
 
       <div className="glass-card" style={{ borderRadius: 24, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
 
-        {/* 프로필 탭 */}
         {activeTab === "profile" && (
           <>
             <div>
@@ -246,7 +226,6 @@ export default function EditCharacterPage({ apiUrl, token, characterId, onBack, 
           </>
         )}
 
-        {/* 상세정보 탭 */}
         {activeTab === "detail" && (
           <>
             <div>
@@ -271,7 +250,6 @@ export default function EditCharacterPage({ apiUrl, token, characterId, onBack, 
           </>
         )}
 
-        {/* 이미지 탭 */}
         {activeTab === "images" && (
           <>
             <div>
@@ -346,7 +324,6 @@ export default function EditCharacterPage({ apiUrl, token, characterId, onBack, 
           </>
         )}
 
-        {/* 시작상황 탭 */}
         {activeTab === "situation" && (
           <>
             <div>
@@ -363,7 +340,6 @@ export default function EditCharacterPage({ apiUrl, token, characterId, onBack, 
           </>
         )}
 
-        {/* 기타설정 탭 */}
         {activeTab === "setting" && (
           <>
             <div>
@@ -434,13 +410,9 @@ export default function EditCharacterPage({ apiUrl, token, characterId, onBack, 
             <div>
               <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 8, display: "block" }}>태그</label>
               <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                <input
-                  style={{ ...inputStyle, flex: 1 }}
-                  placeholder="태그 입력 후 추가"
-                  value={tagInput}
-                  onChange={e => setTagInput(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && addTag()}
-                />
+                <input style={{ ...inputStyle, flex: 1 }} placeholder="태그 입력 후 추가"
+                  value={tagInput} onChange={e => setTagInput(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && addTag()} />
                 <button onClick={addTag} style={{ padding: "14px 18px", borderRadius: 14, border: "1px solid var(--primary)", background: "rgba(139,124,255,.12)", color: "var(--primary)", fontWeight: 600, cursor: "pointer" }}>추가</button>
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -453,7 +425,9 @@ export default function EditCharacterPage({ apiUrl, token, characterId, onBack, 
               </div>
             </div>
 
-            {error && <div style={{ color: "#ff6b8a", fontSize: 13, textAlign: "center" }}>{error}</div>}
+            {loading && (
+              <div style={{ textAlign: "center", color: "var(--text-muted)", fontSize: 14 }}>저장 중...</div>
+            )}
 
             <button onClick={handleSubmit} disabled={loading} style={{
               padding: "16px", borderRadius: 16, border: "none",

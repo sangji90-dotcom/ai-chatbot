@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useToast } from "./Toast";
 
 interface AdminPageProps {
   apiUrl: string;
@@ -9,6 +10,7 @@ interface AdminPageProps {
 
 export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
   const headers = { Authorization: `Bearer ${token}` };
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<"stats" | "users" | "reports" | "inquiries" | "banners" | "stories" | "notices">("stats");
   const [stats, setStats] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
@@ -18,7 +20,6 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
   const [stories, setStories] = useState<any[]>([]);
   const [notices, setNotices] = useState<any[]>([]);
   const [searchQ, setSearchQ] = useState("");
-  const [msg, setMsg] = useState("");
   const [grantModal, setGrantModal] = useState<{userId: number, username: string} | null>(null);
   const [grantAmount, setGrantAmount] = useState("");
   const [grantReason, setGrantReason] = useState("");
@@ -31,8 +32,6 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
     recommended_players: 4, min_players: 2, max_players: 6,
   });
   const [newNotice, setNewNotice] = useState({ title: "", content: "", is_pinned: 0 });
-
-  const showMsg = (m: string) => { setMsg(m); setTimeout(() => setMsg(""), 3000); };
 
   useEffect(() => {
     axios.get(`${apiUrl}/admin/stats`, { headers }).then(r => setStats(r.data)).catch(console.error);
@@ -59,13 +58,13 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
 
   const handleSuspend = async (userId: number, suspended: number) => {
     await axios.patch(`${apiUrl}/admin/users/${userId}/${suspended ? "unsuspend" : "suspend"}`, {}, { headers });
-    showMsg(suspended ? "정지 해제 완료" : "정지 완료");
+    toast.success(suspended ? "정지 해제 완료" : "정지 완료");
     fetchUsers(searchQ || undefined);
   };
 
   const handleGrantAdmin = async (userId: number, isAdmin: number) => {
     await axios.patch(`${apiUrl}/admin/users/${userId}/${isAdmin ? "revoke-admin" : "grant-admin"}`, {}, { headers });
-    showMsg(isAdmin ? "관리자 해제 완료" : "관리자 부여 완료");
+    toast.success(isAdmin ? "관리자 해제 완료" : "관리자 부여 완료");
     fetchUsers(searchQ || undefined);
   };
 
@@ -74,29 +73,29 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
     try {
       await axios.post(`${apiUrl}/admin/users/${grantModal.userId}/grant-token`,
         { amount: Number(grantAmount), reason: grantReason }, { headers });
-      showMsg(`${grantAmount}토큰 지급 완료`);
+      toast.success(`${grantAmount}토큰 지급 완료`);
       setGrantModal(null); setGrantAmount(""); setGrantReason("");
     } catch (e: any) {
-      showMsg(e.response?.data?.detail ?? "오류 발생");
+      toast.error(e.response?.data?.detail ?? "오류 발생");
     }
   };
 
   const handleDismissReport = async (id: number) => {
     await axios.patch(`${apiUrl}/admin/reports/${id}/dismiss`, {}, { headers });
-    showMsg("신고 무시 완료"); fetchReports();
+    toast.success("신고 무시 완료"); fetchReports();
   };
 
   const handleActionReport = async (id: number) => {
     if (!confirm("캐릭터를 삭제할까요?")) return;
     await axios.patch(`${apiUrl}/admin/reports/${id}/action`, {}, { headers });
-    showMsg("신고 처리 완료 (캐릭터 삭제)"); fetchReports();
+    toast.success("신고 처리 완료 (캐릭터 삭제)"); fetchReports();
   };
 
   const handleAnswer = async () => {
     if (!answerModal || !answerText) return;
     await axios.patch(`${apiUrl}/admin/inquiries/${answerModal.id}/answer`,
       { answer: answerText }, { headers });
-    showMsg("답변 완료");
+    toast.success("답변 완료");
     setAnswerModal(null); setAnswerText("");
     fetchInquiries();
   };
@@ -105,10 +104,10 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
     if (!newBanner.title || !newBanner.image_url) return;
     try {
       await axios.post(`${apiUrl}/banners`, newBanner, { headers });
-      showMsg("배너 등록 완료");
+      toast.success("배너 등록 완료");
       setNewBanner({ title: "", image_url: "", link_url: "" });
       fetchBanners();
-    } catch { showMsg("배너 등록 실패"); }
+    } catch { toast.error("배너 등록 실패"); }
   };
 
   const handleToggleBanner = async (id: number) => {
@@ -119,42 +118,42 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
   const handleDeleteBanner = async (id: number) => {
     if (!confirm("배너를 삭제할까요?")) return;
     await axios.delete(`${apiUrl}/banners/${id}`, { headers });
-    showMsg("배너 삭제 완료"); fetchBanners();
+    toast.success("배너 삭제 완료"); fetchBanners();
   };
 
   const handleCreateStory = async () => {
     if (!newStory.title || !newStory.background || !newStory.system_prompt) {
-      showMsg("제목, 배경, 시스템 프롬프트는 필수예요."); return;
+      toast.error("제목, 배경, 시스템 프롬프트는 필수예요."); return;
     }
     try {
       await axios.post(`${apiUrl}/party/stories`, newStory, { headers });
-      showMsg("스토리 등록 완료");
+      toast.success("스토리 등록 완료");
       setNewStory({ title: "", genre: "판타지", background: "", system_prompt: "", image_url: "", recommended_players: 4, min_players: 2, max_players: 6 });
       fetchStories();
-    } catch { showMsg("스토리 등록 실패"); }
+    } catch { toast.error("스토리 등록 실패"); }
   };
 
   const handleToggleOfficial = async (storyId: number, isOfficial: number) => {
     const url = `${apiUrl}/admin/stories/${storyId}/${isOfficial ? "unofficial" : "official"}`;
     await axios.patch(url, {}, { headers });
-    showMsg(isOfficial ? "공식 해제 완료" : "공식 지정 완료");
+    toast.success(isOfficial ? "공식 해제 완료" : "공식 지정 완료");
     fetchStories();
   };
 
   const handleCreateNotice = async () => {
-    if (!newNotice.title || !newNotice.content) { showMsg("제목과 내용을 입력해주세요."); return; }
+    if (!newNotice.title || !newNotice.content) { toast.error("제목과 내용을 입력해주세요."); return; }
     try {
       await axios.post(`${apiUrl}/notices`, newNotice, { headers });
-      showMsg("공지사항 등록 완료");
+      toast.success("공지사항 등록 완료");
       setNewNotice({ title: "", content: "", is_pinned: 0 });
       fetchNotices();
-    } catch { showMsg("등록 실패"); }
+    } catch { toast.error("등록 실패"); }
   };
 
   const handleDeleteNotice = async (id: number) => {
     if (!confirm("삭제할까요?")) return;
     await axios.delete(`${apiUrl}/notices/${id}`, { headers });
-    showMsg("삭제 완료");
+    toast.success("삭제 완료");
     fetchNotices();
   };
 
@@ -205,14 +204,6 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
       </nav>
 
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px" }}>
-
-        {msg && (
-          <div style={{
-            padding: "12px 20px", borderRadius: 12, marginBottom: 16,
-            background: "rgba(73,216,154,.15)", border: "1px solid rgba(73,216,154,.3)",
-            color: "#49d89a", fontSize: 14, textAlign: "center",
-          }}>{msg}</div>
-        )}
 
         {/* 탭 */}
         <div style={{
@@ -526,7 +517,6 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
                 }}>등록</button>
               </div>
             </div>
-
             {notices.length === 0 ? (
               <div style={{ textAlign: "center", color: "var(--text-muted)", padding: 40 }}>등록된 공지사항이 없어요.</div>
             ) : notices.map(n => (

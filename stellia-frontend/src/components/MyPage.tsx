@@ -39,6 +39,8 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
   const [equipMessage, setEquipMessage] = useState("");
   const [showImageModal, setShowImageModal] = useState<string | null>(null);
   const [tokenHistory, setTokenHistory] = useState<any[]>([]);
+  const [adultLoading, setAdultLoading] = useState(false);
+  const [showAdultConfirm, setShowAdultConfirm] = useState(false);
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -102,6 +104,34 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
       setEquipMessage("칭호가 장착됐어요!");
     } catch {
       setEquipMessage("칭호 장착에 실패했어요.");
+    }
+  };
+
+  const handleAdultVerify = async () => {
+    setAdultLoading(true);
+    try {
+      await axios.post(`${apiUrl}/users/me/adult-verify`, {}, { headers });
+      setUser((prev: any) => ({ ...prev, is_adult: 1 }));
+      setShowAdultConfirm(false);
+      setMessage("성인 인증이 완료됐어요.");
+    } catch {
+      setMessage("성인 인증에 실패했어요.");
+    } finally {
+      setAdultLoading(false);
+    }
+  };
+
+  const handleAdultCancel = async () => {
+    if (!confirm("성인 인증을 해제할까요? 19금 콘텐츠에 접근할 수 없게 돼요.")) return;
+    setAdultLoading(true);
+    try {
+      await axios.delete(`${apiUrl}/users/me/adult-verify`, { headers });
+      setUser((prev: any) => ({ ...prev, is_adult: 0 }));
+      setMessage("성인 인증이 해제됐어요.");
+    } catch {
+      setMessage("해제에 실패했어요.");
+    } finally {
+      setAdultLoading(false);
     }
   };
 
@@ -197,10 +227,18 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
               <div style={{ color: "var(--gold)", fontSize: 13, marginTop: 4 }}>
                 ✦ {user?.token_balance?.toLocaleString()} 럭키 코인
               </div>
+              {user?.is_adult === 1 && (
+                <div style={{
+                  display: "inline-block", marginTop: 6,
+                  padding: "2px 10px", borderRadius: 999, fontSize: 11,
+                  background: "rgba(255,107,138,.15)",
+                  border: "1px solid rgba(255,107,138,.3)",
+                  color: "#ff6b8a",
+                }}>🔞 성인 인증 완료</div>
+              )}
             </div>
           </div>
 
-          {/* 프로필 이미지 업로드 */}
           <div>
             <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 8, display: "block" }}>프로필 이미지</label>
             <input type="file" accept="image/*" id="profile-image-input" style={{ display: "none" }}
@@ -230,7 +268,6 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
             }}>🖼 이미지 변경</label>
           </div>
 
-          {/* 닉네임 수정 */}
           <div>
             <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 8, display: "block" }}>닉네임 수정</label>
             <input style={inputStyle} value={username} onChange={e => setUsername(e.target.value)} placeholder="새 닉네임" />
@@ -496,6 +533,42 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
       {/* 설정 탭 */}
       {activeTab === "settings" && (
         <div className="glass-card" style={{ borderRadius: 24, padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
+
+          {/* 성인 인증 */}
+          <div>
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>🔞 성인 인증</div>
+            <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 16, lineHeight: 1.6 }}>
+              성인 인증 시 19금 캐릭터와 콘텐츠에 접근할 수 있어요.<br />
+              <span style={{ fontSize: 12, color: "#ff9532" }}>※ 현재 자기선언 방식 — 사업자등록 후 본인인증으로 교체 예정</span>
+            </div>
+            {user?.is_adult === 1 ? (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderRadius: 14, border: "1px solid rgba(255,107,138,.3)", background: "rgba(255,107,138,.06)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 20 }}>🔞</span>
+                  <div>
+                    <div style={{ fontWeight: 600, color: "#ff6b8a" }}>성인 인증 완료</div>
+                    <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 2 }}>19금 콘텐츠 접근 가능</div>
+                  </div>
+                </div>
+                <button onClick={handleAdultCancel} disabled={adultLoading} style={{
+                  padding: "8px 14px", borderRadius: 10, fontSize: 13,
+                  border: "1px solid var(--border-default)",
+                  background: "rgba(255,255,255,.04)",
+                  color: "var(--text-muted)", cursor: "pointer",
+                }}>인증 해제</button>
+              </div>
+            ) : (
+              <button onClick={() => setShowAdultConfirm(true)} style={{
+                width: "100%", padding: "14px", borderRadius: 14,
+                border: "1px solid rgba(255,107,138,.3)",
+                background: "rgba(255,107,138,.08)",
+                color: "#ff6b8a", fontWeight: 600, fontSize: 15,
+                cursor: "pointer",
+              }}>🔞 성인 인증하기</button>
+            )}
+          </div>
+
+          {/* 기본 출력량 */}
           <div>
             <div style={{ fontWeight: 600, marginBottom: 8 }}>기본 출력량</div>
             <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 16 }}>AI 응답의 기본 길이를 설정해요.</div>
@@ -515,6 +588,7 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
             </div>
           </div>
 
+          {/* 세이프티 모드 */}
           <div>
             <div style={{ fontWeight: 600, marginBottom: 8 }}>세이프티 모드</div>
             <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 16 }}>부적절한 콘텐츠를 필터링해요.</div>
@@ -570,6 +644,45 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
           characterName={myCharacters.find(c => c.id === showImageModal)?.name ?? ""}
           onClose={() => setShowImageModal(null)}
         />
+      )}
+
+      {/* 성인 인증 확인 모달 */}
+      {showAdultConfirm && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "grid", placeItems: "center", zIndex: 100 }}>
+          <div style={{
+            borderRadius: 24, padding: 32,
+            background: "rgba(17,21,40,.98)",
+            border: "1px solid rgba(255,107,138,.3)",
+            width: 380, maxWidth: "90vw",
+          }}>
+            <div style={{ fontSize: 32, textAlign: "center", marginBottom: 16 }}>🔞</div>
+            <div style={{ fontWeight: 700, fontSize: 18, textAlign: "center", marginBottom: 12 }}>성인 인증</div>
+            <div style={{ color: "var(--text-muted)", fontSize: 14, textAlign: "center", lineHeight: 1.7, marginBottom: 24 }}>
+              본인이 만 18세 이상임을 확인합니다.<br />
+              미성년자가 성인 콘텐츠에 접근하는 것은<br />
+              법적으로 금지되어 있습니다.<br />
+              <span style={{ color: "#ff9532", fontSize: 12, marginTop: 8, display: "block" }}>
+                ※ 추후 실명 본인인증으로 교체될 예정입니다.
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setShowAdultConfirm(false)} style={{
+                flex: 1, padding: "14px", borderRadius: 14,
+                border: "1px solid var(--border-default)",
+                background: "none", color: "var(--text-muted)",
+                fontWeight: 600, cursor: "pointer",
+              }}>취소</button>
+              <button onClick={handleAdultVerify} disabled={adultLoading} style={{
+                flex: 1, padding: "14px", borderRadius: 14, border: "none",
+                background: "linear-gradient(135deg, #ff6b8a, #ff9532)",
+                color: "#fff", fontWeight: 700, cursor: "pointer",
+                opacity: adultLoading ? 0.7 : 1,
+              }}>
+                {adultLoading ? "처리 중..." : "만 18세 이상입니다"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

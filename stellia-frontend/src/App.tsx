@@ -18,7 +18,6 @@ import MyPage from "./components/MyPage";
 import AdminPage from "./components/AdminPage";
 import CharacterProfileModal from "./components/CharacterProfileModal";
 import RankingPage from "./components/RankingPage";
-import { Toast, useToast } from "./components/Toast";
 import NoticePage from "./components/NoticePage";
 
 export interface Character {
@@ -67,7 +66,7 @@ export default function App() {
   const [sharedCharacter, setSharedCharacter] = useState<Character | null>(null);
   const [editCharacterId, setEditCharacterId] = useState<string | null>(null);
   const [creatorUserId, setCreatorUserId] = useState<number | null>(null);
-  const { toasts, removeToast } = useToast();
+  
 
   useEffect(() => {
     if (token) {
@@ -148,7 +147,6 @@ export default function App() {
   return (
     <>
       <StarBackground />
-      <Toast toasts={toasts} onRemove={removeToast} />
 
       {/* 공유 캐릭터 모달 */}
       {sharedCharacter && (

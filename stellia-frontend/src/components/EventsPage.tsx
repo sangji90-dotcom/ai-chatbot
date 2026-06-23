@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { useToast } from "./Toast";
 
 interface EventsPageProps {
   apiUrl: string;
@@ -9,44 +10,40 @@ interface EventsPageProps {
 
 export default function EventsPage({ apiUrl, token, onBack }: EventsPageProps) {
   const headers = { Authorization: `Bearer ${token}` };
-  
+  const toast = useToast();
+
   const [referralCode, setReferralCode] = useState("");
   const [inputCode, setInputCode] = useState("");
   const [attendanceStreak, setAttendanceStreak] = useState(0);
   const [purchaseStreak, setPurchaseStreak] = useState(0);
   const [streakRewardClaimed, setStreakRewardClaimed] = useState(false);
-  const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [silverExpiring, setSilverExpiring] = useState<{amount: number, days_left: number | null} | null>(null);
-  
 
   useEffect(() => {
-  // 초대 코드 조회
-  axios.get(`${apiUrl}/events/referral-code`, { headers })
-    .then(res => setReferralCode(res.data.code))
-    .catch(console.error);
+    axios.get(`${apiUrl}/events/referral-code`, { headers })
+      .then(res => setReferralCode(res.data.code))
+      .catch(console.error);
 
-    // 유저 정보 (streak + 은화 만료)
-  axios.get(`${apiUrl}/users/me`, { headers })
-    .then(res => {
-      setAttendanceStreak(res.data.attendance_streak ?? 0);
-      setPurchaseStreak(res.data.consecutive_purchase_days ?? 0);
-      if (res.data.silver_expiring?.amount > 0) {
-        setSilverExpiring(res.data.silver_expiring);
-      }
-      if (res.data.streak_reward_claimed_at) {
-        const claimedDate = new Date(res.data.streak_reward_claimed_at).toDateString();
-        const today = new Date().toDateString();
-        setStreakRewardClaimed(claimedDate === today);
-      }
-    })
-    .catch(console.error);
-}, []);
+    axios.get(`${apiUrl}/users/me`, { headers })
+      .then(res => {
+        setAttendanceStreak(res.data.attendance_streak ?? 0);
+        setPurchaseStreak(res.data.consecutive_purchase_days ?? 0);
+        if (res.data.silver_expiring?.amount > 0) {
+          setSilverExpiring(res.data.silver_expiring);
+        }
+        if (res.data.streak_reward_claimed_at) {
+          const claimedDate = new Date(res.data.streak_reward_claimed_at).toDateString();
+          const today = new Date().toDateString();
+          setStreakRewardClaimed(claimedDate === today);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(referralCode);
-    setMsg("초대 코드가 복사됐어요!");
-    setTimeout(() => setMsg(""), 2000);
+    toast.success("초대 코드가 복사됐어요!");
   };
 
   const handleUseCode = async () => {
@@ -55,12 +52,11 @@ export default function EventsPage({ apiUrl, token, onBack }: EventsPageProps) {
     try {
       const res = await axios.post(`${apiUrl}/events/referral/use`,
         { code: inputCode.trim().toUpperCase() }, { headers });
-      setMsg(res.data.message);
+      toast.success(res.data.message);
     } catch (e: any) {
-      setMsg(e.response?.data?.detail ?? "오류가 발생했어요.");
+      toast.error(e.response?.data?.detail ?? "오류가 발생했어요.");
     } finally {
       setLoading(false);
-      setTimeout(() => setMsg(""), 3000);
     }
   };
 
@@ -68,20 +64,18 @@ export default function EventsPage({ apiUrl, token, onBack }: EventsPageProps) {
     setLoading(true);
     try {
       const res = await axios.post(`${apiUrl}/events/attendance-streak-reward`, {}, { headers });
-      setMsg(res.data.message);
+      toast.success(res.data.message);
       setStreakRewardClaimed(true);
     } catch (e: any) {
-      setMsg(e.response?.data?.detail ?? "오류가 발생했어요.");
+      toast.error(e.response?.data?.detail ?? "오류가 발생했어요.");
     } finally {
       setLoading(false);
-      setTimeout(() => setMsg(""), 3000);
     }
   };
 
   return (
     <div style={{ position: "relative", zIndex: 2, minHeight: "100vh" }}>
 
-      {/* 네비바 */}
       <nav style={{
         position: "sticky", top: 0, zIndex: 10,
         display: "flex", alignItems: "center", gap: 16,
@@ -105,29 +99,18 @@ export default function EventsPage({ apiUrl, token, onBack }: EventsPageProps) {
 
       <div style={{ maxWidth: 720, margin: "40px auto", padding: "0 24px", display: "flex", flexDirection: "column", gap: 24 }}>
 
-        {/* 메시지 토스트 */}
-        {msg && (
-          <div style={{
-            padding: "12px 20px", borderRadius: 12,
-            background: "rgba(139,124,255,.2)",
-            border: "1px solid rgba(139,124,255,.4)",
-            color: "var(--text-primary)", fontSize: 14, textAlign: "center",
-          }}>{msg}</div>
-        )}
-
         {/* 7일 연속 출석 */}
         <EventCard title="🗓 7일 연속 출석" badge="은화 5,000">
-        {silverExpiring && silverExpiring.amount > 0 && (
-    <div style={{
-                padding: "10px 16px", borderRadius: 10, marginBottom: 16,
-                background: "rgba(255,150,50,.12)",
-                border: "1px solid rgba(255,150,50,.3)",
-                color: "#ff9532", fontSize: 13,
+          {silverExpiring && silverExpiring.amount > 0 && (
+            <div style={{
+              padding: "10px 16px", borderRadius: 10, marginBottom: 16,
+              background: "rgba(255,150,50,.12)",
+              border: "1px solid rgba(255,150,50,.3)",
+              color: "#ff9532", fontSize: 13,
             }}>
               ⚠ 은화 {silverExpiring.amount.toLocaleString()}개가 {silverExpiring.days_left}일 후 만료돼요!
-    </div>
-            )}
-  <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 16 }}></p>
+            </div>
+          )}
           <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 16 }}>
             7일 연속 출석체크 시 은화 5,000개를 드려요. (21일 내 사용)
           </p>
@@ -188,7 +171,6 @@ export default function EventsPage({ apiUrl, token, onBack }: EventsPageProps) {
             친구가 내 코드로 가입하면 나는 금화 500개, 친구는 금화 300개를 받아요.
           </p>
 
-          {/* 내 코드 */}
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 8 }}>내 초대 코드</div>
             <div style={{ display: "flex", gap: 10 }}>
@@ -211,7 +193,6 @@ export default function EventsPage({ apiUrl, token, onBack }: EventsPageProps) {
             </div>
           </div>
 
-          {/* 코드 입력 */}
           <div>
             <div style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 8 }}>초대 코드 입력</div>
             <div style={{ display: "flex", gap: 10 }}>
@@ -243,7 +224,6 @@ export default function EventsPage({ apiUrl, token, onBack }: EventsPageProps) {
             </div>
           </div>
         </EventCard>
-
       </div>
     </div>
   );

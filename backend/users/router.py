@@ -407,6 +407,26 @@ async def upload_profile_image(
 
     return {"image_url": image_url, "message": "프로필 이미지 업로드 완료"}
 
+@router.post("/me/adult-verify", summary="성인 인증 (임시 자기선언)")
+async def adult_verify(current_user: dict = Depends(get_current_user)):
+    """PG 본인인증 연동 전 임시 자기선언 방식"""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET is_adult = 1 WHERE id = ?", (current_user["id"],))
+    conn.commit()
+    conn.close()
+    return {"message": "성인 인증 완료", "is_adult": 1}
+
+
+@router.delete("/me/adult-verify", summary="성인 인증 해제")
+async def adult_verify_cancel(current_user: dict = Depends(get_current_user)):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET is_adult = 0 WHERE id = ?", (current_user["id"],))
+    conn.commit()
+    conn.close()
+    return {"message": "성인 인증 해제 완료", "is_adult": 0}
+
 
 @router.patch("/me/password", summary="비밀번호 변경")
 async def change_password(
@@ -519,6 +539,8 @@ async def block_user(
     if not cursor.fetchone():
         conn.close()
         raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
+    
+    
 
     try:
         cursor.execute("INSERT INTO user_blocks (blocker_id, blocked_id) VALUES (?, ?)",

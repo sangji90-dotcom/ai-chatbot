@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import PolicyModal from "./PolicyModal";
+import { useToast } from "./Toast";
 
 interface CreateCharacterPageProps {
   apiUrl: string;
@@ -55,29 +56,18 @@ const TEMPLATES = {
 };
 
 export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }: CreateCharacterPageProps) {
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<"profile" | "detail" | "images" | "situation" | "setting">("profile");
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
-  const [error, setError] = useState("");
   const [showPolicy, setShowPolicy] = useState(true);
 
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    age: 20,
-    job: "",
-    personality: "",
-    likes: "",
-    dislikes: "",
-    speech_style: "",
-    situation: "",
-    first_message: "",
-    visibility: "public",
-    is_adult: 0,
-    image_url: "",
-    tags: [] as string[],
-    category: "",
-    party_enabled: 0,
+    name: "", description: "", age: 20, job: "",
+    personality: "", likes: "", dislikes: "", speech_style: "",
+    situation: "", first_message: "",
+    visibility: "public", is_adult: 0, image_url: "",
+    tags: [] as string[], category: "", party_enabled: 0,
   });
 
   const [emotionFiles, setEmotionFiles] = useState<Record<string, File>>({});
@@ -115,37 +105,34 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
   };
 
   const handleAutoComplete = async () => {
-  if (!formData.name) return;
-      setAiLoading(true);
-      try {
-    const headers = { Authorization: `Bearer ${token}` };
-    const res = await axios.post(`${apiUrl}/characters/auto-complete`, {
-      name: formData.name,
-      description: formData.description,
-      job: formData.job,
-      age: formData.age,
-    }, { headers });
-
-        if (res.data.personality) update("personality", res.data.personality);
-        if (res.data.speech_style) update("speech_style", res.data.speech_style);
-        if (res.data.likes) update("likes", res.data.likes);
-        if (res.data.dislikes) update("dislikes", res.data.dislikes);
-        if (res.data.first_message) update("first_message", res.data.first_message);
-        if (res.data.situation) update("situation", res.data.situation);
+    if (!formData.name) return;
+    setAiLoading(true);
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      const res = await axios.post(`${apiUrl}/characters/auto-complete`, {
+        name: formData.name, description: formData.description,
+        job: formData.job, age: formData.age,
+      }, { headers });
+      if (res.data.personality) update("personality", res.data.personality);
+      if (res.data.speech_style) update("speech_style", res.data.speech_style);
+      if (res.data.likes) update("likes", res.data.likes);
+      if (res.data.dislikes) update("dislikes", res.data.dislikes);
+      if (res.data.first_message) update("first_message", res.data.first_message);
+      if (res.data.situation) update("situation", res.data.situation);
+      toast.success("AI 자동완성 완료!");
     } catch {
-        setError("AI 자동완성에 실패했어요.");
+      toast.error("AI 자동완성에 실패했어요.");
     } finally {
-        setAiLoading(false);
+      setAiLoading(false);
     }
-        };
+  };
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.personality || !formData.speech_style) {
-      setError("이름, 성격, 말투는 필수예요.");
+      toast.error("이름, 성격, 말투는 필수예요.");
       return;
     }
     setLoading(true);
-    setError("");
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const submitData = { ...formData, image_url: "" };
@@ -170,10 +157,11 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
         await axios.post(`${apiUrl}/characters/${characterId}/backgrounds/${situation}`, fd, { headers });
       }
 
+      toast.success("캐릭터 생성 완료!");
       onCreated();
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.detail || "캐릭터 생성에 실패했어요.");
+        toast.error(err.response?.data?.detail || "캐릭터 생성에 실패했어요.");
       }
     } finally {
       setLoading(false);
@@ -205,71 +193,46 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
   return (
     <>
       {showPolicy && (
-        <PolicyModal
-          onAgree={() => setShowPolicy(false)}
-          onClose={onBack}
-        />
+        <PolicyModal onAgree={() => setShowPolicy(false)} onClose={onBack} />
       )}
-      <div
-        style={{
-          position: "relative", zIndex: 2,
-          height: "100vh", display: "flex", flexDirection: "column",
-          maxWidth: 600, margin: "0 auto",
-          padding: "24px", overflowY: "auto",
-        }}
-      >
-        {/* 헤더 */}
+      <div style={{
+        position: "relative", zIndex: 2,
+        height: "100vh", display: "flex", flexDirection: "column",
+        maxWidth: 600, margin: "0 auto",
+        padding: "24px", overflowY: "auto",
+      }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
-          <button
-            onClick={onBack}
-            style={{
-              width: 40, height: 40, borderRadius: 12,
-              border: "1px solid var(--border-default)",
-              background: "rgba(255,255,255,.04)",
-              color: "var(--text-primary)", fontSize: 18, cursor: "pointer",
-            }}
-          >
-            ←
-          </button>
-          <div
-            style={{
-              fontSize: 22, fontWeight: 700,
-              background: "var(--gradient-cosmic)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            캐릭터 만들기
-          </div>
+          <button onClick={onBack} style={{
+            width: 40, height: 40, borderRadius: 12,
+            border: "1px solid var(--border-default)",
+            background: "rgba(255,255,255,.04)",
+            color: "var(--text-primary)", fontSize: 18, cursor: "pointer",
+          }}>←</button>
+          <div style={{
+            fontSize: 22, fontWeight: 700,
+            background: "var(--gradient-cosmic)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}>캐릭터 만들기</div>
         </div>
 
-        {/* 탭 */}
-        <div
-          style={{
-            display: "flex", borderRadius: 16,
-            background: "rgba(255,255,255,.04)",
-            border: "1px solid var(--border-default)",
-            overflow: "hidden", marginBottom: 24,
-          }}
-        >
+        <div style={{
+          display: "flex", borderRadius: 16,
+          background: "rgba(255,255,255,.04)",
+          border: "1px solid var(--border-default)",
+          overflow: "hidden", marginBottom: 24,
+        }}>
           {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                flex: 1, padding: "12px", border: "none",
-                background: activeTab === tab.id ? "var(--gradient-cosmic)" : "transparent",
-                color: activeTab === tab.id ? "#fff" : "var(--text-muted)",
-                fontWeight: 600, fontSize: 11, transition: "all .2s ease", cursor: "pointer",
-              }}
-            >
-              {tab.label}
-            </button>
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+              flex: 1, padding: "12px", border: "none",
+              background: activeTab === tab.id ? "var(--gradient-cosmic)" : "transparent",
+              color: activeTab === tab.id ? "#fff" : "var(--text-muted)",
+              fontWeight: 600, fontSize: 11, transition: "all .2s ease", cursor: "pointer",
+            }}>{tab.label}</button>
           ))}
         </div>
 
-        {/* 폼 */}
         <div className="glass-card" style={{ borderRadius: 24, padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
 
           {activeTab === "profile" && (
@@ -300,57 +263,43 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
 
           {activeTab === "detail" && (
             <>
-            {/* 템플릿 선택 */}
-        <div>
-            <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 10, display: "block" }}>
-            템플릿으로 빠르게 시작하기
-          </label>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {Object.keys(TEMPLATES).map(key => (
-              <button
-                key={key}
-                onClick={() => {
-                  const t = TEMPLATES[key as keyof typeof TEMPLATES];
-                  update("personality", t.personality);
-                  update("speech_style", t.speech_style);
-                  update("first_message", t.first_message);
-                }}
-                style={{
-                  padding: "8px 16px", borderRadius: 999, fontSize: 13,
-                  border: "1px solid var(--border-default)",
-                  background: "rgba(255,255,255,.04)",
-                  color: "var(--text-secondary)", cursor: "pointer",
-                  transition: "all .2s ease",
-                }}
-              >
-                {key}
-              </button>
-            ))}
-          </div>
-        </div>
+              <div>
+                <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 10, display: "block" }}>템플릿으로 빠르게 시작하기</label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {Object.keys(TEMPLATES).map(key => (
+                    <button key={key} onClick={() => {
+                      const t = TEMPLATES[key as keyof typeof TEMPLATES];
+                      update("personality", t.personality);
+                      update("speech_style", t.speech_style);
+                      update("first_message", t.first_message);
+                    }} style={{
+                      padding: "8px 16px", borderRadius: 999, fontSize: 13,
+                      border: "1px solid var(--border-default)",
+                      background: "rgba(255,255,255,.04)",
+                      color: "var(--text-secondary)", cursor: "pointer",
+                    }}>{key}</button>
+                  ))}
+                </div>
+              </div>
 
-        {/* AI 자동완성 버튼 */}
-        <div>
-          <button
-            onClick={handleAutoComplete}
-            disabled={!formData.name || aiLoading}
-            style={{
-              width: "100%", padding: "12px", borderRadius: 14,
-              border: "1px solid rgba(246,198,91,.4)",
-              background: "linear-gradient(135deg, rgba(246,198,91,.15), rgba(246,198,91,.05))",
-              color: "var(--gold)", fontWeight: 600, fontSize: 14,
-              cursor: !formData.name || aiLoading ? "not-allowed" : "pointer",
-              opacity: !formData.name ? 0.5 : 1,
-            }}
-        >
-            {aiLoading ? "AI 생성 중..." : "✦ AI 자동완성 (이름/소개 기반)"}
-          </button>
-          {!formData.name && (
-            <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 6, textAlign: "center" }}>
-              프로필 탭에서 이름을 먼저 입력해주세요
-            </div>
-              )}
-            </div>
+              <div>
+                <button onClick={handleAutoComplete} disabled={!formData.name || aiLoading} style={{
+                  width: "100%", padding: "12px", borderRadius: 14,
+                  border: "1px solid rgba(246,198,91,.4)",
+                  background: "linear-gradient(135deg, rgba(246,198,91,.15), rgba(246,198,91,.05))",
+                  color: "var(--gold)", fontWeight: 600, fontSize: 14,
+                  cursor: !formData.name || aiLoading ? "not-allowed" : "pointer",
+                  opacity: !formData.name ? 0.5 : 1,
+                }}>
+                  {aiLoading ? "AI 생성 중..." : "✦ AI 자동완성 (이름/소개 기반)"}
+                </button>
+                {!formData.name && (
+                  <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 6, textAlign: "center" }}>
+                    프로필 탭에서 이름을 먼저 입력해주세요
+                  </div>
+                )}
+              </div>
+
               <div>
                 <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 8, display: "block" }}>성격 *</label>
                 <textarea style={textareaStyle} placeholder="성격을 상세히 입력해주세요" value={formData.personality} onChange={e => update("personality", e.target.value)} />
@@ -466,62 +415,30 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
                     { value: "public", label: "모든 사용자가 이용 가능해요", icon: "🟢" },
                     { value: "private", label: "나만 이용 가능해요", icon: "🔒" },
                   ].map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => update("visibility", opt.value)}
-                      style={{
-                        padding: "14px 16px", borderRadius: 14, textAlign: "left",
-                        border: formData.visibility === opt.value ? "1px solid var(--primary)" : "1px solid var(--border-default)",
-                        background: formData.visibility === opt.value ? "rgba(139,124,255,.12)" : "rgba(255,255,255,.02)",
-                        color: formData.visibility === opt.value ? "var(--primary)" : "var(--text-muted)",
-                        fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 10,
-                      }}
-                    >
+                    <button key={opt.value} onClick={() => update("visibility", opt.value)} style={{
+                      padding: "14px 16px", borderRadius: 14, textAlign: "left",
+                      border: formData.visibility === opt.value ? "1px solid var(--primary)" : "1px solid var(--border-default)",
+                      background: formData.visibility === opt.value ? "rgba(139,124,255,.12)" : "rgba(255,255,255,.02)",
+                      color: formData.visibility === opt.value ? "var(--primary)" : "var(--text-muted)",
+                      fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 10,
+                    }}>
                       <span>{opt.icon}</span>{opt.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-                  <div>
-              <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 12, display: "block" }}>파티챗</label>
-              <div style={{ display: "flex", gap: 10 }}>
-              {[{ label: "비활성화", value: 0 }, { label: "활성화", value: 1 }].map(opt => (
-            <button
-              key={opt.value}
-              onClick={() => update("party_enabled", opt.value)}
-              style={{
-                  flex: 1, padding: "12px", borderRadius: 14,
-                  border: formData.party_enabled === opt.value ? "1px solid rgba(139,124,255,.6)" : "1px solid var(--border-default)",
-                  background: formData.party_enabled === opt.value ? "rgba(139,124,255,.12)" : "rgba(255,255,255,.02)",
-                  color: formData.party_enabled === opt.value ? "var(--primary)" : "var(--text-muted)",
-                  fontWeight: 600, cursor: "pointer",
-                    }}
-                  >{opt.label}</button>
-                  ))}
-              </div>
-                <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 8 }}>
-                  활성화 시 캐릭터 프로필에서 파티챗 방 만들기 버튼이 표시돼요.
-              </div>
-            </div>
-
               <div>
                 <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 12, display: "block" }}>이용 제한</label>
                 <div style={{ display: "flex", gap: 10 }}>
                   {[{ label: "전체 이용가", value: 0 }, { label: "성인 전용", value: 1 }].map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => update("is_adult", opt.value)}
-                      style={{
-                        flex: 1, padding: "12px", borderRadius: 14,
-                        border: formData.is_adult === opt.value ? "1px solid var(--primary)" : "1px solid var(--border-default)",
-                        background: formData.is_adult === opt.value ? "rgba(139,124,255,.12)" : "rgba(255,255,255,.02)",
-                        color: formData.is_adult === opt.value ? "var(--primary)" : "var(--text-muted)",
-                        fontWeight: 600, cursor: "pointer",
-                      }}
-                    >
-                      {opt.label}
-                    </button>
+                    <button key={opt.value} onClick={() => update("is_adult", opt.value)} style={{
+                      flex: 1, padding: "12px", borderRadius: 14,
+                      border: formData.is_adult === opt.value ? "1px solid var(--primary)" : "1px solid var(--border-default)",
+                      background: formData.is_adult === opt.value ? "rgba(139,124,255,.12)" : "rgba(255,255,255,.02)",
+                      color: formData.is_adult === opt.value ? "var(--primary)" : "var(--text-muted)",
+                      fontWeight: 600, cursor: "pointer",
+                    }}>{opt.label}</button>
                   ))}
                 </div>
               </div>
@@ -530,36 +447,42 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
                 <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 12, display: "block" }}>카테고리</label>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
                   {CATEGORIES.map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => update("category", cat)}
-                      style={{
-                        padding: "10px 8px", borderRadius: 12, fontSize: 13,
-                        border: formData.category === cat ? "1px solid var(--primary)" : "1px solid var(--border-default)",
-                        background: formData.category === cat ? "rgba(139,124,255,.12)" : "rgba(255,255,255,.02)",
-                        color: formData.category === cat ? "var(--primary)" : "var(--text-muted)",
-                        fontWeight: 600, cursor: "pointer",
-                      }}
-                    >
-                      {cat}
-                    </button>
+                    <button key={cat} onClick={() => update("category", cat)} style={{
+                      padding: "10px 8px", borderRadius: 12, fontSize: 13,
+                      border: formData.category === cat ? "1px solid var(--primary)" : "1px solid var(--border-default)",
+                      background: formData.category === cat ? "rgba(139,124,255,.12)" : "rgba(255,255,255,.02)",
+                      color: formData.category === cat ? "var(--primary)" : "var(--text-muted)",
+                      fontWeight: 600, cursor: "pointer",
+                    }}>{cat}</button>
                   ))}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 12, display: "block" }}>파티챗</label>
+                <div style={{ display: "flex", gap: 10 }}>
+                  {[{ label: "비활성화", value: 0 }, { label: "활성화", value: 1 }].map(opt => (
+                    <button key={opt.value} onClick={() => update("party_enabled", opt.value)} style={{
+                      flex: 1, padding: "12px", borderRadius: 14,
+                      border: formData.party_enabled === opt.value ? "1px solid rgba(139,124,255,.6)" : "1px solid var(--border-default)",
+                      background: formData.party_enabled === opt.value ? "rgba(139,124,255,.12)" : "rgba(255,255,255,.02)",
+                      color: formData.party_enabled === opt.value ? "var(--primary)" : "var(--text-muted)",
+                      fontWeight: 600, cursor: "pointer",
+                    }}>{opt.label}</button>
+                  ))}
+                </div>
+                <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 8 }}>
+                  활성화 시 캐릭터 프로필에서 파티챗 방 만들기 버튼이 표시돼요.
                 </div>
               </div>
 
               <div>
                 <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 8, display: "block" }}>태그</label>
                 <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                  <input
-                    style={{ ...inputStyle, flex: 1 }}
-                    placeholder="태그 입력 후 추가"
-                    value={tagInput}
-                    onChange={e => setTagInput(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && addTag()}
-                  />
-                  <button onClick={addTag} style={{ padding: "14px 18px", borderRadius: 14, border: "1px solid var(--primary)", background: "rgba(139,124,255,.12)", color: "var(--primary)", fontWeight: 600, cursor: "pointer" }}>
-                    추가
-                  </button>
+                  <input style={{ ...inputStyle, flex: 1 }} placeholder="태그 입력 후 추가"
+                    value={tagInput} onChange={e => setTagInput(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && addTag()} />
+                  <button onClick={addTag} style={{ padding: "14px 18px", borderRadius: 14, border: "1px solid var(--primary)", background: "rgba(139,124,255,.12)", color: "var(--primary)", fontWeight: 600, cursor: "pointer" }}>추가</button>
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {formData.tags.map(tag => (
@@ -571,26 +494,20 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
                 </div>
               </div>
 
-              {error && <div style={{ color: "#ff6b8a", fontSize: 13, textAlign: "center" }}>{error}</div>}
-
               {loading && (
                 <div style={{ textAlign: "center", color: "var(--text-muted)", fontSize: 14 }}>
                   캐릭터 생성 중... 이미지 업로드 중...
                 </div>
               )}
 
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                style={{
-                  padding: "16px", borderRadius: 16, border: "none",
-                  background: "var(--gradient-cosmic)",
-                  color: "#fff", fontWeight: 700, fontSize: 16,
-                  opacity: loading ? 0.7 : 1,
-                  cursor: loading ? "not-allowed" : "pointer",
-                  boxShadow: "0 0 30px rgba(139,124,255,.3)",
-                }}
-              >
+              <button onClick={handleSubmit} disabled={loading} style={{
+                padding: "16px", borderRadius: 16, border: "none",
+                background: "var(--gradient-cosmic)",
+                color: "#fff", fontWeight: 700, fontSize: 16,
+                opacity: loading ? 0.7 : 1,
+                cursor: loading ? "not-allowed" : "pointer",
+                boxShadow: "0 0 30px rgba(139,124,255,.3)",
+              }}>
                 {loading ? "생성 중..." : "캐릭터 생성 완료"}
               </button>
             </>
