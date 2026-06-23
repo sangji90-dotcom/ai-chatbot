@@ -62,7 +62,7 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
           // 가장 최근 세션 이어하기
           const latestSession = sessionList[0].session_id;
           setSessionId(latestSession);
-          loadHistory(latestSession);
+          loadHistory();
         } else {
           // 새 세션
           const newId = "session_" + Math.random().toString(36).substr(2, 9);
@@ -98,7 +98,7 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const loadHistory = async (sid: string) => {
+  const loadHistory = async () => {
     try {
       const res = await axios.get(`${apiUrl}/chat/history/${character.id}`, { headers });
       const history: Message[] = res.data

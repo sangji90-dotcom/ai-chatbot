@@ -9,7 +9,6 @@ interface NoticePageProps {
 
 export default function NoticePage({ apiUrl, token, onBack }: NoticePageProps) {
   const [notices, setNotices] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
   const [selectedNotice, setSelectedNotice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +18,6 @@ export default function NoticePage({ apiUrl, token, onBack }: NoticePageProps) {
     axios.get(`${apiUrl}/notices`, { headers })
       .then(res => {
         setNotices(res.data.notices);
-        setTotal(res.data.total);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
