@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import type { Character } from "../App";
+import LazyImage from "./LazyImage";
 
 interface CreatorPageProps {
   apiUrl: string;
@@ -115,10 +116,14 @@ export default function CreatorPage({ apiUrl, token, userId, onBack, onSelectCha
               overflow: "hidden", flexShrink: 0,
               boxShadow: "var(--shadow-glow-primary)",
             }}>
-              {creator.profile_image_url
-                ? <img src={creator.profile_image_url} alt={creator.username}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : creator.username?.[0]?.toUpperCase()}
+          {creator.profile_image_url
+            ? <LazyImage
+              src={creator.profile_image_url}
+              alt={creator.username}
+              fallback={creator.username?.[0]?.toUpperCase()}
+              style={{ width: "100%", height: "100%", borderRadius: "50%" }}
+              />
+              : creator.username?.[0]?.toUpperCase()}
             </div>
 
             {/* 이름 + 칭호 */}
@@ -193,18 +198,22 @@ export default function CreatorPage({ apiUrl, token, userId, onBack, onSelectCha
                 }}>
                   <div style={{ position: "relative", height: 180, overflow: "hidden" }}>
                     {char.avatar ? (
-                      <img src={char.avatar} alt={char.name}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    ) : (
-                      <div style={{
-                        width: "100%", height: "100%",
-                        background: "var(--gradient-cosmic)",
-                        display: "grid", placeItems: "center",
-                        fontSize: 56, fontWeight: 700,
-                      }}>{char.name[0]}</div>
-                    )}
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(9,11,20,.9), transparent 50%)" }} />
-                  </div>
+                    <LazyImage
+                      src={char.avatar}
+                      alt={char.name}
+                      fallback={char.name[0]}
+                      style={{ width: "100%", height: "100%" }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: "100%", height: "100%",
+                      background: "var(--gradient-cosmic)",
+                      display: "grid", placeItems: "center",
+                      fontSize: 56, fontWeight: 700,
+                    }}>{char.name[0]}</div>
+                  )}
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(9,11,20,.9), transparent 50%)" }} />
+                </div>
                   <div style={{ padding: "12px 14px" }}>
                     <div style={{ fontWeight: 700, fontSize: 14 }}>{char.name}</div>
                     <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

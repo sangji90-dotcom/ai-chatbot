@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import type { Character } from "../App";
 import { RankingItemSkeleton } from "./Skeleton";
+import LazyImage from "./LazyImage";
 
 interface RankingPageProps {
   apiUrl: string;
@@ -140,9 +141,14 @@ export default function RankingPage({ apiUrl, token, onBack, onSelectCharacter }
                       display: "grid", placeItems: "center",
                       fontWeight: 700, fontSize: i === 0 ? 28 : 22,
                       border: `2px solid ${RANK_COLORS[i]}`,
-                    }}>
-                      {characters[i].avatar
-                        ? <img src={characters[i].avatar} alt={characters[i].name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  }}>
+                  {characters[i].avatar
+                  ? <LazyImage
+                    src={characters[i].avatar}
+                    alt={characters[i].name}
+                    fallback={characters[i].name[0]}
+                    style={{ width: "100%", height: "100%", borderRadius: "50%" }}
+                  />
                         : characters[i].name[0]}
                     </div>
                     <div style={{ fontWeight: 700, fontSize: i === 0 ? 15 : 13, marginBottom: 4 }}>{characters[i].name}</div>
@@ -175,8 +181,13 @@ export default function RankingPage({ apiUrl, token, onBack, onSelectCharacter }
                     fontWeight: 700, fontSize: 18, flexShrink: 0, overflow: "hidden",
                   }}>
                     {char.avatar
-                      ? <img src={char.avatar} alt={char.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      : char.name[0]}
+                      ? <LazyImage
+                      src={char.avatar}
+                      alt={char.name}
+                      fallback={char.name[0]}
+                      style={{ width: "100%", height: "100%", borderRadius: "50%" }}
+                    />
+                    : char.name[0]}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 600, fontSize: 14 }}>{char.name}</div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import type { Character } from "../App";
+import LazyImage from "./LazyImage";
 
 interface SearchPageProps {
   apiUrl: string;
@@ -225,8 +226,15 @@ export default function SearchPage({ apiUrl, token, onBack, onSelectCharacter }:
                 }}>
                   <div style={{ width: 28, fontWeight: 700, fontSize: 16, color: i < 3 ? "var(--primary)" : "var(--text-muted)", flexShrink: 0 }}>{i + 1}</div>
                   <div style={{ width: 40, height: 40, borderRadius: "50%", background: char.avatar ? "none" : "var(--gradient-cosmic)", display: "grid", placeItems: "center", fontWeight: 700, fontSize: 16, flexShrink: 0, overflow: "hidden" }}>
-                    {char.avatar ? <img src={char.avatar} alt={char.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : char.name[0]}
-                  </div>
+                    {char.avatar
+                ? <LazyImage
+                    src={char.avatar}
+                    alt={char.name}
+                    fallback={char.name[0]}
+                    style={{ width: "100%", height: "100%", borderRadius: "50%" }}
+                />
+                : char.name[0]}
+                </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 600 }}>{char.name}</div>
                     <div style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{char.description}</div>
@@ -271,7 +279,12 @@ function CharacterRow({ character, onClick, onTagClick }: {
         fontWeight: 700, fontSize: 18, flexShrink: 0, overflow: "hidden",
       }}>
         {character.avatar
-          ? <img src={character.avatar} alt={character.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ? <LazyImage
+            src={character.avatar}
+            alt={character.name}
+            fallback={character.name[0]}
+            style={{ width: "100%", height: "100%", borderRadius: "50%" }}
+            />
           : character.name[0]}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>

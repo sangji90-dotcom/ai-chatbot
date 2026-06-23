@@ -4,6 +4,7 @@ import type { Character, User } from "../App";
 import CoinModal from "./CoinModal";
 import NotificationModal from "./NotificationModal";
 import { CharacterGridSkeleton, BannerSkeleton } from "./Skeleton";
+import LazyImage from "./LazyImage";
 
 interface HomePageProps {
   apiUrl: string;
@@ -446,13 +447,17 @@ function CharacterCard({ character, onClick }: { character: Character; onClick: 
       }}
     >
       <div style={{ position: "relative", height: 200, overflow: "hidden" }}>
-        {character.avatar ? (
-          <img src={character.avatar} alt={character.name}
-            style={{
-              width: "100%", height: "100%", objectFit: "cover",
-              transform: hovered ? "scale(1.05)" : "scale(1)",
-              transition: "transform .3s ease",
-            }} />
+      {character.avatar ? (
+      <LazyImage
+        src={character.avatar}
+        alt={character.name}
+        fallback={character.name[0]}
+        style={{
+            width: "100%", height: "100%",
+            transform: hovered ? "scale(1.05)" : "scale(1)",
+            transition: "transform .3s ease",
+          }}
+        />
         ) : (
           <div style={{
             width: "100%", height: "100%",
