@@ -16,6 +16,8 @@ import MyPage from "./components/MyPage";
 import AdminPage from "./components/AdminPage";
 import CharacterProfileModal from "./components/CharacterProfileModal";
 import RankingPage from "./components/RankingPage";
+import EditCharacterPage from "./components/EditCharacterPage";
+import { Toast, useToast } from "./components/Toast";
 
 export interface Character {
   id: string;
@@ -28,6 +30,9 @@ export interface Character {
   user_id?: number;
   first_message?: string;
   party_enabled?: boolean;
+  like_count?: number;
+  chat_count?: number;
+  view_count?: number;
 }
 
 export interface Message {
@@ -53,11 +58,13 @@ const API_URL = "https://suburb-marrow-radial.ngrok-free.dev";
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem("access_token"));
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "terms" | "privacy" | "login" | "events" | "mypage" |  "ranking"  | "admin">("home");
+  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "edit-character" | "terms" | "privacy" | "login" | "events" | "mypage" |  "ranking"  | "admin">("home");
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [partyRoomCode, setPartyRoomCode] = useState<string>("");
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [sharedCharacter, setSharedCharacter] = useState<Character | null>(null);
+  const [editCharacterId, setEditCharacterId] = useState<string | null>(null);
+  const { toasts, removeToast, toast } = useToast();
 
   // 앱 시작 시 토큰 있으면 유저 정보 조회
   useEffect(() => {
@@ -132,6 +139,8 @@ export default function App() {
     <>
       <StarBackground />
 
+  <Toast toasts={toasts} onRemove={removeToast} />
+
       {sharedCharacter && (
   <CharacterProfileModal
     character={sharedCharacter}
@@ -173,6 +182,15 @@ export default function App() {
           token={token ?? ""}
           onBack={() => setView("home")}
           onGoAdmin={() => setView("admin")}
+          onEditCharacter={(id) => { setEditCharacterId(id); setView("edit-character"); }}
+        />
+      ) : view === "edit-character" ? (
+        <EditCharacterPage
+          apiUrl={API_URL}
+          token={token ?? ""}
+          characterId={editCharacterId ?? ""}
+          onBack={() => setView("mypage")}
+          onSaved={() => setView("mypage")}
         />
       ) : view === "admin" ? (
         <AdminPage

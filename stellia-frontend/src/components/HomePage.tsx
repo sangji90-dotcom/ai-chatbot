@@ -3,6 +3,7 @@ import axios from "axios";
 import type { Character, User } from "../App";
 import CoinModal from "./CoinModal";
 import NotificationModal from "./NotificationModal";
+import { CharacterGridSkeleton, BannerSkeleton } from "./Skeleton";
 
 interface HomePageProps {
   apiUrl: string;
@@ -17,12 +18,13 @@ interface HomePageProps {
   onGoRanking: () => void;
 }
 
-const CATEGORIES = ["전체", "로맨스", "판타지", "액션", "일상", "공포", "SF", "BL", "GL", "기타"];
+const CATEGORIES = ["전체", "팔로우", "로맨스", "판타지", "액션", "일상", "공포", "SF", "BL", "GL", "기타"];
 
 export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLogout, onGoParty, onCreateCharacter, onGoEvents, onGoMyPage, onGoRanking }: HomePageProps) {
   const [activeCategory, setActiveCategory] = useState("전체");
   const [characters, setCharacters] = useState<Character[]>([]);
   const [newCharacters, setNewCharacters] = useState<Character[]>([]);
+  const [followFeed, setFollowFeed] = useState<Character[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [showCoinModal, setShowCoinModal] = useState(false);
@@ -30,6 +32,7 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
   const [coins, setCoins] = useState<number>(user?.token_balance ?? 0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [banners, setBanners] = useState<any[]>([]);
+  const [bannersLoading, setBannersLoading] = useState(true);
   const [bannerIndex, setBannerIndex] = useState(0);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -46,6 +49,10 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
     online: true, tags: c.tags || [],
     user_id: c.user_id,
     first_message: c.first_message || "",
+    party_enabled: c.party_enabled || false,
+    like_count: c.like_count ?? 0,
+    chat_count: c.chat_count ?? 0,
+    view_count: c.view_count ?? 0,
   });
 
   useEffect(() => {
@@ -62,20 +69,20 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
       axios.get(`${apiUrl}/notifications/unread-count`, { headers })
         .then(res => setUnreadCount(res.data.count))
         .catch(console.error);
-    }
-
-    if (token && token !== "") {
-      axios.get(`${apiUrl}/notifications/unread-count`, { headers })
-        .then(res => setUnreadCount(res.data.count))
+      axios.get(`${apiUrl}/tokens/me`, { headers })
+        .then(res => setCoins(res.data.token_balance))
+        .catch(console.error);
+      axios.get(`${apiUrl}/follows/me/new-characters`, { headers })
+        .then(res => setFollowFeed(res.data.map(formatChar)))
         .catch(console.error);
     }
 
     axios.get(`${apiUrl}/banners`, { headers })
       .then(res => setBanners(res.data))
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setBannersLoading(false));
   }, []);
 
-  // 배너 자동 슬라이드
   useEffect(() => {
     if (banners.length <= 1) return;
     const timer = setInterval(() => {
@@ -84,13 +91,10 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
     return () => clearInterval(timer);
   }, [banners]);
 
-  // 무한 스크롤 observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore) {
-          loadMore();
-        }
+        if (entries[0].isIntersecting && hasMore && !loadingMore) loadMore();
       },
       { threshold: 0.5 }
     );
@@ -106,6 +110,8 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
       let url = "";
       if (activeCategory === "전체") {
         url = `${apiUrl}/characters/ranking?limit=20&offset=${(nextPage - 1) * 20}`;
+      } else if (activeCategory === "팔로우") {
+        return;
       } else {
         url = `${apiUrl}/characters?tag=${encodeURIComponent(activeCategory)}&size=20&page=${nextPage}`;
       }
@@ -130,6 +136,9 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
     if (cat === "전체") {
       axios.get(`${apiUrl}/characters/ranking?limit=20`, { headers })
         .then(res => setCharacters(res.data.map(formatChar)));
+    } else if (cat === "팔로우") {
+      setCharacters(followFeed);
+      setHasMore(false);
     } else {
       axios.get(`${apiUrl}/characters?tag=${encodeURIComponent(cat)}&size=20`, { headers })
         .then(res => setCharacters(res.data.map(formatChar)));
@@ -189,7 +198,6 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
               color: "var(--secondary)", fontSize: 13, fontWeight: 600, cursor: "pointer",
             }}>✦ 캐릭터 만들기</button>
           )}
-
           {user && (
             <button onClick={onGoParty} style={{
               padding: "8px 14px", borderRadius: 10,
@@ -198,7 +206,6 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
               color: "var(--primary)", fontSize: 13, fontWeight: 600, cursor: "pointer",
             }}>⚔ 파티챗</button>
           )}
-
           {user && (
             <button onClick={onGoEvents} style={{
               padding: "8px 14px", borderRadius: 10,
@@ -207,7 +214,6 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
               color: "#ffc850", fontSize: 13, fontWeight: 600, cursor: "pointer",
             }}>🎁 이벤트</button>
           )}
-
           {user && (
             <button onClick={onGoRanking} style={{
               padding: "8px 14px", borderRadius: 10,
@@ -216,7 +222,6 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
               color: "#49d89a", fontSize: 13, fontWeight: 600, cursor: "pointer",
             }}>🏆 랭킹</button>
           )}
-
           {user && (
             <div onClick={() => { setShowNotification(true); setUnreadCount(0); }}
               style={{ position: "relative", cursor: "pointer" }}>
@@ -232,14 +237,12 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
               )}
             </div>
           )}
-
           {user && (
             <div onClick={() => setShowCoinModal(true)}
               style={{ color: "var(--gold)", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
               ✦ {coins.toLocaleString()}
             </div>
           )}
-
           {user && (
             <div onClick={onGoMyPage} style={{
               width: 38, height: 38, borderRadius: "50%",
@@ -252,12 +255,9 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
               {user.profile_image_url ? (
                 <img src={user.profile_image_url} alt={user.username}
                   style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : (
-                user.username?.[0]?.toUpperCase()
-              )}
+              ) : user.username?.[0]?.toUpperCase()}
             </div>
           )}
-
           {user ? (
             <button onClick={onLogout} style={{
               padding: "8px 14px", borderRadius: 10,
@@ -276,27 +276,24 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
         </div>
       </nav>
 
-      {/* 배너 슬라이더 */}
-      {banners.length > 0 && (
+      {/* 배너 */}
+      {bannersLoading ? (
+        <BannerSkeleton />
+      ) : banners.length > 0 ? (
         <div style={{ position: "relative", height: 180, overflow: "hidden" }}>
           {banners.map((banner, i) => (
-            <div
-              key={banner.id}
+            <div key={banner.id}
               onClick={() => banner.link_url && window.open(banner.link_url, "_blank")}
               style={{
                 position: "absolute", inset: 0,
                 backgroundImage: `url(${banner.image_url})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
+                backgroundSize: "cover", backgroundPosition: "center",
                 cursor: banner.link_url ? "pointer" : "default",
                 opacity: i === bannerIndex ? 1 : 0,
                 transition: "opacity 0.6s ease",
               }}
             >
-              <div style={{
-                position: "absolute", inset: 0,
-                background: "linear-gradient(to top, rgba(9,11,20,.8), transparent 50%)",
-              }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(9,11,20,.8), transparent 50%)" }} />
               <div style={{
                 position: "absolute", bottom: 20, left: 32,
                 fontSize: 18, fontWeight: 700, color: "#fff",
@@ -317,7 +314,7 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
       {/* 카테고리 탭 */}
       <div style={{
@@ -326,98 +323,128 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
         borderBottom: "1px solid var(--border-subtle)",
         background: "rgba(9,11,20,.6)",
       }}>
-        {CATEGORIES.map(cat => (
+        {CATEGORIES.filter(cat => cat !== "팔로우" || (token && token !== "")).map(cat => (
           <button key={cat} onClick={() => handleCategoryChange(cat)} style={{
             padding: "8px 18px", borderRadius: 999,
             border: activeCategory === cat ? "none" : "1px solid var(--border-default)",
-            background: activeCategory === cat ? "var(--gradient-cosmic)" : "rgba(255,255,255,.04)",
-            color: activeCategory === cat ? "#fff" : "var(--text-muted)",
+            background: activeCategory === cat
+              ? cat === "팔로우" ? "linear-gradient(135deg, #ff6b8a, #ff9532)" : "var(--gradient-cosmic)"
+              : "rgba(255,255,255,.04)",
+            color: activeCategory === cat ? "#fff" : cat === "팔로우" ? "#ff9af3" : "var(--text-muted)",
             fontWeight: 600, fontSize: 14, cursor: "pointer",
             whiteSpace: "nowrap", transition: "all .2s ease",
-          }}>{cat}</button>
+          }}>
+            {cat === "팔로우" ? "💗 팔로우" : cat}
+          </button>
         ))}
       </div>
 
       {/* 메인 콘텐츠 */}
       <div style={{ flex: 1, padding: "32px", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
         {loading ? (
-          <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "80px 0" }}>불러오는 중...</div>
+          <CharacterGridSkeleton count={8} />
         ) : (
           <>
-            {activeCategory === "전체" && newCharacters.length > 0 && (
-              <section style={{ marginBottom: 48 }}>
+            {activeCategory === "팔로우" && (
+              <section>
                 <div style={{ marginBottom: 20 }}>
-                  <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>✨ 신규 캐릭터</h2>
+                  <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>💗 팔로우한 창작자 신작</h2>
                 </div>
-                <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 8 }}>
-                  {newCharacters.map(char => (
-                    <CharacterCard key={char.id} character={char} onClick={() => onSelectCharacter(char)} />
-                  ))}
-                </div>
+                {followFeed.length === 0 ? (
+                  <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "60px 0" }}>
+                    팔로우한 창작자의 새 캐릭터가 없어요.
+                  </div>
+                ) : (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 20 }}>
+                    {followFeed.map(char => (
+                      <CharacterCard key={char.id} character={char} onClick={() => onSelectCharacter(char)} />
+                    ))}
+                  </div>
+                )}
               </section>
             )}
 
-            <section>
-              <div style={{ marginBottom: 20 }}>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>
-                  {activeCategory === "전체" ? "🔥 인기 캐릭터" : `# ${activeCategory}`}
-                </h2>
-              </div>
-              {characters.length === 0 ? (
-                <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "60px 0" }}>캐릭터가 없어요.</div>
-              ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 20 }}>
-                  {characters.map(char => (
-                    <CharacterCard key={char.id} character={char} onClick={() => onSelectCharacter(char)} />
-                  ))}
-                </div>
-              )}
-
-              {/* 무한 스크롤 트리거 */}
-              <div ref={observerRef} style={{ height: 40, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 20 }}>
-                {loadingMore && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>불러오는 중...</div>}
-                {!hasMore && characters.length > 0 && (
-                  <div style={{ color: "var(--text-muted)", fontSize: 13 }}>모든 캐릭터를 불러왔어요.</div>
+            {activeCategory !== "팔로우" && (
+              <>
+                {activeCategory === "전체" && newCharacters.length > 0 && (
+                  <section style={{ marginBottom: 48 }}>
+                    <div style={{ marginBottom: 20 }}>
+                      <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>✨ 신규 캐릭터</h2>
+                    </div>
+                    <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 8 }}>
+                      {newCharacters.map(char => (
+                        <CharacterCard key={char.id} character={char} onClick={() => onSelectCharacter(char)} />
+                      ))}
+                    </div>
+                  </section>
                 )}
-              </div>
-            </section>
+
+                <section>
+                  <div style={{ marginBottom: 20 }}>
+                    <h2 style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>
+                      {activeCategory === "전체" ? "🔥 인기 캐릭터" : `# ${activeCategory}`}
+                    </h2>
+                  </div>
+                  {characters.length === 0 ? (
+                    <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "60px 0" }}>캐릭터가 없어요.</div>
+                  ) : (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 20 }}>
+                      {characters.map(char => (
+                        <CharacterCard key={char.id} character={char} onClick={() => onSelectCharacter(char)} />
+                      ))}
+                    </div>
+                  )}
+
+                  <div ref={observerRef} style={{ height: 40, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 20 }}>
+                    {loadingMore && <div style={{ color: "var(--text-muted)", fontSize: 13 }}>불러오는 중...</div>}
+                    {!hasMore && characters.length > 0 && (
+                      <div style={{ color: "var(--text-muted)", fontSize: 13 }}>모든 캐릭터를 불러왔어요.</div>
+                    )}
+                  </div>
+                </section>
+              </>
+            )}
           </>
         )}
       </div>
 
       {showCoinModal && token && (
-        <CoinModal
-          apiUrl={apiUrl}
-          token={token}
-          onClose={() => setShowCoinModal(false)}
-          onCoinsUpdated={(balance) => setCoins(balance)}
-        />
+        <CoinModal apiUrl={apiUrl} token={token} onClose={() => setShowCoinModal(false)} onCoinsUpdated={(balance) => setCoins(balance)} />
       )}
-
       {showNotification && token && (
-        <NotificationModal
-          apiUrl={apiUrl}
-          token={token}
-          onClose={() => setShowNotification(false)}
-        />
+        <NotificationModal apiUrl={apiUrl} token={token} onClose={() => setShowNotification(false)} />
       )}
     </div>
   );
 }
 
 function CharacterCard({ character, onClick }: { character: Character; onClick: () => void }) {
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <div onClick={onClick} style={{
-      borderRadius: 20, overflow: "hidden",
-      cursor: "pointer", transition: "all .2s ease",
-      border: "1px solid var(--border-default)",
-      background: "rgba(17,21,40,.7)",
-      backdropFilter: "blur(16px)", minWidth: 180,
-    }}>
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        borderRadius: 20, overflow: "hidden",
+        cursor: "pointer",
+        border: "1px solid var(--border-default)",
+        background: "rgba(17,21,40,.7)",
+        backdropFilter: "blur(16px)", minWidth: 180,
+        transform: hovered ? "translateY(-4px)" : "translateY(0)",
+        boxShadow: hovered ? "0 8px 30px rgba(139,124,255,.2)" : "none",
+        transition: "all .2s ease",
+      }}
+    >
       <div style={{ position: "relative", height: 200, overflow: "hidden" }}>
         {character.avatar ? (
           <img src={character.avatar} alt={character.name}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            style={{
+              width: "100%", height: "100%", objectFit: "cover",
+              transform: hovered ? "scale(1.05)" : "scale(1)",
+              transition: "transform .3s ease",
+            }} />
         ) : (
           <div style={{
             width: "100%", height: "100%",
@@ -427,7 +454,48 @@ function CharacterCard({ character, onClick }: { character: Character; onClick: 
           }}>{character.name[0]}</div>
         )}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(9,11,20,.9), transparent 50%)" }} />
+
+        {/* 호버 통계 오버레이 */}
+        {hovered && (
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "rgba(9,11,20,.75)",
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            gap: 16, backdropFilter: "blur(4px)",
+          }}>
+            <div style={{ display: "flex", gap: 20 }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 22 }}>♥</div>
+                <div style={{ fontSize: 14, color: "#ff6b8a", fontWeight: 700 }}>
+                  {character.like_count?.toLocaleString() ?? 0}
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)" }}>좋아요</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 22 }}>💬</div>
+                <div style={{ fontSize: 14, color: "#5fd6ff", fontWeight: 700 }}>
+                  {character.chat_count?.toLocaleString() ?? 0}
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)" }}>대화수</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 22 }}>👁</div>
+                <div style={{ fontSize: 14, color: "#ffc850", fontWeight: 700 }}>
+                  {character.view_count?.toLocaleString() ?? 0}
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)" }}>조회수</div>
+              </div>
+            </div>
+            <div style={{
+              padding: "8px 20px", borderRadius: 999,
+              background: "var(--gradient-cosmic)",
+              color: "#fff", fontSize: 13, fontWeight: 600,
+            }}>대화하기 →</div>
+          </div>
+        )}
       </div>
+
       <div style={{ padding: "14px 16px" }}>
         <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>{character.name}</div>
         <div style={{ marginTop: 4, color: "var(--text-muted)", fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

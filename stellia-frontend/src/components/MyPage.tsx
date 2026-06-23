@@ -7,6 +7,7 @@ interface MyPageProps {
   token: string;
   onBack: () => void;
   onGoAdmin: () => void;
+  onEditCharacter: (characterId: string) => void;
 }
 
 const DIFFICULTY_COLOR: Record<string, string> = {
@@ -25,7 +26,7 @@ const DIFFICULTY_LABEL: Record<string, string> = {
   anniversary: "기념일",
 };
 
-export default function MyPage({ apiUrl, token, onBack, onGoAdmin }: MyPageProps) {
+export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharacter }: MyPageProps) {
   const [activeTab, setActiveTab] = useState<"profile" | "characters" | "likes" | "bookmarks" | "achievements" | "tokens" | "settings">("profile");
   const [user, setUser] = useState<any>(null);
   const [myCharacters, setMyCharacters] = useState<any[]>([]);
@@ -42,30 +43,30 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin }: MyPageProps
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
-  axios.get(`${apiUrl}/users/me`, { headers })
-    .then(res => { setUser(res.data); setUsername(res.data.username); })
-    .catch(console.error);
+    axios.get(`${apiUrl}/users/me`, { headers })
+      .then(res => { setUser(res.data); setUsername(res.data.username); })
+      .catch(console.error);
 
-  axios.get(`${apiUrl}/tokens/me/history?page=1&size=20`, { headers })
-    .then(res => setTokenHistory(res.data.items))
-    .catch(console.error);
+    axios.get(`${apiUrl}/tokens/me/history?page=1&size=20`, { headers })
+      .then(res => setTokenHistory(res.data.items))
+      .catch(console.error);
 
-  axios.get(`${apiUrl}/characters/me`, { headers })
-    .then(res => setMyCharacters(res.data))
-    .catch(console.error);
+    axios.get(`${apiUrl}/characters/me`, { headers })
+      .then(res => setMyCharacters(res.data))
+      .catch(console.error);
 
-  axios.get(`${apiUrl}/likes/me`, { headers })
-    .then(res => setLikedCharacters(res.data))
-    .catch(console.error);
+    axios.get(`${apiUrl}/likes/me`, { headers })
+      .then(res => setLikedCharacters(res.data))
+      .catch(console.error);
 
-  axios.get(`${apiUrl}/achievements/me`, { headers })
-    .then(res => setAchievements(res.data))
-    .catch(console.error);
+    axios.get(`${apiUrl}/achievements/me`, { headers })
+      .then(res => setAchievements(res.data))
+      .catch(console.error);
 
-  axios.get(`${apiUrl}/likes/bookmarks`, { headers })
-    .then(res => setBookmarks(res.data))
-    .catch(console.error);
-}, []);
+    axios.get(`${apiUrl}/likes/bookmarks`, { headers })
+      .then(res => setBookmarks(res.data))
+      .catch(console.error);
+  }, []);
 
   const handleUpdateProfile = async () => {
     setLoading(true);
@@ -170,8 +171,6 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin }: MyPageProps
       {/* 프로필 탭 */}
       {activeTab === "profile" && (
         <div className="glass-card" style={{ borderRadius: 24, padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
-
-          {/* 아바타 + 기본 정보 */}
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
             <div style={{
               width: 80, height: 80, borderRadius: "50%",
@@ -204,11 +203,7 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin }: MyPageProps
           {/* 프로필 이미지 업로드 */}
           <div>
             <label style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 8, display: "block" }}>프로필 이미지</label>
-            <input
-              type="file"
-              accept="image/*"
-              id="profile-image-input"
-              style={{ display: "none" }}
+            <input type="file" accept="image/*" id="profile-image-input" style={{ display: "none" }}
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
@@ -280,6 +275,12 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin }: MyPageProps
                   {char.visibility === "public" ? "공개" : "비공개"} · 대화 {char.chat_count}회
                 </div>
               </div>
+              <button onClick={() => onEditCharacter(char.id)} style={{
+                padding: "8px 14px", borderRadius: 10,
+                border: "1px solid rgba(255,200,80,.3)",
+                background: "rgba(255,200,80,.08)",
+                color: "#ffc850", fontSize: 13, cursor: "pointer",
+              }}>✏ 수정</button>
               <button onClick={() => setShowImageModal(char.id)} style={{
                 padding: "8px 14px", borderRadius: 10,
                 border: "1px solid rgba(95,214,255,.3)",

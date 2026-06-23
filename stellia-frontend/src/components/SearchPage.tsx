@@ -16,7 +16,7 @@ const SORT_OPTIONS = [
   { label: "최신순", value: "latest" },
   { label: "오래된순", value: "oldest" },
   { label: "대화 많은 순", value: "chat" },
-  { label: "조회수", value: "view" },
+  { label: "조회수순", value: "view" },
 ];
 
 const formatChar = (c: any): Character => ({
@@ -27,6 +27,10 @@ const formatChar = (c: any): Character => ({
   online: true, tags: c.tags || [],
   user_id: c.user_id,
   first_message: c.first_message || "",
+  party_enabled: c.party_enabled || false,
+  like_count: c.like_count ?? 0,
+  chat_count: c.chat_count ?? 0,
+  view_count: c.view_count ?? 0,
 });
 
 export default function SearchPage({ apiUrl, token, onBack, onSelectCharacter }: SearchPageProps) {
@@ -88,16 +92,12 @@ export default function SearchPage({ apiUrl, token, onBack, onSelectCharacter }:
 
   const handleCategoryChange = (cat: string) => {
     setActiveCategory(cat);
-    if (query.trim() || cat !== "전체") {
-      handleSearch(query, cat, sortBy);
-    }
+    if (query.trim() || cat !== "전체") handleSearch(query, cat, sortBy);
   };
 
   const handleSortChange = (sort: string) => {
     setSortBy(sort);
-    if (query.trim() || activeCategory !== "전체") {
-      handleSearch(query, activeCategory, sort);
-    }
+    if (query.trim() || activeCategory !== "전체") handleSearch(query, activeCategory, sort);
   };
 
   const handleTagClick = (tag: string) => {
@@ -137,7 +137,8 @@ export default function SearchPage({ apiUrl, token, onBack, onSelectCharacter }:
             autoFocus
           />
           {query && (
-            <button onClick={() => { setQuery(""); setResults([]); }} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: 18 }}>×</button>
+            <button onClick={() => { setQuery(""); setResults([]); }}
+              style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: 18 }}>×</button>
           )}
         </div>
       </div>
@@ -178,12 +179,9 @@ export default function SearchPage({ apiUrl, token, onBack, onSelectCharacter }:
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {results.map(char => (
-              <CharacterRow
-                key={char.id}
-                character={char}
+              <CharacterRow key={char.id} character={char}
                 onClick={() => { onSelectCharacter(char); onBack(); }}
-                onTagClick={handleTagClick}
-              />
+                onTagClick={handleTagClick} />
             ))}
           </div>
         </div>
@@ -192,7 +190,6 @@ export default function SearchPage({ apiUrl, token, onBack, onSelectCharacter }:
       {/* 검색어 없을 때 */}
       {!query && activeCategory === "전체" && results.length === 0 && (
         <>
-          {/* 최근 검색어 */}
           <div style={{ marginBottom: 32 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
               <div style={{ fontWeight: 700, fontSize: 16 }}>최근 검색어</div>
@@ -216,7 +213,6 @@ export default function SearchPage({ apiUrl, token, onBack, onSelectCharacter }:
             )}
           </div>
 
-          {/* 인기 캐릭터 */}
           <div>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>인기 캐릭터</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -235,6 +231,10 @@ export default function SearchPage({ apiUrl, token, onBack, onSelectCharacter }:
                     <div style={{ fontWeight: 600 }}>{char.name}</div>
                     <div style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{char.description}</div>
                   </div>
+                  <div style={{ display: "flex", gap: 12, flexShrink: 0 }}>
+                    <span style={{ color: "#ff6b8a", fontSize: 12 }}>♥ {char.like_count?.toLocaleString()}</span>
+                    <span style={{ color: "#5fd6ff", fontSize: 12 }}>💬 {char.chat_count?.toLocaleString()}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -242,16 +242,12 @@ export default function SearchPage({ apiUrl, token, onBack, onSelectCharacter }:
         </>
       )}
 
-      {/* 검색 중 */}
       {searching && (
         <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "40px 0" }}>검색 중...</div>
       )}
 
-      {/* 결과 없음 */}
       {!searching && (query || activeCategory !== "전체") && results.length === 0 && (
-        <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "40px 0" }}>
-          검색 결과가 없어요.
-        </div>
+        <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "40px 0" }}>검색 결과가 없어요.</div>
       )}
     </div>
   );
@@ -293,6 +289,11 @@ function CharacterRow({ character, onClick, onTagClick }: {
             ))}
           </div>
         )}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, flexShrink: 0, alignItems: "flex-end" }}>
+        <span style={{ color: "#ff6b8a", fontSize: 12 }}>♥ {character.like_count?.toLocaleString()}</span>
+        <span style={{ color: "#5fd6ff", fontSize: 12 }}>💬 {character.chat_count?.toLocaleString()}</span>
+        <span style={{ color: "#ffc850", fontSize: 12 }}>👁 {character.view_count?.toLocaleString()}</span>
       </div>
     </div>
   );
