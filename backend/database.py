@@ -541,5 +541,29 @@ def init_db():
         )
     """)
     
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS character_reviews (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        character_id TEXT NOT NULL,
+        rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
+        content TEXT DEFAULT '',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, character_id),
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (character_id) REFERENCES characters(id)
+        )
+    """)
+    
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS notices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        is_pinned INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
     conn.commit()
     conn.close()

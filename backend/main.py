@@ -22,6 +22,8 @@ from admin.router import router as admin_router
 from notifications.router import router as notifications_router
 from events.router import router as events_router
 from purchases.router import router as purchases_router
+from reviews.router import router as reviews_router
+from notices.router import router as notices_router
 
 load_dotenv()
 
@@ -84,7 +86,8 @@ app.include_router(admin_router)
 app.include_router(notifications_router)
 app.include_router(events_router)
 app.include_router(purchases_router)
-
+app.include_router(reviews_router)
+app.include_router(notices_router)
 
 # ── 프론트엔드 static serve (반드시 맨 마지막) ──────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

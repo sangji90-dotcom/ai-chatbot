@@ -10,12 +10,16 @@ router = APIRouter(
 )
 
 # 토큰 설정
-SIGNUP_TOKEN = 3000          # 회원가입 기본 지급
-ATTENDANCE_TOKEN = 1000      # 출석 체크 지급
-AD_TOKEN = 500               # 광고 시청 지급
-AD_DAILY_LIMIT = 2           # 하루 광고 최대 횟수
-CHAT_DEDUCT = 50             # 대화 1회 차감
-EVENT_EXPIRE_DAYS = 21       # 이벤트 토큰 유효기간
+SIGNUP_TOKEN = 3000
+ATTENDANCE_TOKEN = 1000
+AD_TOKEN = 500
+AD_DAILY_LIMIT = 2
+CHAT_DEDUCT = 50
+EVENT_EXPIRE_DAYS = 21
+
+# 메모리 패스 가격
+MEMORY_PASS_30DAY_COINS = 24900
+MEMORY_PASS_CASH_PRICE = 9900
 
 # 토큰 패키지
 TOKEN_PACKAGES = [
@@ -46,6 +50,7 @@ def add_token(user_id: int, amount: int, token_type: str, reason: str, expires_a
     conn.commit()
     conn.close()
 
+
 def deduct_token(user_id: int, amount: int, reason: str):
     from notifications.router import send_notification
     conn = get_db()
@@ -58,7 +63,7 @@ def deduct_token(user_id: int, amount: int, reason: str):
     if user["token_balance"] < amount:
         conn.close()
         send_notification(
-             user_id,
+            user_id,
             "token_empty",
             "토큰이 부족합니다",
             "토큰을 충전하고 대화를 계속해보세요!",
@@ -69,7 +74,6 @@ def deduct_token(user_id: int, amount: int, reason: str):
     event = user["token_event"]
     purchased = user["token_purchased"]
 
-    # 이벤트 토큰 먼저 차감
     if event >= amount:
         cursor.execute("""
             UPDATE users SET token_event = token_event - ?,
@@ -105,11 +109,13 @@ def deduct_token(user_id: int, amount: int, reason: str):
         )
     conn.close()
 
-@router.get("/packages", summary="토큰 패키지 목록", description="구매 가능한 토큰 패키지 목록을 반환합니다.")
+
+@router.get("/packages", summary="토큰 패키지 목록")
 async def get_packages():
     return TOKEN_PACKAGES
 
-@router.get("/me", summary="내 토큰 조회", description="보유 토큰 (구매/이벤트/총합)을 반환합니다.")
+
+@router.get("/me", summary="내 토큰 조회")
 async def get_my_tokens(current_user: dict = Depends(get_current_user)):
     conn = get_db()
     cursor = conn.cursor()
@@ -120,7 +126,8 @@ async def get_my_tokens(current_user: dict = Depends(get_current_user)):
     conn.close()
     return dict(row)
 
-@router.get("/me/history", summary="토큰 내역", description="토큰 충전/사용 내역을 반환합니다.")
+
+@router.get("/me/history", summary="토큰 내역")
 async def get_token_history(
         page: int = 1,
         size: int = 20,
@@ -155,7 +162,8 @@ async def get_token_history(
         "items": [dict(row) for row in rows]
     }
 
-@router.post("/attendance", summary="출석 체크", description="출석 체크 후 이벤트 토큰을 지급합니다. (21일 유효)")
+
+@router.post("/attendance", summary="출석 체크")
 async def attendance_check(current_user: dict = Depends(get_current_user)):
     today = str(date.today())
     yesterday = str(date.today() - timedelta(days=1))
@@ -171,15 +179,12 @@ async def attendance_check(current_user: dict = Depends(get_current_user)):
     if user["last_attendance_date"] == today:
         raise HTTPException(status_code=400, detail="오늘 이미 출석했습니다.")
 
-    # streak 계산
     last = user["last_attendance_date"]
     current_streak = user["attendance_streak"] or 0
 
     if last == yesterday:
-        # 연속 출석
         new_streak = current_streak + 1
     else:
-        # 하루라도 빠지면 리셋
         new_streak = 1
 
     expires_at = datetime.now() + timedelta(days=EVENT_EXPIRE_DAYS)
@@ -203,7 +208,8 @@ async def attendance_check(current_user: dict = Depends(get_current_user)):
         "expires_at": expires_at.strftime("%Y-%m-%d")
     }
 
-@router.post("/ad-watch", summary="광고 시청", description="광고 시청 후 이벤트 토큰을 지급합니다. 하루 2회 제한. (21일 유효)")
+
+@router.post("/ad-watch", summary="광고 시청")
 async def watch_ad(current_user: dict = Depends(get_current_user)):
     today = str(date.today())
     conn = get_db()
@@ -235,7 +241,8 @@ async def watch_ad(current_user: dict = Depends(get_current_user)):
         "expires_at": expires_at.strftime("%Y-%m-%d")
     }
 
-@router.post("/purchase/{package_id}", summary="토큰 구매", description="토큰 패키지를 구매합니다. (실제 결제 연동 전 테스트용)")
+
+@router.post("/purchase/{package_id}", summary="토큰 구매")
 async def purchase_token(
         package_id: int,
         current_user: dict = Depends(get_current_user)):
@@ -244,6 +251,8 @@ async def purchase_token(
         raise HTTPException(status_code=404, detail="패키지를 찾을 수 없습니다.")
 
     today = str(date.today())
+    yesterday = str((date.today() - timedelta(days=1)))
+
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
@@ -252,25 +261,20 @@ async def purchase_token(
     user = cursor.fetchone()
     conn.close()
 
-    # 연속 구매 카운트
     last_date = user["last_purchase_date"]
     consecutive = user["consecutive_purchase_days"]
-
-    from datetime import timedelta
-    yesterday = str((date.today() - timedelta(days=1)))
 
     if last_date == yesterday:
         consecutive += 1
     elif last_date == today:
-        consecutive = consecutive  # 오늘 이미 구매
+        consecutive = consecutive
     else:
-        consecutive = 1  # 리셋
+        consecutive = 1
 
-    # 5일 연속 구매 페이백
     payback = 0
     if consecutive >= 5:
         payback = package["token_amount"] // 2
-        consecutive = 0  # 리셋
+        consecutive = 0
 
     expires_at = datetime.now() + timedelta(days=365)
     add_token(current_user["id"], package["token_amount"], "purchased",
@@ -306,7 +310,6 @@ async def purchase_token(
 
     return result
 
-MEMORY_PASS_30DAY_COINS = 24900
 
 @router.post("/memory-pass/purchase", summary="메모리 패스 구매 (금화)")
 async def purchase_memory_pass(current_user: dict = Depends(get_current_user)):
@@ -337,7 +340,8 @@ async def purchase_memory_pass(current_user: dict = Depends(get_current_user)):
         UPDATE users
         SET token_purchased = token_purchased - ?,
             token_balance = token_balance - ?,
-            memory_pass_expires_at = ?
+            memory_pass_expires_at = ?,
+            memory_chunk_limit = COALESCE(memory_chunk_limit, 20) + 5
         WHERE id = ?
     """, (MEMORY_PASS_30DAY_COINS, MEMORY_PASS_30DAY_COINS,
           new_expires.isoformat(), current_user["id"]))
@@ -345,7 +349,52 @@ async def purchase_memory_pass(current_user: dict = Depends(get_current_user)):
     cursor.execute("""
         INSERT INTO token_history (user_id, amount, token_type, reason)
         VALUES (?, ?, ?, ?)
-    """, (current_user["id"], -MEMORY_PASS_30DAY_COINS, "purchased", "메모리 패스 30일권 구매"))
+    """, (current_user["id"], -MEMORY_PASS_30DAY_COINS, "purchased", "메모리 패스 30일권 금화 구매 (+청크 5개)"))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "message": "메모리 패스 30일권 구매 완료 (보너스 청크 5개 지급)",
+        "expires_at": new_expires.strftime("%Y-%m-%d"),
+    }
+
+
+@router.post("/memory-pass/purchase-cash", summary="메모리 패스 현금 구매")
+async def purchase_memory_pass_cash(current_user: dict = Depends(get_current_user)):
+    """PG 연동 전 테스트용"""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT memory_pass_expires_at FROM users WHERE id = ?",
+                   (current_user["id"],))
+    user = cursor.fetchone()
+
+    now = datetime.now()
+    if user["memory_pass_expires_at"]:
+        try:
+            existing = datetime.fromisoformat(user["memory_pass_expires_at"])
+            base = existing if existing > now else now
+        except:
+            base = now
+    else:
+        base = now
+
+    new_expires = base + timedelta(days=30)
+
+    cursor.execute("""
+        UPDATE users SET memory_pass_expires_at = ? WHERE id = ?
+    """, (new_expires.isoformat(), current_user["id"]))
+
+    cursor.execute("""
+        INSERT INTO token_history (user_id, amount, token_type, reason)
+        VALUES (?, ?, ?, ?)
+    """, (current_user["id"], 0, "purchased", "메모리 패스 30일권 현금 구매"))
+
+    cursor.execute("""
+        INSERT INTO purchases (user_id, amount, token_amount, status)
+        VALUES (?, ?, ?, ?)
+    """, (current_user["id"], MEMORY_PASS_CASH_PRICE, 0, "completed"))
 
     conn.commit()
     conn.close()
@@ -410,7 +459,7 @@ async def add_memory_chunk(
         conn.close()
         raise HTTPException(status_code=403, detail="메모리 패스가 만료됐어요.")
 
-    cost = amount  # 금화 1개 = 청크 1개
+    cost = amount
     if user["token_purchased"] < cost:
         conn.close()
         raise HTTPException(status_code=400, detail="금화가 부족해요.")

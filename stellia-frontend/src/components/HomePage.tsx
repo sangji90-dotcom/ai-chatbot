@@ -16,11 +16,12 @@ interface HomePageProps {
   onGoEvents: () => void;
   onGoMyPage: () => void;
   onGoRanking: () => void;
+  onGoNotice: () => void;
 }
 
 const CATEGORIES = ["전체", "팔로우", "로맨스", "판타지", "액션", "일상", "공포", "SF", "BL", "GL", "기타"];
 
-export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLogout, onGoParty, onCreateCharacter, onGoEvents, onGoMyPage, onGoRanking }: HomePageProps) {
+export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLogout, onGoParty, onCreateCharacter, onGoEvents, onGoMyPage, onGoRanking, onGoNotice }: HomePageProps) {
   const [activeCategory, setActiveCategory] = useState("전체");
   const [characters, setCharacters] = useState<Character[]>([]);
   const [newCharacters, setNewCharacters] = useState<Character[]>([]);
@@ -172,6 +173,13 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
           backgroundClip: "text",
           letterSpacing: "-0.04em",
         }}>Stellia</div>
+
+        <button onClick={() => onGoNotice()} style={{
+          padding: "8px 14px", borderRadius: 10,
+          border: "1px solid rgba(255,255,255,.15)",
+          background: "rgba(255,255,255,.04)",
+          color: "var(--text-muted)", fontSize: 13, fontWeight: 600, cursor: "pointer",
+        }}>📢 공지</button>
 
         <div style={{
           display: "flex", alignItems: "center", gap: 10,

@@ -8,6 +8,8 @@ import PartyLobbyPage from "./components/PartyLobbyPage";
 import PartyRoomPage from "./components/PartyRoomPage";
 import PartyChatPage from "./components/PartyChatPage";
 import CreateCharacterPage from "./components/CreateCharacterPage";
+import EditCharacterPage from "./components/EditCharacterPage";
+import CreatorPage from "./components/CreatorPage";
 import TermsPage from "./components/TermsPage";
 import PrivacyPage from "./components/PrivacyPage";
 import LoginPromptModal from "./components/LoginPromptModal";
@@ -16,8 +18,8 @@ import MyPage from "./components/MyPage";
 import AdminPage from "./components/AdminPage";
 import CharacterProfileModal from "./components/CharacterProfileModal";
 import RankingPage from "./components/RankingPage";
-import EditCharacterPage from "./components/EditCharacterPage";
 import { Toast, useToast } from "./components/Toast";
+import NoticePage from "./components/NoticePage";
 
 export interface Character {
   id: string;
@@ -58,15 +60,15 @@ const API_URL = "https://suburb-marrow-radial.ngrok-free.dev";
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem("access_token"));
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "edit-character" | "terms" | "privacy" | "login" | "events" | "mypage" |  "ranking"  | "admin">("home");
+  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "edit-character" | "creator" | "terms" | "privacy" | "login" | "events" | "mypage" | "ranking" | "notice" | "admin">("home");
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [partyRoomCode, setPartyRoomCode] = useState<string>("");
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [sharedCharacter, setSharedCharacter] = useState<Character | null>(null);
   const [editCharacterId, setEditCharacterId] = useState<string | null>(null);
-  const { toasts, removeToast, toast } = useToast();
+  const [creatorUserId, setCreatorUserId] = useState<number | null>(null);
+  const { toasts, removeToast } = useToast();
 
-  // 앱 시작 시 토큰 있으면 유저 정보 조회
   useEffect(() => {
     if (token) {
       axios.get(`${API_URL}/users/me`, {
@@ -78,7 +80,6 @@ export default function App() {
     }
   }, []);
 
-  // 공유 링크 처리
   useEffect(() => {
     const hash = window.location.hash;
     const match = hash.match(/^#\/characters\/(.+)$/);
@@ -95,6 +96,10 @@ export default function App() {
             online: true, tags: c.tags || [],
             user_id: c.user_id,
             first_message: c.first_message || "",
+            party_enabled: c.party_enabled || false,
+            like_count: c.like_count ?? 0,
+            chat_count: c.chat_count ?? 0,
+            view_count: c.view_count ?? 0,
           });
         })
         .catch(console.error);
@@ -135,22 +140,29 @@ export default function App() {
     setView("party-chat");
   };
 
+  const handleGoCreator = (userId: number) => {
+    setCreatorUserId(userId);
+    setView("creator");
+  };
+
   return (
     <>
       <StarBackground />
+      <Toast toasts={toasts} onRemove={removeToast} />
 
-  <Toast toasts={toasts} onRemove={removeToast} />
-
+      {/* 공유 캐릭터 모달 */}
       {sharedCharacter && (
-  <CharacterProfileModal
-    character={sharedCharacter}
-    apiUrl={API_URL}
-    token={token ?? ""}
-    onClose={() => { setSharedCharacter(null); window.location.hash = ""; }}
-    onGoParty={(code) => { setPartyRoomCode(code); setView("party-room"); }}
-  />
-)}
+        <CharacterProfileModal
+          character={sharedCharacter}
+          apiUrl={API_URL}
+          token={token ?? ""}
+          onClose={() => { setSharedCharacter(null); window.location.hash = ""; }}
+          onGoParty={(code) => { setPartyRoomCode(code); setView("party-room"); }}
+          onGoCreator={handleGoCreator}
+        />
+      )}
 
+      {/* 로그인 유도 모달 */}
       {showLoginPrompt && (
         <LoginPromptModal
           onClose={() => setShowLoginPrompt(false)}
@@ -169,7 +181,7 @@ export default function App() {
           token={token ?? ""}
           onBack={() => setView("home")}
         />
-        ) : view === "ranking" ? (
+      ) : view === "ranking" ? (
         <RankingPage
           apiUrl={API_URL}
           token={token ?? ""}
@@ -192,11 +204,25 @@ export default function App() {
           onBack={() => setView("mypage")}
           onSaved={() => setView("mypage")}
         />
+      ) : view === "creator" ? (
+        <CreatorPage
+          apiUrl={API_URL}
+          token={token ?? ""}
+          userId={creatorUserId ?? 0}
+          onBack={() => setView("home")}
+          onSelectCharacter={handleSelectCharacter}
+        />
       ) : view === "admin" ? (
         <AdminPage
           apiUrl={API_URL}
           token={token ?? ""}
           onBack={() => setView("mypage")}
+        />
+      ) : view === "notice" ? (
+        <NoticePage
+          apiUrl={API_URL}
+          token={token ?? ""}
+          onBack={() => setView("home")}
         />
       ) : !token ? (
         <>
@@ -218,8 +244,8 @@ export default function App() {
               onCreateCharacter={() => setShowLoginPrompt(true)}
               onGoEvents={() => setShowLoginPrompt(true)}
               onGoMyPage={() => setShowLoginPrompt(true)}
-              // 비로그인
               onGoRanking={() => setView("ranking")}
+              onGoNotice={() => setView("notice")}
             />
           )}
         </>
@@ -234,8 +260,8 @@ export default function App() {
           onCreateCharacter={() => setView("create")}
           onGoEvents={() => setView("events")}
           onGoMyPage={() => setView("mypage")}
-          // 로그인
           onGoRanking={() => setView("ranking")}
+          onGoNotice={() => setView("notice")}
         />
       ) : view === "chat" ? (
         <ChatApp
@@ -245,6 +271,7 @@ export default function App() {
           character={selectedCharacter!}
           onBack={() => setView("home")}
           onSelectCharacter={handleSelectCharacter}
+          onGoCreator={handleGoCreator}
         />
       ) : view === "create" ? (
         <CreateCharacterPage

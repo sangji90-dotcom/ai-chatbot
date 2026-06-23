@@ -41,7 +41,6 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
 
 
-# ===== 내 캐릭터 목록 =====
 @router.get("/me/characters", summary="내 캐릭터 목록")
 async def get_my_characters(current_user: dict = Depends(get_current_user)):
     conn = get_db()
@@ -53,7 +52,6 @@ async def get_my_characters(current_user: dict = Depends(get_current_user)):
     return [dict(row) for row in rows]
 
 
-# ===== 최근 대화한 캐릭터 =====
 @router.get("/me/recent-chats", summary="최근 대화 캐릭터")
 async def get_recent_chats(current_user: dict = Depends(get_current_user)):
     conn = get_db()
@@ -73,7 +71,6 @@ async def get_recent_chats(current_user: dict = Depends(get_current_user)):
     return [dict(row) for row in rows]
 
 
-# ===== 설정 조회 =====
 @router.get("/me/settings", summary="내 설정 조회")
 async def get_settings(current_user: dict = Depends(get_current_user)):
     conn = get_db()
@@ -89,7 +86,6 @@ async def get_settings(current_user: dict = Depends(get_current_user)):
     return dict(row)
 
 
-# ===== 설정 변경 =====
 @router.patch("/me/settings", summary="내 설정 변경")
 async def update_settings(
         request: SettingsRequest,
@@ -127,7 +123,6 @@ async def update_settings(
     return {"message": "설정 변경 완료"}
 
 
-# ===== 유저노트 CRUD =====
 @router.post("/me/notes", summary="노트 저장")
 async def create_note(request: NoteRequest, current_user: dict = Depends(get_current_user)):
     conn = get_db()
@@ -187,7 +182,6 @@ async def delete_note(note_id: int, current_user: dict = Depends(get_current_use
     return {"message": "노트 삭제 완료"}
 
 
-# ===== 페르소나 CRUD =====
 @router.post("/me/personas", summary="페르소나 저장")
 async def create_persona(request: PersonaRequest, current_user: dict = Depends(get_current_user)):
     conn = get_db()
@@ -248,7 +242,6 @@ async def delete_persona(persona_id: int, current_user: dict = Depends(get_curre
     return {"message": "페르소나 삭제 완료"}
 
 
-# ===== 메모리북 CRUD =====
 @router.post("/me/memory-book", summary="메모리북 저장")
 async def create_memory(request: MemoryBookRequest, current_user: dict = Depends(get_current_user)):
     conn = get_db()
@@ -290,7 +283,6 @@ async def delete_memory(memory_id: int, current_user: dict = Depends(get_current
     return {"message": "메모리북 삭제 완료"}
 
 
-# ===== 차단 목록 =====
 @router.get("/me/blocks", summary="차단 목록")
 async def get_block_list(current_user: dict = Depends(get_current_user)):
     conn = get_db()
@@ -307,7 +299,6 @@ async def get_block_list(current_user: dict = Depends(get_current_user)):
     return [dict(row) for row in rows]
 
 
-# ===== 내 정보 조회 =====
 @router.get("/me", summary="내 정보 조회")
 async def get_me(current_user: dict = Depends(get_current_user)):
     from datetime import datetime, timedelta
@@ -336,7 +327,6 @@ async def get_me(current_user: dict = Depends(get_current_user)):
                    (current_user["id"],))
     following_count = cursor.fetchone()["cnt"]
 
-    # 은화 만료 임박 체크 (7일 이내)
     now = datetime.utcnow()
     seven_days_later = (now + timedelta(days=7)).isoformat()
     cursor.execute("""
@@ -366,11 +356,10 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "character_count": char_count,
         "follower_count": follower_count,
         "following_count": following_count,
-        "silver_expiring": silver_expiring  # 프론트에서 배지 표시용
+        "silver_expiring": silver_expiring
     }
 
 
-# ===== 내 정보 수정 =====
 @router.patch("/me", summary="내 정보 수정")
 async def update_profile(
         request: UpdateProfileRequest,
@@ -386,11 +375,11 @@ async def update_profile(
     conn.close()
     return {"message": "프로필 수정 완료"}
 
+
 @router.post("/me/profile-image", summary="프로필 이미지 업로드")
 async def upload_profile_image(
         file: UploadFile = File(...),
         current_user: dict = Depends(get_current_user)):
-
     allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail="허용되지 않는 파일 형식입니다.")
@@ -419,7 +408,6 @@ async def upload_profile_image(
     return {"image_url": image_url, "message": "프로필 이미지 업로드 완료"}
 
 
-# ===== 비밀번호 변경 =====
 @router.patch("/me/password", summary="비밀번호 변경")
 async def change_password(
         request: ChangePasswordRequest,
@@ -445,7 +433,6 @@ async def change_password(
     return {"message": "비밀번호 변경 완료"}
 
 
-# ===== 회원 탈퇴 =====
 @router.delete("/me", summary="회원 탈퇴")
 async def delete_account(current_user: dict = Depends(get_current_user)):
     conn = get_db()
@@ -466,14 +453,12 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
     return {"message": "회원 탈퇴 완료"}
 
 
-# ===== 유저 검색 =====
 @router.get("/search", summary="유저 검색")
 async def search_users(
         q: str,
         page: int = 1,
         size: int = 20,
         current_user: Optional[dict] = Depends(get_optional_user)):
-
     conn = get_db()
     cursor = conn.cursor()
 
@@ -521,7 +506,6 @@ async def search_users(
     return result
 
 
-# ===== 차단 =====
 @router.post("/{user_id}/block", summary="유저 차단")
 async def block_user(
         user_id: int,
@@ -552,7 +536,6 @@ async def block_user(
         raise HTTPException(status_code=400, detail="이미 차단한 사용자입니다.")
 
 
-# ===== 차단 해제 =====
 @router.delete("/{user_id}/block", summary="차단 해제")
 async def unblock_user(
         user_id: int,
@@ -569,14 +552,17 @@ async def unblock_user(
     return {"message": "차단 해제 완료"}
 
 
-# ===== 유저 공개 프로필 =====
 @router.get("/{user_id}", summary="유저 공개 프로필")
 async def get_user_profile(
         user_id: int,
         current_user: dict = Depends(get_optional_user)):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, username, created_at FROM users WHERE id = ?", (user_id,))
+    cursor.execute("""
+        SELECT id, username, created_at, profile_image_url,
+               equipped_prefix, equipped_suffix
+        FROM users WHERE id = ?
+    """, (user_id,))
     user = cursor.fetchone()
 
     if not user:
@@ -598,10 +584,13 @@ async def get_user_profile(
 
     conn.close()
     return {
-        "id": dict(user)["id"],
-        "username": dict(user)["username"],
-        "created_at": dict(user)["created_at"],
+        "id": user["id"],
+        "username": user["username"],
+        "created_at": user["created_at"],
+        "profile_image_url": user["profile_image_url"],
+        "equipped_prefix": user["equipped_prefix"],
+        "equipped_suffix": user["equipped_suffix"],
         "character_count": char_count,
         "follower_count": follower_count,
-        "is_following": is_following
+        "is_following": is_following,
     }

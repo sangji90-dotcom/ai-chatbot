@@ -314,8 +314,8 @@ async def chat(
 
     raw_message = response.text
 
-    # MAX_TOKENS로 잘린 경우 자동으로 이어서 생성 (최대 3회)
-    MAX_CONTINUATIONS = 3
+    # MAX_TOKENS로 잘린 경우 자동으로 이어서 생성 (최대 1회)
+    MAX_CONTINUATIONS = 1
     continuation_count = 0
 
     while (

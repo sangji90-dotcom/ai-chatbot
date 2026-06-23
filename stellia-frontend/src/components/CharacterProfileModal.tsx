@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 import type { Character } from "../App";
+import ReviewModal from "./ReviewModal";
 
 interface CharacterProfileModalProps {
   character: Character;
@@ -8,12 +9,14 @@ interface CharacterProfileModalProps {
   token: string;
   onClose: () => void;
   onGoParty?: (roomCode: string) => void;
+  onGoCreator?: (userId: number) => void;
 }
 
-export default function CharacterProfileModal({ character, apiUrl, token, onClose, onGoParty }: CharacterProfileModalProps) {
+export default function CharacterProfileModal({ character, apiUrl, token, onClose, onGoParty, onGoCreator }: CharacterProfileModalProps) {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [partyLoading, setPartyLoading] = useState(false);
+  const [showReview, setShowReview] = useState(false);
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -111,6 +114,18 @@ export default function CharacterProfileModal({ character, apiUrl, token, onClos
 
         {/* 내용 */}
         <div style={{ overflowY: "auto", flex: 1, padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* 창작자 보기 */}
+          {character.user_id && onGoCreator && (
+            <button onClick={() => { onClose(); onGoCreator(character.user_id!); }} style={{
+              padding: "8px 16px", borderRadius: 999, fontSize: 13,
+              border: "1px solid var(--border-default)",
+              background: "rgba(255,255,255,.04)",
+              color: "var(--text-muted)", cursor: "pointer",
+              alignSelf: "flex-start",
+            }}>👤 창작자 보기</button>
+          )}
+
           {character.tags.length > 0 && (
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {character.tags.map(tag => (
@@ -147,6 +162,13 @@ export default function CharacterProfileModal({ character, apiUrl, token, onClos
               fontWeight: 600, fontSize: 14, cursor: "pointer", transition: "all .2s ease",
             }}>{liked ? "♥" : "♡"} 좋아요</button>
 
+            <button onClick={() => setShowReview(true)} style={{
+              width: "100%", padding: "12px", borderRadius: 14,
+              border: "1px solid rgba(255,200,80,.3)",
+              background: "rgba(255,200,80,.08)",
+              color: "#ffc850", fontWeight: 600, fontSize: 14, cursor: "pointer",
+            }}>⭐ 리뷰 보기 / 작성</button>
+
             <button onClick={handleBookmark} style={{
               flex: 1, padding: "12px", borderRadius: 14,
               border: bookmarked ? "1px solid rgba(255,200,80,.4)" : "1px solid var(--border-default)",
@@ -179,6 +201,16 @@ export default function CharacterProfileModal({ character, apiUrl, token, onClos
             }}>⚔ 파티챗 방 만들기</button>
           )}
         </div>
+
+        {showReview && (
+          <ReviewModal
+            apiUrl={apiUrl}
+            token={token}
+            characterId={character.id}
+            characterName={character.name}
+            onClose={() => setShowReview(false)}
+            />
+          )}
       </div>
     </>
   );
