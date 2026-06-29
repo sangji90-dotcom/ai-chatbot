@@ -48,23 +48,18 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
     axios.get(`${apiUrl}/users/me`, { headers })
       .then(res => { setUser(res.data); setUsername(res.data.username); })
       .catch(console.error);
-
     axios.get(`${apiUrl}/tokens/me/history?page=1&size=20`, { headers })
       .then(res => setTokenHistory(res.data.items))
       .catch(console.error);
-
     axios.get(`${apiUrl}/characters/me`, { headers })
       .then(res => setMyCharacters(res.data))
       .catch(console.error);
-
     axios.get(`${apiUrl}/likes/me`, { headers })
       .then(res => setLikedCharacters(res.data))
       .catch(console.error);
-
     axios.get(`${apiUrl}/achievements/me`, { headers })
       .then(res => setAchievements(res.data))
       .catch(console.error);
-
     axios.get(`${apiUrl}/likes/bookmarks`, { headers })
       .then(res => setBookmarks(res.data))
       .catch(console.error);
@@ -122,7 +117,7 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
   };
 
   const handleAdultCancel = async () => {
-    if (!confirm("성인 인증을 해제할까요? 19금 콘텐츠에 접근할 수 없게 돼요.")) return;
+    if (!confirm("성인 인증을 해제할까요?")) return;
     setAdultLoading(true);
     try {
       await axios.delete(`${apiUrl}/users/me/adult-verify`, { headers });
@@ -164,7 +159,6 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
       padding: "24px", overflowY: "auto",
     }}>
 
-      {/* 헤더 */}
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
         <button onClick={onBack} style={{
           width: 40, height: 40, borderRadius: 12,
@@ -181,7 +175,6 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
         }}>마이페이지</div>
       </div>
 
-      {/* 탭 */}
       <div style={{
         display: "flex", borderRadius: 16,
         background: "rgba(255,255,255,.04)",
@@ -198,7 +191,6 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
         ))}
       </div>
 
-      {/* 프로필 탭 */}
       {activeTab === "profile" && (
         <div className="glass-card" style={{ borderRadius: 24, padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
@@ -213,9 +205,7 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
               {user?.profile_image_url ? (
                 <img src={user.profile_image_url} alt={username}
                   style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : (
-                username[0]?.toUpperCase()
-              )}
+              ) : username[0]?.toUpperCase()}
             </div>
             <div>
               <div style={{ fontSize: 13, color: "var(--primary)", marginBottom: 4 }}>
@@ -263,8 +253,7 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
               padding: "10px 18px", borderRadius: 12,
               border: "1px solid var(--border-default)",
               background: "rgba(255,255,255,.04)",
-              color: "var(--text-muted)", fontSize: 13,
-              cursor: "pointer",
+              color: "var(--text-muted)", fontSize: 13, cursor: "pointer",
             }}>🖼 이미지 변경</label>
           </div>
 
@@ -287,7 +276,6 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
         </div>
       )}
 
-      {/* 내 캐릭터 탭 */}
       {activeTab === "characters" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {myCharacters.length === 0 ? (
@@ -335,7 +323,6 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
         </div>
       )}
 
-      {/* 좋아요 탭 */}
       {activeTab === "likes" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {likedCharacters.length === 0 ? (
@@ -359,7 +346,6 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
         </div>
       )}
 
-      {/* 북마크 탭 */}
       {activeTab === "bookmarks" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {bookmarks.length === 0 ? (
@@ -388,7 +374,6 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
         </div>
       )}
 
-      {/* 업적 탭 */}
       {activeTab === "achievements" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div className="glass-card" style={{ borderRadius: 20, padding: 20 }}>
@@ -492,7 +477,6 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
         </div>
       )}
 
-      {/* 토큰 내역 탭 */}
       {activeTab === "tokens" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div className="glass-card" style={{ borderRadius: 20, padding: 20, display: "flex", gap: 20 }}>
@@ -521,20 +505,15 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
               </div>
               <div style={{ fontWeight: 700, fontSize: 16, color: h.amount > 0 ? "#49d89a" : "#ff6b8a" }}>
                 {h.amount > 0 ? "+" : ""}{h.amount.toLocaleString()}
-                <span style={{ fontSize: 12, marginLeft: 4, color: "var(--text-muted)" }}>
-                  {h.token_type === "gold" ? "금화" : h.token_type === "silver" ? "은화" : h.token_type === "expire" ? "만료" : ""}
-                </span>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* 설정 탭 */}
       {activeTab === "settings" && (
         <div className="glass-card" style={{ borderRadius: 24, padding: 24, display: "flex", flexDirection: "column", gap: 20 }}>
 
-          {/* 성인 인증 */}
           <div>
             <div style={{ fontWeight: 600, marginBottom: 8 }}>🔞 성인 인증</div>
             <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 16, lineHeight: 1.6 }}>
@@ -562,33 +541,41 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
                 width: "100%", padding: "14px", borderRadius: 14,
                 border: "1px solid rgba(255,107,138,.3)",
                 background: "rgba(255,107,138,.08)",
-                color: "#ff6b8a", fontWeight: 600, fontSize: 15,
-                cursor: "pointer",
+                color: "#ff6b8a", fontWeight: 600, fontSize: 15, cursor: "pointer",
               }}>🔞 성인 인증하기</button>
             )}
           </div>
 
-          {/* 기본 출력량 */}
           <div>
             <div style={{ fontWeight: 600, marginBottom: 8 }}>기본 출력량</div>
             <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 16 }}>AI 응답의 기본 길이를 설정해요.</div>
             <div style={{ display: "flex", gap: 10 }}>
-              {[{ label: "짧게", value: "short" }, { label: "보통", value: "medium" }, { label: "길게", value: "long" }].map(opt => (
+              {[
+                { label: "짧게", value: "short", tokens: "300토큰" },
+                { label: "보통", value: "medium", tokens: "1,000토큰" },
+                { label: "길게", value: "long", tokens: "2,000토큰" },
+              ].map(opt => (
                 <button key={opt.value} onClick={async () => {
                   await axios.patch(`${apiUrl}/users/me/settings`, { output_length: opt.value }, { headers });
                   setUser((prev: any) => ({ ...prev, output_length: opt.value }));
                 }} style={{
-                  flex: 1, padding: "12px", borderRadius: 14,
+                  flex: 1, padding: "12px 8px", borderRadius: 14,
                   border: user?.output_length === opt.value ? "1px solid var(--primary)" : "1px solid var(--border-default)",
                   background: user?.output_length === opt.value ? "rgba(139,124,255,.15)" : "rgba(255,255,255,.02)",
                   color: user?.output_length === opt.value ? "var(--primary)" : "var(--text-muted)",
                   fontWeight: 600, cursor: "pointer",
-                }}>{opt.label}</button>
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                }}>
+                  <span style={{ fontSize: 14 }}>{opt.label}</span>
+                  <span style={{ fontSize: 11, opacity: .7 }}>{opt.tokens}</span>
+                </button>
               ))}
+            </div>
+            <div style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 8 }}>
+              ※ 메모리 패스 구매 시 출력량 배수(x1.5, x2.0)를 설정할 수 있어요.
             </div>
           </div>
 
-          {/* 세이프티 모드 */}
           <div>
             <div style={{ fontWeight: 600, marginBottom: 8 }}>세이프티 모드</div>
             <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 16 }}>부적절한 콘텐츠를 필터링해요.</div>
@@ -646,7 +633,6 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
         />
       )}
 
-      {/* 성인 인증 확인 모달 */}
       {showAdultConfirm && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", display: "grid", placeItems: "center", zIndex: 100 }}>
           <div style={{

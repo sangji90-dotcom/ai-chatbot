@@ -19,6 +19,7 @@ import AdminPage from "./components/AdminPage";
 import CharacterProfileModal from "./components/CharacterProfileModal";
 import RankingPage from "./components/RankingPage";
 import NoticePage from "./components/NoticePage";
+import CommunityPage from "./components/CommunityPage";
 
 export interface Character {
   id: string;
@@ -54,20 +55,61 @@ export interface User {
   is_admin?: number;
 }
 
-const API_URL = "https://suburb-marrow-radial.ngrok-free.dev";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem("access_token"));
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "edit-character" | "creator" | "terms" | "privacy" | "login" | "events" | "mypage" | "ranking" | "notice" | "admin">("home");
+  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "edit-character" | "creator" | "terms" | "privacy" | "login" | "events" | "mypage" | "ranking" | "notice" | "admin" | "community">("home");
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [partyRoomCode, setPartyRoomCode] = useState<string>("");
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [sharedCharacter, setSharedCharacter] = useState<Character | null>(null);
   const [editCharacterId, setEditCharacterId] = useState<string | null>(null);
   const [creatorUserId, setCreatorUserId] = useState<number | null>(null);
-  
 
+  // ── 핸들러 먼저 선언 ──────────────────────────────────────
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    setToken(null);
+    setUser(null);
+    setView("home");
+    setSelectedCharacter(null);
+    setPartyRoomCode("");
+  };
+
+  const handleLogin = (accessToken: string, userData: User) => {
+    localStorage.setItem("access_token", accessToken);
+    setToken(accessToken);
+    axios.get(`${API_URL}/users/me`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    }).then(res => setUser(res.data)).catch(() => setUser(userData));
+    setView("home");
+  };
+
+  const handleSelectCharacter = (char: Character) => {
+    setSelectedCharacter(char);
+    setView("chat");
+  };
+
+  const handleEnterParty = (roomCode: string) => {
+    setPartyRoomCode(roomCode);
+    setView("party-room");
+  };
+
+  const handleStartPartyChat = (roomCode: string) => {
+    setPartyRoomCode(roomCode);
+    setView("party-chat");
+  };
+
+  const handleGoCreator = (userId: number) => {
+    setCreatorUserId(userId);
+    setView("creator");
+  };
+
+  // ── Effects ───────────────────────────────────────────────
+  // 1. 토큰 있으면 유저 불러오기
   useEffect(() => {
     if (token) {
       axios.get(`${API_URL}/users/me`, {
@@ -79,6 +121,44 @@ export default function App() {
     }
   }, []);
 
+  // 2. axios interceptor — 401 시 자동 refresh
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      res => res,
+      async err => {
+        const originalRequest = err.config;
+      if (err.response?.status === 401 && !originalRequest._retry) {
+      if (originalRequest.url?.includes('/auth/login') ||
+          originalRequest.url?.includes('/auth/register')) {
+      return Promise.reject(err);
+      }
+  originalRequest._retry = true;
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (!refreshToken) {
+    handleLogout();
+    return Promise.reject(err);
+  }
+  try {
+    const res = await axios.post(`${API_URL}/auth/refresh`, {
+      refresh_token: refreshToken,
+    });
+    const newToken = res.data.access_token;
+    localStorage.setItem("access_token", newToken);
+    localStorage.setItem("refresh_token", res.data.refresh_token);
+    setToken(newToken);
+    originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+    return axios(originalRequest);
+  } catch {
+    handleLogout();
+    return Promise.reject(err);
+  }
+}
+      }
+    );
+    return () => axios.interceptors.response.eject(interceptor);
+  }, []);
+
+  // 3. 공유 캐릭터 해시 처리
   useEffect(() => {
     const hash = window.location.hash;
     const match = hash.match(/^#\/characters\/(.+)$/);
@@ -105,50 +185,10 @@ export default function App() {
     }
   }, []);
 
-  const handleLogin = (accessToken: string, userData: User) => {
-    localStorage.setItem("access_token", accessToken);
-    setToken(accessToken);
-    axios.get(`${API_URL}/users/me`, {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    }).then(res => setUser(res.data)).catch(() => setUser(userData));
-    setView("home");
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    setToken(null);
-    setUser(null);
-    setView("home");
-    setSelectedCharacter(null);
-    setPartyRoomCode("");
-  };
-
-  const handleSelectCharacter = (char: Character) => {
-    setSelectedCharacter(char);
-    setView("chat");
-  };
-
-  const handleEnterParty = (roomCode: string) => {
-    setPartyRoomCode(roomCode);
-    setView("party-room");
-  };
-
-  const handleStartPartyChat = (roomCode: string) => {
-    setPartyRoomCode(roomCode);
-    setView("party-chat");
-  };
-
-  const handleGoCreator = (userId: number) => {
-    setCreatorUserId(userId);
-    setView("creator");
-  };
-
   return (
     <>
       <StarBackground />
 
-      {/* 공유 캐릭터 모달 */}
       {sharedCharacter && (
         <CharacterProfileModal
           character={sharedCharacter}
@@ -160,7 +200,6 @@ export default function App() {
         />
       )}
 
-      {/* 로그인 유도 모달 */}
       {showLoginPrompt && (
         <LoginPromptModal
           onClose={() => setShowLoginPrompt(false)}
@@ -174,53 +213,46 @@ export default function App() {
       ) : view === "privacy" ? (
         <PrivacyPage onBack={() => setView("home")} />
       ) : view === "events" ? (
-        <EventsPage
-          apiUrl={API_URL}
-          token={token ?? ""}
-          onBack={() => setView("home")}
-        />
+        <EventsPage apiUrl={API_URL} token={token ?? ""} onBack={() => setView("home")} />
       ) : view === "ranking" ? (
         <RankingPage
-          apiUrl={API_URL}
-          token={token ?? ""}
+          apiUrl={API_URL} token={token ?? ""}
           onBack={() => setView("home")}
           onSelectCharacter={handleSelectCharacter}
         />
       ) : view === "mypage" ? (
         <MyPage
-          apiUrl={API_URL}
-          token={token ?? ""}
+          apiUrl={API_URL} token={token ?? ""}
           onBack={() => setView("home")}
           onGoAdmin={() => setView("admin")}
           onEditCharacter={(id) => { setEditCharacterId(id); setView("edit-character"); }}
         />
       ) : view === "edit-character" ? (
         <EditCharacterPage
-          apiUrl={API_URL}
-          token={token ?? ""}
+          apiUrl={API_URL} token={token ?? ""}
           characterId={editCharacterId ?? ""}
           onBack={() => setView("mypage")}
           onSaved={() => setView("mypage")}
         />
       ) : view === "creator" ? (
         <CreatorPage
-          apiUrl={API_URL}
-          token={token ?? ""}
+          apiUrl={API_URL} token={token ?? ""}
           userId={creatorUserId ?? 0}
           onBack={() => setView("home")}
           onSelectCharacter={handleSelectCharacter}
         />
       ) : view === "admin" ? (
-        <AdminPage
-          apiUrl={API_URL}
-          token={token ?? ""}
-          onBack={() => setView("mypage")}
-        />
+        <AdminPage apiUrl={API_URL} token={token ?? ""} onBack={() => setView("mypage")} />
       ) : view === "notice" ? (
-        <NoticePage
-          apiUrl={API_URL}
-          token={token ?? ""}
+        <NoticePage apiUrl={API_URL} token={token ?? ""} onBack={() => setView("home")} />
+      ) : view === "community" ? (
+        <CommunityPage
+          apiUrl={API_URL} token={token ?? ""}
+          user={user}
           onBack={() => setView("home")}
+          onSelectCharacter={handleSelectCharacter}
+          onGoCreator={handleGoCreator}
+          onLoginRequired={() => setShowLoginPrompt(true)}
         />
       ) : !token ? (
         <>
@@ -233,9 +265,7 @@ export default function App() {
             />
           ) : (
             <HomePage
-              apiUrl={API_URL}
-              token=""
-              user={null}
+              apiUrl={API_URL} token="" user={null}
               onSelectCharacter={() => setShowLoginPrompt(true)}
               onLogout={() => setView("login")}
               onGoParty={() => setShowLoginPrompt(true)}
@@ -244,14 +274,13 @@ export default function App() {
               onGoMyPage={() => setShowLoginPrompt(true)}
               onGoRanking={() => setView("ranking")}
               onGoNotice={() => setView("notice")}
+              onGoCommunity={() => setView("community")}
             />
           )}
         </>
       ) : view === "home" ? (
         <HomePage
-          apiUrl={API_URL}
-          token={token}
-          user={user}
+          apiUrl={API_URL} token={token} user={user}
           onSelectCharacter={handleSelectCharacter}
           onLogout={handleLogout}
           onGoParty={() => setView("party-lobby")}
@@ -260,12 +289,11 @@ export default function App() {
           onGoMyPage={() => setView("mypage")}
           onGoRanking={() => setView("ranking")}
           onGoNotice={() => setView("notice")}
+          onGoCommunity={() => setView("community")}
         />
       ) : view === "chat" ? (
         <ChatApp
-          apiUrl={API_URL}
-          token={token}
-          user={user}
+          apiUrl={API_URL} token={token} user={user}
           character={selectedCharacter!}
           onBack={() => setView("home")}
           onSelectCharacter={handleSelectCharacter}
@@ -273,33 +301,26 @@ export default function App() {
         />
       ) : view === "create" ? (
         <CreateCharacterPage
-          apiUrl={API_URL}
-          token={token}
+          apiUrl={API_URL} token={token}
           onBack={() => setView("home")}
           onCreated={() => setView("home")}
         />
       ) : view === "party-lobby" ? (
         <PartyLobbyPage
-          apiUrl={API_URL}
-          token={token}
-          user={user}
+          apiUrl={API_URL} token={token} user={user}
           onBack={() => setView("home")}
           onEnterRoom={handleEnterParty}
         />
       ) : view === "party-room" ? (
         <PartyRoomPage
-          apiUrl={API_URL}
-          token={token}
-          user={user}
+          apiUrl={API_URL} token={token} user={user}
           roomCode={partyRoomCode}
           onBack={() => setView("party-lobby")}
           onStartChat={handleStartPartyChat}
         />
       ) : view === "party-chat" ? (
         <PartyChatPage
-          apiUrl={API_URL}
-          token={token}
-          user={user}
+          apiUrl={API_URL} token={token} user={user}
           roomCode={partyRoomCode}
           onBack={() => setView("party-room")}
           onLeave={() => setView("home")}

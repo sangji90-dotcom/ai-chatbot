@@ -481,9 +481,9 @@ export default function ChatRoomModal({
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
-                  { value: "short", label: "짧게", desc: "간결하고 빠른 응답" },
-                  { value: "medium", label: "보통", desc: "적당한 길이의 응답" },
-                  { value: "long", label: "길게", desc: "상세하고 풍부한 응답" },
+                  { value: "short", label: "짧게", desc: "간결하고 빠른 응답", tokens: "300토큰/회" },
+                  { value: "medium", label: "보통", desc: "적당한 길이의 응답", tokens: "1,000토큰/회" },
+                  { value: "long", label: "길게", desc: "상세하고 풍부한 응답", tokens: "2,000토큰/회" },
                 ].map(opt => (
                   <button
                     key={opt.value}
@@ -498,6 +498,7 @@ export default function ChatRoomModal({
                   >
                     <div style={{ fontWeight: 700, marginBottom: 4 }}>{opt.label}</div>
                     <div style={{ fontSize: 12 }}>{opt.desc}</div>
+                    <div style={{ fontSize: 11, color: "var(--gold)", marginTop: 4 }}>✦ {opt.tokens}</div>
                   </button>
                 ))}
               </div>

@@ -19,6 +19,10 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
 
     if not user:
         raise HTTPException(status_code=401, detail="사용자를 찾을 수 없습니다.")
+
+    if user["suspended"]:
+        raise HTTPException(status_code=403, detail="정지된 계정입니다.")
+
     return dict(user)
 
 def get_optional_user(token: str = Depends(oauth2_scheme_optional)):
@@ -32,4 +36,8 @@ def get_optional_user(token: str = Depends(oauth2_scheme_optional)):
     cursor.execute("SELECT * FROM users WHERE id = ?", (int(payload["sub"]),))
     user = cursor.fetchone()
     conn.close()
-    return dict(user) if user else None
+    if not user:
+        return None
+    if user["suspended"]:
+        return None
+    return dict(user)

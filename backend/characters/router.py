@@ -6,6 +6,11 @@ from typing import Optional, List
 from database import get_db
 from deps import get_current_user, get_optional_user
 from notifications.router import send_notification
+from utils import read_and_validate_image
+from dotenv import load_dotenv
+load_dotenv()
+from google import genai
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 router = APIRouter(prefix="/characters", tags=["캐릭터"])
 
@@ -61,9 +66,6 @@ class AutoCompleteRequest(BaseModel):
 async def auto_complete_character(
         request: AutoCompleteRequest,
         current_user: dict = Depends(get_current_user)):
-    from google import genai
-    import os
-    client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
     prompt = f"""
 캐릭터 정보:
@@ -93,7 +95,7 @@ async def auto_complete_character(
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=[{"role": "user", "parts": [{"text": prompt}]}],
-        config={"max_output_tokens": 800}
+        config={"max_output_tokens": 2000}
     )
 
     import json, re
@@ -103,7 +105,8 @@ async def auto_complete_character(
     try:
         data = json.loads(text)
         return data
-    except:
+    except Exception as e:
+        print(f"[AUTO-COMPLETE ERROR] {e} | 응답: {text}")
         raise HTTPException(status_code=500, detail="AI 자동완성 실패")
 
 
@@ -417,6 +420,7 @@ async def get_characters_by_user(
     return [_format_character(row) for row in rows]
 
 
+# upload_character_image 수정
 @router.post("/{character_id}/image", summary="캐릭터 이미지 업로드")
 async def upload_character_image(
         character_id: str,
@@ -432,15 +436,10 @@ async def upload_character_image(
     if char["user_id"] != current_user["id"]:
         conn.close()
         raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
-    allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-    if file.content_type not in allowed_types:
-        conn.close()
-        raise HTTPException(status_code=400, detail="허용되지 않는 파일 형식입니다.")
-    contents = await file.read()
-    if len(contents) > 5 * 1024 * 1024:
-        conn.close()
-        raise HTTPException(status_code=400, detail="파일 크기는 5MB 이하여야 합니다.")
-    ext = file.filename.split(".")[-1]
+
+    contents = await read_and_validate_image(file, max_size=5 * 1024 * 1024)
+
+    ext = file.filename.split(".")[-1].lower()
     filename = f"{uuid.uuid4().hex}.{ext}"
     save_dir = "../frontend/images/characters"
     os.makedirs(save_dir, exist_ok=True)
@@ -451,6 +450,7 @@ async def upload_character_image(
     conn.commit()
     conn.close()
     return {"image_url": image_url, "message": "이미지 업로드 완료"}
+
 
 
 @router.post("/{character_id}/report", summary="캐릭터 신고")
@@ -634,15 +634,10 @@ async def upload_emotion_image(
     if char["user_id"] != current_user["id"]:
         conn.close()
         raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
-    allowed_types = ["image/jpeg", "image/png", "image/webp"]
-    if file.content_type not in allowed_types:
-        conn.close()
-        raise HTTPException(status_code=400, detail="허용되지 않는 파일 형식입니다.")
-    contents = await file.read()
-    if len(contents) > 5 * 1024 * 1024:
-        conn.close()
-        raise HTTPException(status_code=400, detail="파일 크기는 5MB 이하여야 합니다.")
-    ext = file.filename.split(".")[-1]
+
+    contents = await read_and_validate_image(file, max_size=5 * 1024 * 1024)
+
+    ext = file.filename.split(".")[-1].lower()
     filename = f"{uuid.uuid4().hex}.{ext}"
     save_dir = "../frontend/images/emotions"
     os.makedirs(save_dir, exist_ok=True)
@@ -692,15 +687,10 @@ async def upload_background_image(
     if char["user_id"] != current_user["id"]:
         conn.close()
         raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
-    allowed_types = ["image/jpeg", "image/png", "image/webp"]
-    if file.content_type not in allowed_types:
-        conn.close()
-        raise HTTPException(status_code=400, detail="허용되지 않는 파일 형식입니다.")
-    contents = await file.read()
-    if len(contents) > 10 * 1024 * 1024:
-        conn.close()
-        raise HTTPException(status_code=400, detail="파일 크기는 10MB 이하여야 합니다.")
-    ext = file.filename.split(".")[-1]
+
+    contents = await read_and_validate_image(file, max_size=10 * 1024 * 1024)
+
+    ext = file.filename.split(".")[-1].lower()
     filename = f"{uuid.uuid4().hex}.{ext}"
     save_dir = "../frontend/images/backgrounds"
     os.makedirs(save_dir, exist_ok=True)

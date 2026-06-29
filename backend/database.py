@@ -472,6 +472,17 @@ def init_db():
     except:
         pass
     
+    try:
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_posts_type ON community_posts(post_type)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_posts_genre ON community_posts(genre)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_posts_user ON community_posts(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_tags_post ON post_character_tags(post_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_tags_char ON post_character_tags(character_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_comments_post ON community_comments(post_id)")
+        conn.commit()
+    except:
+        pass
+    
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS character_images (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -562,6 +573,71 @@ def init_db():
         content TEXT NOT NULL,
         is_pinned INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+        # 커뮤니티 게시글
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS community_posts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            title TEXT,
+            content TEXT NOT NULL,
+            post_type TEXT DEFAULT 'general',
+            genre TEXT,
+            ai_description TEXT,
+            image_url TEXT,
+            is_adult INTEGER DEFAULT 0,
+            is_blurred INTEGER DEFAULT 0,
+            party_character_id TEXT,
+            party_room_id TEXT,
+            party_max INTEGER,
+            party_current INTEGER DEFAULT 1,
+            party_status TEXT DEFAULT 'open',
+            status TEXT DEFAULT 'active',
+            view_count INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+
+    # 게시글 캐릭터 태그
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS post_character_tags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            post_id INTEGER NOT NULL,
+            character_id TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (post_id) REFERENCES community_posts(id),
+            FOREIGN KEY (character_id) REFERENCES characters(id)
+        )
+    """)
+
+    # 커뮤니티 댓글
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS community_comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            post_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            content TEXT NOT NULL,
+            status TEXT DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (post_id) REFERENCES community_posts(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+
+    # 커뮤니티 좋아요
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS community_likes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            post_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(post_id, user_id),
+            FOREIGN KEY (post_id) REFERENCES community_posts(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
     

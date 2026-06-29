@@ -367,7 +367,8 @@ export default function CoinModal({ apiUrl, token, onClose, onCoinsUpdated }: Co
                     position: "absolute", top: 12, right: 12,
                     padding: "3px 10px", borderRadius: 999, fontSize: 11,
                     background: "rgba(246,198,91,.3)", color: "var(--gold)", fontWeight: 700,
-                  }}>🔥 추천</div>
+                    zIndex: 1,
+                }}>🔥 추천</div>
 
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                     <div>
@@ -376,7 +377,7 @@ export default function CoinModal({ apiUrl, token, onClose, onCoinsUpdated }: Co
                         30일권 + 보너스
                       </div>
                     </div>
-                    <div style={{ textAlign: "right" }}>
+                    <div style={{ textAlign: "right", paddingRight: 56 }}>
                       <div style={{ fontWeight: 700, fontSize: 18, color: "var(--gold)" }}>24,900 금화</div>
                       <div style={{ color: "#49d89a", fontSize: 11, marginTop: 2 }}>≈ 약 8,200원 상당</div>
                     </div>

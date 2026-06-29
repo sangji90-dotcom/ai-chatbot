@@ -18,11 +18,12 @@ interface HomePageProps {
   onGoMyPage: () => void;
   onGoRanking: () => void;
   onGoNotice: () => void;
+  onGoCommunity: () => void;
 }
 
 const CATEGORIES = ["전체", "팔로우", "로맨스", "판타지", "액션", "일상", "공포", "SF", "BL", "GL", "기타"];
 
-export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLogout, onGoParty, onCreateCharacter, onGoEvents, onGoMyPage, onGoRanking, onGoNotice }: HomePageProps) {
+export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLogout, onGoParty, onCreateCharacter, onGoEvents, onGoMyPage, onGoRanking, onGoNotice, onGoCommunity }: HomePageProps) {
   const [activeCategory, setActiveCategory] = useState("전체");
   const [characters, setCharacters] = useState<Character[]>([]);
   const [newCharacters, setNewCharacters] = useState<Character[]>([]);
@@ -230,6 +231,14 @@ export default function HomePage({ apiUrl, token, user, onSelectCharacter, onLog
               background: "rgba(73,216,154,.08)",
               color: "#49d89a", fontSize: 13, fontWeight: 600, cursor: "pointer",
             }}>🏆 랭킹</button>
+          )}
+          {user && (
+            <button onClick={onGoCommunity} style={{
+              padding: "8px 14px", borderRadius: 10,
+              border: "1px solid rgba(255,120,120,.4)",
+              background: "rgba(255,120,120,.08)",
+              color: "#ff7878", fontSize: 13, fontWeight: 600, cursor: "pointer",
+            }}>💬 커뮤니티</button>
           )}
           {user && (
             <div onClick={() => { setShowNotification(true); setUnreadCount(0); }}

@@ -337,28 +337,42 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
           display: "flex", flexDirection: "column", gap: "18px",
           position: "relative", zIndex: 1,
         }}>
-          {messages.map((message) => (
-            <MessageBubble key={message.id} message={message} characterName={character.name} />
-          ))}
+          {messages.map((message, index) => {
+          const isLastAiMessage =
+          message.sender === "ai" &&
+          messages.slice(index + 1).every(m => m.sender === "user");
+
+        return (
+          <MessageBubble
+            key={message.id}
+            message={message}
+            characterName={character.name}
+            emotionImageUrl={
+            isLastAiMessage && emotionImages[currentEmotion]
+            ? emotionImages[currentEmotion]
+            : undefined
+          }
+        />
+          );
+        })}
 
           {typing && (
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <div style={{
-                width: 42, height: 42, borderRadius: "50%",
-                background: "var(--gradient-cosmic)",
-                display: "grid", placeItems: "center",
-                fontWeight: 700, fontSize: 16, flexShrink: 0,
-              }}>{character.name[0]}</div>
+            width: 42, height: 42, borderRadius: "50%",
+            background: "var(--gradient-cosmic)",
+            display: "grid", placeItems: "center",
+            fontWeight: 700, fontSize: 16, flexShrink: 0,
+          }}>{character.name[0]}</div>
               <div className="glass-card" style={{ padding: "14px 18px", borderRadius: "999px", display: "flex", gap: "6px" }}>
-                <span className="typing-dot" />
-                <span className="typing-dot" />
-                <span className="typing-dot" />
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+          </div>
         </div>
-
+        )}
+      <div ref={messagesEndRef} />
+    </div>
         {/* 입력창 */}
         <div style={{ position: "relative", zIndex: 3 }}>
           <ChatInput onSend={handleSend} characterName={character.name} />
