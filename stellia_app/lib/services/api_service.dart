@@ -58,4 +58,71 @@ class ApiService {
     );
     return res.data;
   }
+
+  static Future<void> toggleLike(String characterId) async {
+  final token = await getToken();
+  await _dio.post(
+    '/likes/$characterId',
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
+  }
+
+  static Future<List<dynamic>> getCommunityPosts({String? postType}) async {
+  final token = await getToken();
+  final params = <String, dynamic>{'limit': 20};
+  if (postType != null) params['post_type'] = postType;
+  final res = await _dio.get(
+    '/community',
+    queryParameters: params,
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
+  return res.data;
+  }
+
+  static Future<Map<String, dynamic>> togglePostLike(int postId) async {
+  final token = await getToken();
+  final res = await _dio.post(
+    '/community/$postId/like',
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
+  return res.data;
+  }
+
+  static Future<List<dynamic>> getStories() async {
+  final token = await getToken();
+  final res = await _dio.get(
+    '/party/stories',
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
+  return res.data;
+  }
+
+  static Future<List<dynamic>> searchCharacters(String q) async {
+  final token = await getToken();
+  final res = await _dio.get(
+    '/characters/search',
+    queryParameters: {'q': q, 'size': 20},
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
+  return res.data;
+  }
+
+  static Future<List<dynamic>> getRanking({String sort = 'popular'}) async {
+  final token = await getToken();
+  final res = await _dio.get(
+    '/characters/ranking',
+    queryParameters: {'limit': 20, 'sort': sort},
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
+  return res.data;
+  }
+
+  static Future<List<dynamic>> getNotifications() async {
+  final token = await getToken();
+  final res = await _dio.get(
+    '/notifications',
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
+  return res.data;
+  }
 }

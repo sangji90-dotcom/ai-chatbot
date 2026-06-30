@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../models/character.dart';
-import 'chat_screen.dart';
 import 'login_screen.dart';
+import 'character_profile_screen.dart';
+import 'community_screen.dart';
+import 'party_lobby_screen.dart';
+import 'my_page_screen.dart';
+import 'search_screen.dart';
+import 'notification_screen.dart';
+import 'ranking_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -67,6 +73,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search_rounded, color: Color(0xFF6B7280)),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreen())),
+          ),
+          IconButton(
+            icon: const Icon(Icons.notifications_rounded, color: Color(0xFF6B7280)),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationScreen())),
+          ),
+          IconButton(
+            icon: const Icon(Icons.emoji_events_rounded, color: Color(0xFF6B7280)),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RankingScreen())),
+          ),
           IconButton(
             icon: const Icon(Icons.logout, color: Color(0xFF6B7280)),
             onPressed: _logout,
@@ -150,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ChatScreen(character: char),
+                        builder: (_) => CharacterProfileScreen(character: char),
                       ),
                     ),
                   )),
@@ -164,7 +182,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: BottomNavigationBar(
           currentIndex: _bottomIndex,
-          onTap: (i) => setState(() => _bottomIndex = i),
+          onTap: (i) {
+            if (i == 1) {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const CommunityScreen()));
+            } else if (i == 2) {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const PartyLobbyScreen()));
+            } else if (i == 3) {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPageScreen()));
+            } else {
+              setState(() => _bottomIndex = i);
+            }
+          },
           backgroundColor: Colors.transparent,
           elevation: 0,
           selectedItemColor: const Color(0xFF7C6CFF),
