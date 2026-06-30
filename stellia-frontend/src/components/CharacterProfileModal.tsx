@@ -10,13 +10,16 @@ interface CharacterProfileModalProps {
   onClose: () => void;
   onGoParty?: (roomCode: string) => void;
   onGoCreator?: (userId: number) => void;
+  onStartChat?: (newSession: boolean) => void;
 }
 
-export default function CharacterProfileModal({ character, apiUrl, token, onClose, onGoParty, onGoCreator }: CharacterProfileModalProps) {
+export default function CharacterProfileModal({ character, apiUrl, token, onClose, onGoParty, onGoCreator, onStartChat }: CharacterProfileModalProps) {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [partyLoading, setPartyLoading] = useState(false);
   const [showReview, setShowReview] = useState(false);
+  const [hasHistory, setHasHistory] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -25,6 +28,18 @@ export default function CharacterProfileModal({ character, apiUrl, token, onClos
     axios.get(`${apiUrl}/likes/bookmarks/${character.id}/status`, { headers })
       .then(res => setBookmarked(res.data.bookmarked))
       .catch(console.error);
+  }, [character.id]);
+
+  useEffect(() => {
+    if (!token) return;
+    axios.get(`${apiUrl}/chat/sessions/${character.id}`, { headers })
+      .then(res => {
+        if (res.data && res.data.length > 0) {
+          setHasHistory(true);
+          setSessionId(res.data[0].session_id);
+        }
+      })
+      .catch(() => setHasHistory(false));
   }, [character.id]);
 
   const handleLike = async () => {
@@ -152,6 +167,29 @@ export default function CharacterProfileModal({ character, apiUrl, token, onClos
             </div>
           )}
 
+          {(character.likes || character.dislikes) && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {character.likes && (
+                <div style={{ padding: 14, borderRadius: 14, background: "rgba(73,216,154,.08)", border: "1px solid rgba(73,216,154,.2)" }}>
+                  <div style={{ color: "#49d89a", fontSize: 12, marginBottom: 6, fontWeight: 600 }}>좋아하는 것</div>
+                  <div style={{ color: "var(--text-secondary)", fontSize: 13, lineHeight: 1.6 }}>{character.likes}</div>
+              </div>
+              )}
+              {character.dislikes && (
+                <div style={{ padding: 14, borderRadius: 14, background: "rgba(255,107,138,.08)", border: "1px solid rgba(255,107,138,.2)" }}>
+                  <div style={{ color: "#ff6b8a", fontSize: 12, marginBottom: 6, fontWeight: 600 }}>싫어하는 것</div>
+                  <div style={{ color: "var(--text-secondary)", fontSize: 13, lineHeight: 1.6 }}>{character.dislikes}</div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {character.created_at && (
+            <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
+              📅 {new Date(character.created_at).toLocaleDateString("ko-KR")} 생성
+            </div>
+          )}
+
           {/* 액션 버튼 */}
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button onClick={handleLike} style={{
@@ -188,6 +226,23 @@ export default function CharacterProfileModal({ character, apiUrl, token, onClos
               fontWeight: 600, fontSize: 14, cursor: "pointer",
             }}>⤴ 공유</button>
           </div>
+
+          <div style={{ display: "flex", gap: 10 }}>
+            {hasHistory && (
+              <button onClick={() => { onClose(); onStartChat?.(false); }} style={{
+                flex: 1, padding: "14px", borderRadius: 14, border: "none",
+                background: "var(--gradient-cosmic)",
+                color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer",
+              }}>이어하기</button>
+            )}
+          <button onClick={() => { onClose(); onStartChat?.(true); }} style={{
+            flex: 1, padding: "14px", borderRadius: 14,
+            border: hasHistory ? "1px solid var(--border-default)" : "none",
+            background: hasHistory ? "rgba(255,255,255,.04)" : "var(--gradient-cosmic)",
+            color: hasHistory ? "var(--text-muted)" : "#fff",
+            fontWeight: 700, fontSize: 15, cursor: "pointer",
+          }}>새로하기</button>
+        </div>
 
           {/* 파티챗 버튼 */}
           {character.party_enabled && token && (

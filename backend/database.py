@@ -473,6 +473,18 @@ def init_db():
         pass
     
     try:
+        cursor.execute("ALTER TABLE characters ADD COLUMN likes TEXT DEFAULT ''")
+        conn.commit()
+    except:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE characters ADD COLUMN dislikes TEXT DEFAULT ''")
+        conn.commit()
+    except:
+        pass
+
+    try:
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_posts_type ON community_posts(post_type)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_posts_genre ON community_posts(genre)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_posts_user ON community_posts(user_id)")

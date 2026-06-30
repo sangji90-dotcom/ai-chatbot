@@ -12,12 +12,13 @@ interface ChatAppProps {
   token: string;
   user: User | null;
   character: Character;
+  forceNewSession?: boolean;
   onBack: () => void;
   onSelectCharacter?: (char: Character) => void;
   onGoCreator?: (userId: number) => void;
 }
 
-export default function ChatApp({ apiUrl, token, user, character, onBack, onSelectCharacter, onGoCreator }: ChatAppProps) {
+export default function ChatApp({ apiUrl, token, user, character, forceNewSession, onBack, onSelectCharacter, onGoCreator }: ChatAppProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [typing, setTyping] = useState(false);
   const [coins, setCoins] = useState<number>(user?.token_balance ?? 0);
@@ -58,7 +59,7 @@ export default function ChatApp({ apiUrl, token, user, character, onBack, onSele
         const sessionList = res.data;
         setSessions(sessionList);
 
-        if (sessionList.length > 0) {
+        if (sessionList.length > 0 && !forceNewSession) {
           // 가장 최근 세션 이어하기
           const latestSession = sessionList[0].session_id;
           setSessionId(latestSession);

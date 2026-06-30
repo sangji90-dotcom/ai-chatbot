@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, useNavigate, useParams, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useParams, Navigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import StarBackground from "./components/StarBackground";
 import LoginPage from "./components/LoginPage";
@@ -22,6 +22,7 @@ import RankingPage from "./components/RankingPage";
 import NoticePage from "./components/NoticePage";
 import CommunityPage from "./components/CommunityPage";
 
+
 export interface Character {
   id: string;
   name: string;
@@ -36,6 +37,9 @@ export interface Character {
   like_count?: number;
   chat_count?: number;
   view_count?: number;
+  likes?: string;
+  dislikes?: string;
+  created_at?: string;
 }
 
 export interface Message {
@@ -67,6 +71,7 @@ function AppRoutes() {
   const [sharedCharacter, setSharedCharacter] = useState<Character | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [creatorUserId, setCreatorUserId] = useState<number | null>(null);
+  const [profileModalChar, setProfileModalChar] = useState<Character | null>(null);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
@@ -86,8 +91,14 @@ function AppRoutes() {
   };
 
   const handleSelectCharacter = (char: Character) => {
-    setSelectedCharacter(char);
-    navigate(`/chat/${char.id}`);
+    setProfileModalChar(char);
+  };
+
+  const handleStartChat = (newSession: boolean) => {
+    if (!profileModalChar) return;
+    setSelectedCharacter(profileModalChar);
+    navigate(`/chat/${profileModalChar.id}${newSession ? "?new=1" : ""}`);
+    setProfileModalChar(null);
   };
 
   const handleGoCreator = (userId: number) => {
@@ -173,16 +184,17 @@ function AppRoutes() {
     <>
       <StarBackground />
 
-      {sharedCharacter && (
+      {profileModalChar && (
         <CharacterProfileModal
-          character={sharedCharacter}
-          apiUrl={API_URL}
-          token={token ?? ""}
-          onClose={() => { setSharedCharacter(null); window.location.hash = ""; }}
-          onGoParty={(code) => navigate(`/party/room/${code}`)}
-          onGoCreator={handleGoCreator}
-        />
-      )}
+        character={profileModalChar}
+        apiUrl={API_URL}
+        token={token ?? ""}
+        onClose={() => setProfileModalChar(null)}
+        onGoParty={(code) => { setProfileModalChar(null); navigate(`/party/room/${code}`); }}
+        onGoCreator={handleGoCreator}
+        onStartChat={handleStartChat}
+      />
+    )}
 
       {showLoginPrompt && (
         <LoginPromptModal
@@ -339,9 +351,11 @@ function ChatRoute({ apiUrl, token, user, selectedCharacter, onSelectCharacter, 
   onGoCreator: (id: number) => void;
 }) {
   const { characterId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [character, setCharacter] = useState<Character | null>(selectedCharacter);
   const [loading, setLoading] = useState(!selectedCharacter);
+  const forceNew = searchParams.get("new") === "1";
 
   useEffect(() => {
     if (selectedCharacter && selectedCharacter.id === characterId) {
@@ -349,7 +363,6 @@ function ChatRoute({ apiUrl, token, user, selectedCharacter, onSelectCharacter, 
       setLoading(false);
       return;
     }
-    // 새로고침 등으로 character가 없으면 다시 fetch
     axios.get(`${apiUrl}/characters/${characterId}`)
       .then(res => {
         const c = res.data;
@@ -377,6 +390,7 @@ function ChatRoute({ apiUrl, token, user, selectedCharacter, onSelectCharacter, 
     <ChatApp
       apiUrl={apiUrl} token={token} user={user}
       character={character}
+      forceNewSession={forceNew}
       onBack={() => navigate("/")}
       onSelectCharacter={onSelectCharacter}
       onGoCreator={onGoCreator}

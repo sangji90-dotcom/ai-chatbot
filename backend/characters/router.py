@@ -149,12 +149,13 @@ async def create_character(
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO characters
-        (id, user_id, name, description, prompt, first_message, situation, visibility, is_adult, image_url, party_enabled)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, user_id, name, description, prompt, first_message, situation, visibility, is_adult, image_url, party_enabled, likes, dislikes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         char_id, current_user["id"], request.name, request.description,
         prompt, request.first_message, request.situation,
-        request.visibility, request.is_adult, request.image_url, request.party_enabled
+        request.visibility, request.is_adult, request.image_url, request.party_enabled,
+        request.likes, request.dislikes
     ))
 
     for tag in request.tags:
@@ -543,6 +544,10 @@ async def update_character(
         fields.append("image_url = ?"); params.append(request.image_url)
     if request.party_enabled is not None:
         fields.append("party_enabled = ?"); params.append(request.party_enabled)
+    if request.likes is not None:
+        fields.append("likes = ?"); params.append(request.likes)
+    if request.dislikes is not None:
+        fields.append("dislikes = ?"); params.append(request.dislikes)
     if any([request.name, request.age, request.job, request.personality,
             request.likes, request.dislikes, request.speech_style]):
         name = request.name or char["name"]
@@ -739,4 +744,6 @@ def _format_character(row) -> dict:
         "party_enabled": bool(row["party_enabled"]) if "party_enabled" in row.keys() else False,
         "tags": row["tags"].split(",") if row["tags"] else [],
         "created_at": row["created_at"],
+        "likes": row["likes"] if "likes" in row.keys() else "",
+        "dislikes": row["dislikes"] if "dislikes" in row.keys() else "",
     }
