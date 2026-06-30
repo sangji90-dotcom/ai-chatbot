@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
+import 'notice_screen.dart';
+import 'events_screen.dart';
+import 'token_screen.dart';
+import 'ranking_screen.dart';
+import 'create_character_screen.dart';
 
 class MyPageScreen extends StatefulWidget {
   const MyPageScreen({super.key});
@@ -129,6 +134,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
                   const SizedBox(height: 24),
 
                   // 메뉴
+                
                   _MenuItem(
                     icon: Icons.star_rounded,
                     label: '내 캐릭터',
@@ -153,7 +159,27 @@ class _MyPageScreenState extends State<MyPageScreen> {
                   _MenuItem(
                     icon: Icons.history_rounded,
                     label: '토큰 내역',
-                    onTap: () {},
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TokenScreen())),
+                  ),
+                  _MenuItem(
+                    icon: Icons.campaign_rounded,
+                    label: '공지사항',
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NoticeScreen())),
+                  ),
+                  _MenuItem(
+                    icon: Icons.celebration_rounded,
+                    label: '이벤트',
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EventsScreen())),
+                  ),
+                  _MenuItem(
+                    icon: Icons.emoji_events_rounded,
+                    label: '랭킹',
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RankingScreen())),
+                  ),
+                  _MenuItem(
+                    icon: Icons.add_rounded,
+                    label: '캐릭터 만들기',
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateCharacterScreen())),
                   ),
                   _MenuItem(
                     icon: Icons.settings_rounded,

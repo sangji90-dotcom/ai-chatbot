@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, useNavigate, useParams, Navigate } from "react-router-dom";
 import axios from "axios";
 import StarBackground from "./components/StarBackground";
 import LoginPage from "./components/LoginPage";
@@ -57,26 +58,22 @@ export interface User {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function App() {
+// ── 인증 관련 전역 상태를 관리하는 Provider 역할 컴포넌트 ──────────
+function AppRoutes() {
+  const navigate = useNavigate();
   const [token, setToken] = useState<string | null>(localStorage.getItem("access_token"));
   const [user, setUser] = useState<User | null>(null);
-  const [view, setView] = useState<"home" | "chat" | "party-lobby" | "party-room" | "party-chat" | "create" | "edit-character" | "creator" | "terms" | "privacy" | "login" | "events" | "mypage" | "ranking" | "notice" | "admin" | "community">("home");
-  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
-  const [partyRoomCode, setPartyRoomCode] = useState<string>("");
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [sharedCharacter, setSharedCharacter] = useState<Character | null>(null);
-  const [editCharacterId, setEditCharacterId] = useState<string | null>(null);
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [creatorUserId, setCreatorUserId] = useState<number | null>(null);
 
-  // ── 핸들러 먼저 선언 ──────────────────────────────────────
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     setToken(null);
     setUser(null);
-    setView("home");
-    setSelectedCharacter(null);
-    setPartyRoomCode("");
+    navigate("/");
   };
 
   const handleLogin = (accessToken: string, userData: User) => {
@@ -85,31 +82,19 @@ export default function App() {
     axios.get(`${API_URL}/users/me`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     }).then(res => setUser(res.data)).catch(() => setUser(userData));
-    setView("home");
+    navigate("/");
   };
 
   const handleSelectCharacter = (char: Character) => {
     setSelectedCharacter(char);
-    setView("chat");
-  };
-
-  const handleEnterParty = (roomCode: string) => {
-    setPartyRoomCode(roomCode);
-    setView("party-room");
-  };
-
-  const handleStartPartyChat = (roomCode: string) => {
-    setPartyRoomCode(roomCode);
-    setView("party-chat");
+    navigate(`/chat/${char.id}`);
   };
 
   const handleGoCreator = (userId: number) => {
     setCreatorUserId(userId);
-    setView("creator");
+    navigate(`/creator/${userId}`);
   };
 
-  // ── Effects ───────────────────────────────────────────────
-  // 1. 토큰 있으면 유저 불러오기
   useEffect(() => {
     if (token) {
       axios.get(`${API_URL}/users/me`, {
@@ -121,44 +106,43 @@ export default function App() {
     }
   }, []);
 
-  // 2. axios interceptor — 401 시 자동 refresh
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       res => res,
       async err => {
         const originalRequest = err.config;
-      if (err.response?.status === 401 && !originalRequest._retry) {
-      if (originalRequest.url?.includes('/auth/login') ||
-          originalRequest.url?.includes('/auth/register')) {
-      return Promise.reject(err);
-      }
-  originalRequest._retry = true;
-  const refreshToken = localStorage.getItem("refresh_token");
-  if (!refreshToken) {
-    handleLogout();
-    return Promise.reject(err);
-  }
-  try {
-    const res = await axios.post(`${API_URL}/auth/refresh`, {
-      refresh_token: refreshToken,
-    });
-    const newToken = res.data.access_token;
-    localStorage.setItem("access_token", newToken);
-    localStorage.setItem("refresh_token", res.data.refresh_token);
-    setToken(newToken);
-    originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
-    return axios(originalRequest);
-  } catch {
-    handleLogout();
-    return Promise.reject(err);
-  }
-}
+        if (err.response?.status === 401 && !originalRequest._retry) {
+          if (originalRequest.url?.includes('/auth/login') ||
+              originalRequest.url?.includes('/auth/register')) {
+            return Promise.reject(err);
+          }
+          originalRequest._retry = true;
+          const refreshToken = localStorage.getItem("refresh_token");
+          if (!refreshToken) {
+            handleLogout();
+            return Promise.reject(err);
+          }
+          try {
+            const res = await axios.post(`${API_URL}/auth/refresh`, {
+              refresh_token: refreshToken,
+            });
+            const newToken = res.data.access_token;
+            localStorage.setItem("access_token", newToken);
+            localStorage.setItem("refresh_token", res.data.refresh_token);
+            setToken(newToken);
+            originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+            return axios(originalRequest);
+          } catch {
+            handleLogout();
+            return Promise.reject(err);
+          }
+        }
+        return Promise.reject(err);
       }
     );
     return () => axios.interceptors.response.eject(interceptor);
   }, []);
 
-  // 3. 공유 캐릭터 해시 처리
   useEffect(() => {
     const hash = window.location.hash;
     const match = hash.match(/^#\/characters\/(.+)$/);
@@ -195,7 +179,7 @@ export default function App() {
           apiUrl={API_URL}
           token={token ?? ""}
           onClose={() => { setSharedCharacter(null); window.location.hash = ""; }}
-          onGoParty={(code) => { setPartyRoomCode(code); setView("party-room"); }}
+          onGoParty={(code) => navigate(`/party/room/${code}`)}
           onGoCreator={handleGoCreator}
         />
       )}
@@ -203,129 +187,262 @@ export default function App() {
       {showLoginPrompt && (
         <LoginPromptModal
           onClose={() => setShowLoginPrompt(false)}
-          onLogin={() => { setShowLoginPrompt(false); setView("login"); }}
-          onRegister={() => { setShowLoginPrompt(false); setView("login"); }}
+          onLogin={() => { setShowLoginPrompt(false); navigate("/login"); }}
+          onRegister={() => { setShowLoginPrompt(false); navigate("/login"); }}
         />
       )}
 
-      {view === "terms" ? (
-        <TermsPage onBack={() => setView("home")} />
-      ) : view === "privacy" ? (
-        <PrivacyPage onBack={() => setView("home")} />
-      ) : view === "events" ? (
-        <EventsPage apiUrl={API_URL} token={token ?? ""} onBack={() => setView("home")} />
-      ) : view === "ranking" ? (
-        <RankingPage
-          apiUrl={API_URL} token={token ?? ""}
-          onBack={() => setView("home")}
-          onSelectCharacter={handleSelectCharacter}
-        />
-      ) : view === "mypage" ? (
-        <MyPage
-          apiUrl={API_URL} token={token ?? ""}
-          onBack={() => setView("home")}
-          onGoAdmin={() => setView("admin")}
-          onEditCharacter={(id) => { setEditCharacterId(id); setView("edit-character"); }}
-        />
-      ) : view === "edit-character" ? (
-        <EditCharacterPage
-          apiUrl={API_URL} token={token ?? ""}
-          characterId={editCharacterId ?? ""}
-          onBack={() => setView("mypage")}
-          onSaved={() => setView("mypage")}
-        />
-      ) : view === "creator" ? (
-        <CreatorPage
-          apiUrl={API_URL} token={token ?? ""}
-          userId={creatorUserId ?? 0}
-          onBack={() => setView("home")}
-          onSelectCharacter={handleSelectCharacter}
-        />
-      ) : view === "admin" ? (
-        <AdminPage apiUrl={API_URL} token={token ?? ""} onBack={() => setView("mypage")} />
-      ) : view === "notice" ? (
-        <NoticePage apiUrl={API_URL} token={token ?? ""} onBack={() => setView("home")} />
-      ) : view === "community" ? (
-        <CommunityPage
-          apiUrl={API_URL} token={token ?? ""}
-          user={user}
-          onBack={() => setView("home")}
-          onSelectCharacter={handleSelectCharacter}
-          onGoCreator={handleGoCreator}
-          onLoginRequired={() => setShowLoginPrompt(true)}
-        />
-      ) : !token ? (
-        <>
-          {view === "login" ? (
-            <LoginPage
-              apiUrl={API_URL}
-              onLogin={handleLogin}
-              onShowTerms={() => setView("terms")}
-              onShowPrivacy={() => setView("privacy")}
-            />
-          ) : (
-            <HomePage
-              apiUrl={API_URL} token="" user={null}
-              onSelectCharacter={() => setShowLoginPrompt(true)}
-              onLogout={() => setView("login")}
-              onGoParty={() => setShowLoginPrompt(true)}
-              onCreateCharacter={() => setShowLoginPrompt(true)}
-              onGoEvents={() => setShowLoginPrompt(true)}
-              onGoMyPage={() => setShowLoginPrompt(true)}
-              onGoRanking={() => setView("ranking")}
-              onGoNotice={() => setView("notice")}
-              onGoCommunity={() => setView("community")}
-            />
-          )}
-        </>
-      ) : view === "home" ? (
-        <HomePage
-          apiUrl={API_URL} token={token} user={user}
-          onSelectCharacter={handleSelectCharacter}
-          onLogout={handleLogout}
-          onGoParty={() => setView("party-lobby")}
-          onCreateCharacter={() => setView("create")}
-          onGoEvents={() => setView("events")}
-          onGoMyPage={() => setView("mypage")}
-          onGoRanking={() => setView("ranking")}
-          onGoNotice={() => setView("notice")}
-          onGoCommunity={() => setView("community")}
-        />
-      ) : view === "chat" ? (
-        <ChatApp
-          apiUrl={API_URL} token={token} user={user}
-          character={selectedCharacter!}
-          onBack={() => setView("home")}
-          onSelectCharacter={handleSelectCharacter}
-          onGoCreator={handleGoCreator}
-        />
-      ) : view === "create" ? (
-        <CreateCharacterPage
-          apiUrl={API_URL} token={token}
-          onBack={() => setView("home")}
-          onCreated={() => setView("home")}
-        />
-      ) : view === "party-lobby" ? (
-        <PartyLobbyPage
-          apiUrl={API_URL} token={token} user={user}
-          onBack={() => setView("home")}
-          onEnterRoom={handleEnterParty}
-        />
-      ) : view === "party-room" ? (
-        <PartyRoomPage
-          apiUrl={API_URL} token={token} user={user}
-          roomCode={partyRoomCode}
-          onBack={() => setView("party-lobby")}
-          onStartChat={handleStartPartyChat}
-        />
-      ) : view === "party-chat" ? (
-        <PartyChatPage
-          apiUrl={API_URL} token={token} user={user}
-          roomCode={partyRoomCode}
-          onBack={() => setView("party-room")}
-          onLeave={() => setView("home")}
-        />
-      ) : null}
+      <Routes>
+        <Route path="/terms" element={<TermsPage onBack={() => navigate("/")} />} />
+        <Route path="/privacy" element={<PrivacyPage onBack={() => navigate("/")} />} />
+        <Route path="/notice" element={<NoticePage apiUrl={API_URL} token={token ?? ""} onBack={() => navigate("/")} />} />
+
+        <Route path="/events" element={
+          token
+            ? <EventsPage apiUrl={API_URL} token={token} onBack={() => navigate("/")} />
+            : <Navigate to="/" replace />
+        } />
+
+        <Route path="/ranking" element={
+          <RankingPage
+            apiUrl={API_URL} token={token ?? ""}
+            onBack={() => navigate("/")}
+            onSelectCharacter={handleSelectCharacter}
+          />
+        } />
+
+        <Route path="/mypage" element={
+          token
+            ? <MyPage
+                apiUrl={API_URL} token={token}
+                onBack={() => navigate("/")}
+                onGoAdmin={() => navigate("/admin")}
+                onEditCharacter={(id) => navigate(`/edit-character/${id}`)}
+              />
+            : <Navigate to="/" replace />
+        } />
+
+        <Route path="/edit-character/:id" element={
+          <EditCharacterRoute apiUrl={API_URL} token={token} />
+        } />
+
+        <Route path="/creator/:userId" element={
+          <CreatorRoute apiUrl={API_URL} token={token} onSelectCharacter={handleSelectCharacter} />
+        } />
+
+        <Route path="/admin" element={
+          token
+            ? <AdminPage apiUrl={API_URL} token={token} onBack={() => navigate("/mypage")} />
+            : <Navigate to="/" replace />
+        } />
+
+        <Route path="/community" element={
+          <CommunityPage
+            apiUrl={API_URL} token={token ?? ""}
+            user={user}
+            onBack={() => navigate("/")}
+            onSelectCharacter={handleSelectCharacter}
+            onGoCreator={handleGoCreator}
+            onLoginRequired={() => setShowLoginPrompt(true)}
+          />
+        } />
+
+        <Route path="/login" element={
+          token
+            ? <Navigate to="/" replace />
+            : <LoginPage
+                apiUrl={API_URL}
+                onLogin={handleLogin}
+                onShowTerms={() => navigate("/terms")}
+                onShowPrivacy={() => navigate("/privacy")}
+              />
+        } />
+
+        <Route path="/" element={
+          token
+            ? <HomePage
+                apiUrl={API_URL} token={token} user={user}
+                onSelectCharacter={handleSelectCharacter}
+                onLogout={handleLogout}
+                onGoParty={() => navigate("/party")}
+                onCreateCharacter={() => navigate("/create")}
+                onGoEvents={() => navigate("/events")}
+                onGoMyPage={() => navigate("/mypage")}
+                onGoRanking={() => navigate("/ranking")}
+                onGoNotice={() => navigate("/notice")}
+                onGoCommunity={() => navigate("/community")}
+              />
+            : <HomePage
+                apiUrl={API_URL} token="" user={null}
+                onSelectCharacter={() => setShowLoginPrompt(true)}
+                onLogout={() => navigate("/login")}
+                onGoParty={() => setShowLoginPrompt(true)}
+                onCreateCharacter={() => setShowLoginPrompt(true)}
+                onGoEvents={() => setShowLoginPrompt(true)}
+                onGoMyPage={() => setShowLoginPrompt(true)}
+                onGoRanking={() => navigate("/ranking")}
+                onGoNotice={() => navigate("/notice")}
+                onGoCommunity={() => navigate("/community")}
+              />
+        } />
+
+        <Route path="/chat/:characterId" element={
+          token
+            ? <ChatRoute apiUrl={API_URL} token={token} user={user} selectedCharacter={selectedCharacter} onSelectCharacter={handleSelectCharacter} onGoCreator={handleGoCreator} />
+            : <Navigate to="/" replace />
+        } />
+
+        <Route path="/create" element={
+          token
+            ? <CreateCharacterPage
+                apiUrl={API_URL} token={token}
+                onBack={() => navigate("/")}
+                onCreated={() => navigate("/")}
+              />
+            : <Navigate to="/" replace />
+        } />
+
+        <Route path="/party" element={
+          token
+            ? <PartyLobbyPage
+                apiUrl={API_URL} token={token} user={user}
+                onBack={() => navigate("/")}
+                onEnterRoom={(code) => navigate(`/party/room/${code}`)}
+              />
+            : <Navigate to="/" replace />
+        } />
+
+        <Route path="/party/room/:roomCode" element={
+          token
+            ? <PartyRoomRoute apiUrl={API_URL} token={token} user={user} />
+            : <Navigate to="/" replace />
+        } />
+
+        <Route path="/party/chat/:roomCode" element={
+          token
+            ? <PartyChatRoute apiUrl={API_URL} token={token} user={user} />
+            : <Navigate to="/" replace />
+        } />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </>
+  );
+}
+
+// ── URL 파라미터 기반 라우트 래퍼들 ──────────────────────────────
+
+function ChatRoute({ apiUrl, token, user, selectedCharacter, onSelectCharacter, onGoCreator }: {
+  apiUrl: string; token: string; user: User | null;
+  selectedCharacter: Character | null;
+  onSelectCharacter: (c: Character) => void;
+  onGoCreator: (id: number) => void;
+}) {
+  const { characterId } = useParams();
+  const navigate = useNavigate();
+  const [character, setCharacter] = useState<Character | null>(selectedCharacter);
+  const [loading, setLoading] = useState(!selectedCharacter);
+
+  useEffect(() => {
+    if (selectedCharacter && selectedCharacter.id === characterId) {
+      setCharacter(selectedCharacter);
+      setLoading(false);
+      return;
+    }
+    // 새로고침 등으로 character가 없으면 다시 fetch
+    axios.get(`${apiUrl}/characters/${characterId}`)
+      .then(res => {
+        const c = res.data;
+        setCharacter({
+          id: c.id, name: c.name,
+          title: c.description || "",
+          avatar: c.image_url || "",
+          description: c.description || "",
+          online: true, tags: c.tags || [],
+          user_id: c.user_id,
+          first_message: c.first_message || "",
+          party_enabled: c.party_enabled || false,
+          like_count: c.like_count ?? 0,
+          chat_count: c.chat_count ?? 0,
+          view_count: c.view_count ?? 0,
+        });
+      })
+      .catch(() => navigate("/"))
+      .finally(() => setLoading(false));
+  }, [characterId]);
+
+  if (loading || !character) return null;
+
+  return (
+    <ChatApp
+      apiUrl={apiUrl} token={token} user={user}
+      character={character}
+      onBack={() => navigate("/")}
+      onSelectCharacter={onSelectCharacter}
+      onGoCreator={onGoCreator}
+    />
+  );
+}
+
+function EditCharacterRoute({ apiUrl, token }: { apiUrl: string; token: string | null }) {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  if (!token) return <Navigate to="/" replace />;
+  return (
+    <EditCharacterPage
+      apiUrl={apiUrl} token={token}
+      characterId={id ?? ""}
+      onBack={() => navigate("/mypage")}
+      onSaved={() => navigate("/mypage")}
+    />
+  );
+}
+
+function CreatorRoute({ apiUrl, token, onSelectCharacter }: {
+  apiUrl: string; token: string | null; onSelectCharacter: (c: Character) => void;
+}) {
+  const { userId } = useParams();
+  const navigate = useNavigate();
+  return (
+    <CreatorPage
+      apiUrl={apiUrl} token={token ?? ""}
+      userId={Number(userId) || 0}
+      onBack={() => navigate("/")}
+      onSelectCharacter={onSelectCharacter}
+    />
+  );
+}
+
+function PartyRoomRoute({ apiUrl, token, user }: { apiUrl: string; token: string; user: User | null }) {
+  const { roomCode } = useParams();
+  const navigate = useNavigate();
+  return (
+    <PartyRoomPage
+      apiUrl={apiUrl} token={token} user={user}
+      roomCode={roomCode ?? ""}
+      onBack={() => navigate("/party")}
+      onStartChat={(code) => navigate(`/party/chat/${code}`)}
+    />
+  );
+}
+
+function PartyChatRoute({ apiUrl, token, user }: { apiUrl: string; token: string; user: User | null }) {
+  const { roomCode } = useParams();
+  const navigate = useNavigate();
+  return (
+    <PartyChatPage
+      apiUrl={apiUrl} token={token} user={user}
+      roomCode={roomCode ?? ""}
+      onBack={() => navigate(`/party/room/${roomCode}`)}
+      onLeave={() => navigate("/")}
+    />
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
   );
 }

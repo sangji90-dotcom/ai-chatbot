@@ -17,7 +17,6 @@ const POST_TYPES = [
   { key: "general", label: "💬 일반" },
   { key: "party_recruit", label: "⚔ 파티 모집" },
   { key: "fanart", label: "🎨 팬아트" },
-  { key: "fanfic", label: "📝 팬픽" },
 ];
 
 const GENRES = ["전체", "fantasy", "modern", "sf", "horror", "romance", "other"];
@@ -76,15 +75,18 @@ export default function CommunityPage({
   }, [postType, genre]);
 
   useEffect(() => {
+    if (!observerRef.current) return;
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting && hasMore && !loading) fetchPosts();
+        if (entries[0].isIntersecting && hasMore && !loading && posts.length > 0) {
+          fetchPosts();
+        }
       },
-      { threshold: 0.5 }
+      { threshold: 0.1 }
     );
-    if (observerRef.current) observer.observe(observerRef.current);
+    observer.observe(observerRef.current);
     return () => observer.disconnect();
-  }, [hasMore, loading, page]);
+  }, [postType, genre]);
 
   const handleLike = async (postId: number) => {
     if (!token) { onLoginRequired(); return; }
@@ -99,7 +101,7 @@ export default function CommunityPage({
   };
 
   return (
-    <div style={{ minHeight: "100vh", position: "relative", zIndex: 2 }}>
+    <div style={{ minHeight: "100vh", height: "100vh", overflowY: "auto", position: "relative", zIndex: 2 }}>
 
       {/* 네비 */}
       <nav style={{
@@ -191,7 +193,6 @@ export default function CommunityPage({
       {showWriteModal && (
         <WritePostModal
           apiUrl={apiUrl}
-          token={token}
           headers={headers}
           onClose={() => setShowWriteModal(false)}
           onPosted={() => { setShowWriteModal(false); fetchPosts(true); }}
@@ -209,6 +210,7 @@ export default function CommunityPage({
           onClose={() => setSelectedPost(null)}
           onLike={() => handleLike(selectedPost.id)}
           onGoCreator={onGoCreator}
+          onDeleted={() => fetchPosts(true)}
         />
       )}
     </div>
@@ -236,7 +238,6 @@ function PostCard({ post, onLike, onClick, onGoCreator }: {
         (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
       }}
     >
-      {/* 작성자 */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}
         onClick={e => { e.stopPropagation(); onGoCreator(post.user_id); }}>
         <div style={{
@@ -262,7 +263,6 @@ function PostCard({ post, onLike, onClick, onGoCreator }: {
           </div>
         </div>
 
-        {/* 타입 뱃지 */}
         <div style={{ marginLeft: "auto" }}>
           {post.post_type === "party_recruit" && (
             <span style={{
@@ -278,24 +278,15 @@ function PostCard({ post, onLike, onClick, onGoCreator }: {
               color: "#ff78b4", fontWeight: 600,
             }}>🎨 팬아트</span>
           )}
-          {post.post_type === "fanfic" && (
-            <span style={{
-              padding: "3px 10px", borderRadius: 999, fontSize: 11,
-              background: "rgba(95,214,255,.12)", border: "1px solid rgba(95,214,255,.3)",
-              color: "var(--secondary)", fontWeight: 600,
-            }}>📝 팬픽</span>
-          )}
         </div>
       </div>
 
-      {/* 제목 */}
       {post.title && (
         <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, color: "var(--text-primary)" }}>
           {post.title}
         </div>
       )}
 
-      {/* 본문 */}
       <div style={{
         color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6,
         overflow: "hidden", display: "-webkit-box",
@@ -303,7 +294,6 @@ function PostCard({ post, onLike, onClick, onGoCreator }: {
         marginBottom: post.image_url ? 12 : 0,
       }}>{post.content}</div>
 
-      {/* AI 설명 초안 */}
       {post.ai_description && (
         <div style={{
           marginTop: 8, padding: "8px 12px", borderRadius: 10,
@@ -313,13 +303,11 @@ function PostCard({ post, onLike, onClick, onGoCreator }: {
         }}>✦ {post.ai_description}</div>
       )}
 
-      {/* 이미지 */}
       {post.image_url && (
         <img src={`${post.image_url}`} alt="게시글 이미지"
           style={{ width: "100%", borderRadius: 12, marginTop: 12, objectFit: "cover", maxHeight: 300 }} />
       )}
 
-      {/* 캐릭터 태그 */}
       {post.character_tags?.length > 0 && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
           {post.character_tags.map((c: any) => (
@@ -332,7 +320,6 @@ function PostCard({ post, onLike, onClick, onGoCreator }: {
         </div>
       )}
 
-      {/* 하단 액션 */}
       <div style={{ display: "flex", gap: 16, marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
         <button onClick={e => { e.stopPropagation(); onLike(); }} style={{
           display: "flex", alignItems: "center", gap: 6,
@@ -348,8 +335,8 @@ function PostCard({ post, onLike, onClick, onGoCreator }: {
 }
 
 // ── WritePostModal ────────────────────────────────────────────
-function WritePostModal({ apiUrl, token, headers, onClose, onPosted }: {
-  apiUrl: string; token: string; headers: any; onClose: () => void; onPosted: () => void;
+function WritePostModal({ apiUrl, headers, onClose, onPosted }: {
+  apiUrl: string; headers: any; onClose: () => void; onPosted: () => void;
 }) {
   const [postType, setPostType] = useState("general");
   const [title, setTitle] = useState("");
@@ -367,12 +354,10 @@ function WritePostModal({ apiUrl, token, headers, onClose, onPosted }: {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 파일 타입 검증
     if (!["image/jpeg", "image/png", "image/gif", "image/webp"].includes(file.type)) {
       alert("JPG, PNG, GIF, WEBP 파일만 업로드 가능해요.");
       return;
     }
-    // 파일 크기 검증 (10MB)
     if (file.size > 10 * 1024 * 1024) {
       alert("파일 크기는 10MB 이하여야 해요.");
       return;
@@ -399,6 +384,7 @@ function WritePostModal({ apiUrl, token, headers, onClose, onPosted }: {
   };
 
   const handleSubmit = async () => {
+    if (submitting) return;
     if (!content.trim()) { alert("내용을 입력해주세요."); return; }
     setSubmitting(true);
     try {
@@ -422,7 +408,6 @@ function WritePostModal({ apiUrl, token, headers, onClose, onPosted }: {
       }
     } catch {
       alert("게시글 작성에 실패했어요.");
-    } finally {
       setSubmitting(false);
     }
   };
@@ -441,7 +426,6 @@ function WritePostModal({ apiUrl, token, headers, onClose, onPosted }: {
           <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer" }}>×</button>
         </div>
 
-        {/* 타입 선택 */}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {POST_TYPES.filter(t => t.key !== "all").map(t => (
             <button key={t.key} onClick={() => setPostType(t.key)} style={{
@@ -454,7 +438,6 @@ function WritePostModal({ apiUrl, token, headers, onClose, onPosted }: {
           ))}
         </div>
 
-        {/* 제목 */}
         <input
           value={title}
           onChange={e => setTitle(e.target.value)}
@@ -468,7 +451,6 @@ function WritePostModal({ apiUrl, token, headers, onClose, onPosted }: {
           }}
         />
 
-        {/* 내용 */}
         <textarea
           value={content}
           onChange={e => setContent(e.target.value)}
@@ -484,7 +466,6 @@ function WritePostModal({ apiUrl, token, headers, onClose, onPosted }: {
           }}
         />
 
-        {/* 파티 모집 옵션 */}
         {postType === "party_recruit" && (
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ color: "var(--text-muted)", fontSize: 14 }}>최대 인원</span>
@@ -500,7 +481,6 @@ function WritePostModal({ apiUrl, token, headers, onClose, onPosted }: {
           </div>
         )}
 
-        {/* 캐릭터 태그 */}
         <div style={{ position: "relative" }}>
           <input
             value={characterSearch}
@@ -537,7 +517,6 @@ function WritePostModal({ apiUrl, token, headers, onClose, onPosted }: {
           )}
         </div>
 
-        {/* 태그된 캐릭터 */}
         {taggedChars.length > 0 && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {taggedChars.map(c => (
@@ -554,7 +533,6 @@ function WritePostModal({ apiUrl, token, headers, onClose, onPosted }: {
           </div>
         )}
 
-        {/* 이미지 업로드 */}
         <label style={{
           display: "flex", alignItems: "center", gap: 10,
           padding: "10px 16px", borderRadius: 12,
@@ -578,7 +556,6 @@ function WritePostModal({ apiUrl, token, headers, onClose, onPosted }: {
           </div>
         )}
 
-        {/* AI 분류 결과 */}
         {aiResult && (
           <div style={{
             padding: "12px 16px", borderRadius: 12,
@@ -602,17 +579,28 @@ function WritePostModal({ apiUrl, token, headers, onClose, onPosted }: {
 }
 
 // ── PostDetailModal ───────────────────────────────────────────
-function PostDetailModal({ post, apiUrl, token, headers, user, onClose, onLike, onGoCreator }: {
+function PostDetailModal({ post, apiUrl, token, headers, user, onClose, onLike, onGoCreator, onDeleted }: {
   post: any; apiUrl: string; token: string; headers: any;
   user: any; onClose: () => void; onLike: () => void; onGoCreator: (id: number) => void;
+  onDeleted: () => void;
 }) {
   const [comments, setComments] = useState<any[]>([]);
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [viewCount, setViewCount] = useState(post.view_count ?? 0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(post.title || "");
+  const [editContent, setEditContent] = useState(post.content || "");
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [displayTitle, setDisplayTitle] = useState(post.title);
+  const [displayContent, setDisplayContent] = useState(post.content);
 
   useEffect(() => {
     axios.get(`${apiUrl}/community/${post.id}`, { headers })
-      .then(res => setComments(res.data.comments ?? []))
+      .then(res => {
+        setComments(res.data.comments ?? []);
+        setViewCount(res.data.view_count ?? 0);
+      })
       .catch(console.error);
   }, [post.id]);
 
@@ -629,6 +617,31 @@ function PostDetailModal({ post, apiUrl, token, headers, user, onClose, onLike, 
     finally { setSubmitting(false); }
   };
 
+  const handleDelete = async () => {
+    if (!confirm("정말 삭제할까요?")) return;
+    try {
+      await axios.delete(`${apiUrl}/community/${post.id}`, { headers });
+      onDeleted();
+      onClose();
+    } catch { alert("삭제 실패"); }
+  };
+
+  const handleEdit = async () => {
+    if (!editContent.trim()) { alert("내용을 입력해주세요."); return; }
+    setEditSubmitting(true);
+    try {
+      await axios.put(`${apiUrl}/community/${post.id}`,
+        { title: editTitle.trim(), content: editContent.trim() },
+        { headers }
+      );
+      setDisplayTitle(editTitle.trim());
+      setDisplayContent(editContent.trim());
+      setIsEditing(false);
+      onDeleted();
+    } catch { alert("수정 실패"); }
+    finally { setEditSubmitting(false); }
+  };
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", display: "grid", placeItems: "center", zIndex: 200 }}>
       <div style={{
@@ -639,29 +652,87 @@ function PostDetailModal({ post, apiUrl, token, headers, user, onClose, onLike, 
         display: "flex", flexDirection: "column", gap: 16,
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>{post.title || "게시글"}</div>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer" }}>×</button>
-        </div>
-
-        {/* 작성자 */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
-          onClick={() => { onClose(); onGoCreator(post.user_id); }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: "50%",
-            background: "var(--gradient-cosmic)",
-            display: "grid", placeItems: "center", fontWeight: 700, overflow: "hidden",
-          }}>
-            {post.profile_image_url
-              ? <img src={post.profile_image_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              : post.username?.[0]?.toUpperCase()}
-          </div>
-          <div>
-            <div style={{ fontWeight: 600, fontSize: 14 }}>{post.username}</div>
-            <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{new Date(post.created_at).toLocaleDateString("ko-KR")}</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>{displayTitle || "게시글"}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {user?.id === post.user_id && !isEditing && (
+              <>
+                <button onClick={() => setIsEditing(true)} style={{
+                  background: "none", border: "none",
+                  color: "var(--primary)", fontSize: 13, cursor: "pointer", fontWeight: 600,
+                }}>수정</button>
+                <button onClick={handleDelete} style={{
+                  background: "none", border: "none",
+                  color: "#ff6b8a", fontSize: 13, cursor: "pointer", fontWeight: 600,
+                }}>삭제</button>
+              </>
+            )}
+            <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: 22, cursor: "pointer" }}>×</button>
           </div>
         </div>
 
-        <div style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.7 }}>{post.content}</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
+            onClick={() => { onClose(); onGoCreator(post.user_id); }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: "50%",
+              background: "var(--gradient-cosmic)",
+              display: "grid", placeItems: "center", fontWeight: 700, overflow: "hidden",
+            }}>
+              {post.profile_image_url
+                ? <img src={post.profile_image_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : post.username?.[0]?.toUpperCase()}
+            </div>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{post.username}</div>
+              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                {new Date(post.created_at).toLocaleString("ko-KR")}
+              </div>
+            </div>
+          </div>
+          <div style={{ color: "var(--text-muted)", fontSize: 12 }}>👁 {viewCount}</div>
+        </div>
+
+        {isEditing ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <input
+              value={editTitle}
+              onChange={e => setEditTitle(e.target.value)}
+              placeholder="제목 (선택)"
+              style={{
+                padding: "10px 14px", borderRadius: 10,
+                border: "1px solid var(--border-default)",
+                background: "rgba(255,255,255,.04)",
+                color: "var(--text-primary)", fontSize: 14, outline: "none",
+              }}
+            />
+            <textarea
+              value={editContent}
+              onChange={e => setEditContent(e.target.value)}
+              rows={5}
+              style={{
+                padding: "10px 14px", borderRadius: 10,
+                border: "1px solid var(--border-default)",
+                background: "rgba(255,255,255,.04)",
+                color: "var(--text-primary)", fontSize: 14,
+                outline: "none", resize: "vertical", lineHeight: 1.6,
+              }}
+            />
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => setIsEditing(false)} style={{
+                flex: 1, padding: "10px", borderRadius: 10,
+                border: "1px solid var(--border-default)",
+                background: "none", color: "var(--text-muted)", cursor: "pointer",
+              }}>취소</button>
+              <button onClick={handleEdit} disabled={editSubmitting} style={{
+                flex: 1, padding: "10px", borderRadius: 10, border: "none",
+                background: "var(--gradient-cosmic)",
+                color: "#fff", fontWeight: 600, cursor: "pointer",
+              }}>{editSubmitting ? "저장 중..." : "저장"}</button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.7 }}>{displayContent}</div>
+        )}
 
         {post.image_url && (
           <img src={post.image_url} style={{ width: "100%", borderRadius: 12, objectFit: "cover", maxHeight: 400 }} />
@@ -679,7 +750,6 @@ function PostDetailModal({ post, apiUrl, token, headers, user, onClose, onLike, 
           </div>
         )}
 
-        {/* 좋아요 */}
         <button onClick={onLike} style={{
           display: "flex", alignItems: "center", gap: 8,
           padding: "10px 20px", borderRadius: 12, width: "fit-content",
@@ -689,7 +759,6 @@ function PostDetailModal({ post, apiUrl, token, headers, user, onClose, onLike, 
           fontWeight: 600, cursor: "pointer",
         }}>♥ {post.like_count ?? 0}</button>
 
-        {/* 댓글 */}
         <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 16 }}>
           <div style={{ fontWeight: 700, marginBottom: 12 }}>댓글 {comments.length}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>

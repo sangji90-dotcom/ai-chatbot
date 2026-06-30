@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 
 class ApiService {
   static const String baseUrl = 'https://suburb-marrow-radial.ngrok-free.dev';
@@ -228,5 +229,17 @@ class ApiService {
     options: Options(headers: {'Authorization': 'Bearer $token'}),
   );
   return res.data;
+  }
+
+  static Future<void> uploadCharacterImage(String characterId, File image) async {
+  final token = await getToken();
+  final formData = FormData.fromMap({
+    'file': await MultipartFile.fromFile(image.path),
+  });
+  await _dio.post(
+    '/characters/$characterId/image',
+    data: formData,
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
   }
 }

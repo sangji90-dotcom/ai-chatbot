@@ -333,6 +333,47 @@ async def create_comment(
     conn.close()
     return {"message": "댓글 작성 완료"}
 
+class UpdatePostRequest(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+
+@router.put("/{post_id}", summary="게시글 수정")
+async def update_post(
+    post_id: int,
+    request: UpdatePostRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT user_id FROM community_posts WHERE id = ?", (post_id,))
+    post = cursor.fetchone()
+
+    if not post:
+        conn.close()
+        raise HTTPException(status_code=404, detail="게시글을 찾을 수 없습니다")
+
+    if post["user_id"] != current_user["id"]:
+        conn.close()
+        raise HTTPException(status_code=403, detail="수정 권한이 없습니다")
+
+    fields = []
+    params = []
+    if request.title is not None:
+        fields.append("title = ?")
+        params.append(request.title)
+    if request.content is not None:
+        fields.append("content = ?")
+        params.append(request.content)
+
+    if fields:
+        fields.append("updated_at = CURRENT_TIMESTAMP")
+        params.append(post_id)
+        cursor.execute(f"UPDATE community_posts SET {', '.join(fields)} WHERE id = ?", params)
+        conn.commit()
+
+    conn.close()
+    return {"message": "게시글 수정 완료"}
 
 # ── 게시글 삭제 ──────────────────────────────────────────────
 @router.delete("/{post_id}", summary="게시글 삭제")

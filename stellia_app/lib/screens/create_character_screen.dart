@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class CreateCharacterScreen extends StatefulWidget {
   const CreateCharacterScreen({super.key});
@@ -27,6 +29,7 @@ class _CreateCharacterScreenState extends State<CreateCharacterScreen> {
   String _visibility = 'public';
   int _isAdult = 0;
   bool _aiLoading = false;
+  File? _selectedImage;
 
   Future<void> _autoComplete() async {
     if (_nameController.text.isEmpty) return;
@@ -58,9 +61,9 @@ class _CreateCharacterScreenState extends State<CreateCharacterScreen> {
       setState(() => _message = '이름, 성격, 말투는 필수예요.');
       return;
     }
-    setState(() { _loading = true; _message = ''; });
+  setState(() { _loading = true; _message = ''; });
     try {
-      await ApiService.createCharacter(
+      final res = await ApiService.createCharacter(
         name: _nameController.text,
         description: _descController.text,
         age: _age,
@@ -71,9 +74,14 @@ class _CreateCharacterScreenState extends State<CreateCharacterScreen> {
         speechStyle: _speechController.text,
         firstMessage: _firstMessageController.text,
         situation: _situationController.text,
-        visibility: _visibility,
+      visibility: _visibility,
         isAdult: _isAdult,
       );
+
+      if (_selectedImage != null) {
+        await ApiService.uploadCharacterImage(res['id'], _selectedImage!);
+      }
+
       if (mounted) {
         Navigator.pop(context);
       }
@@ -150,6 +158,37 @@ class _CreateCharacterScreenState extends State<CreateCharacterScreen> {
                   if (_currentStep == 0) ...[
                     const Text('기본 정보', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18)),
                     const SizedBox(height: 20),
+                    Center(
+                      child: GestureDetector(
+                        onTap: () async {
+                          final picker = ImagePicker();
+                          final picked = await picker.pickImage(source: ImageSource.gallery);
+                          if (picked != null) {
+                            setState(() => _selectedImage = File(picked.path));
+                          }
+                        },
+                        child: Container(
+                          width: 100, height: 100,
+                          decoration: BoxDecoration(
+                            gradient: _selectedImage == null
+                                ? const LinearGradient(colors: [Color(0xFF7C6CFF), Color(0xFF5FD6FF)])
+                                : null,
+                            borderRadius: BorderRadius.circular(50),
+                            image: _selectedImage != null
+                                ? DecorationImage(image: FileImage(_selectedImage!), fit: BoxFit.cover)
+                                : null,
+                          ),
+                          child: _selectedImage == null
+                              ? const Icon(Icons.add_a_photo_rounded, color: Colors.white, size: 32)
+                              : null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Center(
+                    child: Text('대표 이미지', style: TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
+                  ),
+                  const SizedBox(height: 20),
                     const Text('이름 *', style: TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
                     const SizedBox(height: 8),
                     TextField(controller: _nameController, style: const TextStyle(color: Colors.white), decoration: _inputDeco('캐릭터 이름')),

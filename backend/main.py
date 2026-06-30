@@ -40,7 +40,7 @@ RATE_LIMIT_RULES = {
     "/auth/login":        (5,  60),
     "/auth/register":     (3,  60),
     "/chat":              (30, 60),
-    "/community":         (10, 60),
+    "/community":         (60, 60),
 }
 
 def get_client_ip(request: Request) -> str:
@@ -131,6 +131,7 @@ async def security_middleware(request: Request, call_next):
     ip = get_client_ip(request)
     path = request.url.path
 
+    # Rate Limiting
     for route, (limit, window) in RATE_LIMIT_RULES.items():
         if path.startswith(route):
             key = f"{ip}:{route}"
@@ -141,17 +142,27 @@ async def security_middleware(request: Request, call_next):
                 )
             break
 
+    # XSS 필터 — body를 읽지 않고 raw bytes만 캐싱 후 재주입
     if request.method in ("POST", "PUT", "PATCH"):
-        if await check_xss_in_body(request):
-            return JSONResponse(
-                status_code=400,
-                content={"detail": "허용되지 않는 문자가 포함되어 있어요."}
-            )
+        body = await request.body()
+        if body:
+            text = body.decode("utf-8", errors="ignore")
+            if contains_xss(text):
+                return JSONResponse(
+                    status_code=400,
+                    content={"detail": "허용되지 않는 문자가 포함되어 있어요."}
+                )
+        # body를 다시 읽을 수 있도록 재주입
+        async def receive():
+            return {"type": "http.request", "body": body}
+        request._receive = receive
 
     response = await call_next(request)
+
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
+
     return response
 
 
