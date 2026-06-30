@@ -10,6 +10,10 @@ import 'my_page_screen.dart';
 import 'search_screen.dart';
 import 'notification_screen.dart';
 import 'ranking_screen.dart';
+import 'notice_screen.dart';
+import 'events_screen.dart';
+import 'token_screen.dart';
+import 'create_character_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -151,6 +155,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
+            // 바로가기 버튼
+            GridView.count(
+              crossAxisCount: 4,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              padding: const EdgeInsets.only(bottom: 28),
+              children: [
+                _QuickMenu(icon: Icons.add_rounded, label: '캐릭터 만들기', color: const Color(0xFF5FD6FF),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateCharacterScreen()))),
+                _QuickMenu(icon: Icons.campaign_rounded, label: '공지사항', color: const Color(0xFF7C6CFF),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NoticeScreen()))),
+                _QuickMenu(icon: Icons.celebration_rounded, label: '이벤트', color: const Color(0xFFFFD700),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EventsScreen()))),
+                _QuickMenu(icon: Icons.monetization_on_rounded, label: '코인', color: const Color(0xFFFF6B8A),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TokenScreen()))),
+              ],
+            ),
                   const SizedBox(height: 28),
 
                   // 인기 캐릭터
@@ -329,6 +352,37 @@ class _Stat extends StatelessWidget {
   }
 }
 
+class _QuickMenu extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickMenu({required this.icon, required this.label, required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 52, height: 52,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: color.withValues(alpha: 0.3)),
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(height: 6),
+          Text(label, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 10), textAlign: TextAlign.center),
+        ],
+      ),
+    );
+  }
+}
 extension on int {
   String toLocaleString() {
     return toString().replaceAllMapped(

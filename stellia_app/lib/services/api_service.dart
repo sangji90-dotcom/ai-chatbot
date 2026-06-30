@@ -125,4 +125,108 @@ class ApiService {
   );
   return res.data;
   }
+
+  static Future<List<dynamic>> getNotices() async {
+  final res = await _dio.get('/notices');
+  return res.data;
+  }
+
+  static Future<Map<String, dynamic>> attendance() async {
+  final token = await getToken();
+  final res = await _dio.post(
+    '/tokens/attendance',
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
+  return res.data;
+  }
+
+  static Future<Map<String, dynamic>> getReferralCode() async {
+  final token = await getToken();
+  final res = await _dio.get(
+    '/events/referral/my-code',
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
+  return res.data;
+  }
+
+  static Future<Map<String, dynamic>> getTokens() async {
+  final token = await getToken();
+  final res = await _dio.get(
+    '/tokens/me',
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
+  return res.data;
+  }
+
+  static Future<Map<String, dynamic>> getTokenHistory() async {
+  final token = await getToken();
+  final res = await _dio.get(
+    '/tokens/me/history',
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
+  return res.data;
+  }
+
+  static Future<Map<String, dynamic>> purchaseToken(int packageId) async {
+  final token = await getToken();
+  final res = await _dio.post(
+    '/tokens/purchase/$packageId',
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
+  return res.data;
+  }
+
+  static Future<Map<String, dynamic>> autoComplete({
+  required String name,
+  String description = '',
+  String job = '',
+  int age = 20,
+}) async {
+  final token = await getToken();
+  final res = await _dio.post(
+    '/characters/auto-complete',
+    data: {'name': name, 'description': description, 'job': job, 'age': age},
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
+  return res.data;
+  }
+
+  static Future<Map<String, dynamic>> createCharacter({
+  required String name,
+  required String description,
+  required int age,
+  required String job,
+  required String personality,
+  required String likes,
+  required String dislikes,
+  required String speechStyle,
+  required String firstMessage,
+  required String situation,
+  required String visibility,
+  required int isAdult,
+}) async {
+  final token = await getToken();
+  final res = await _dio.post(
+    '/characters',
+    data: {
+      'name': name,
+      'description': description,
+      'age': age,
+      'job': job,
+      'personality': personality,
+      'likes': likes,
+      'dislikes': dislikes,
+      'speech_style': speechStyle,
+      'first_message': firstMessage,
+      'situation': situation,
+      'visibility': visibility,
+      'is_adult': isAdult,
+      'tags': [],
+      'image_url': '',
+      'party_enabled': 0,
+    },
+    options: Options(headers: {'Authorization': 'Bearer $token'}),
+  );
+  return res.data;
+  }
 }
