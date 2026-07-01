@@ -314,7 +314,7 @@ class ApiService {
   static Future<List<dynamic>> getBookmarks() async {
     final token = await getToken();
     final res = await _dio.get(
-      '/likes/bookmarks/me',
+      '/likes/bookmarks',
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
     return res.data;

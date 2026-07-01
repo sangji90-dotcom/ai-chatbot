@@ -1,0 +1,3202 @@
+[
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Request",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "UploadFile",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "File",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "UploadFile",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "File",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Form",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Request",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "WebSocket",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "WebSocketDisconnect",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "UploadFile",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "File",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "FastAPI",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Request",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "UploadFile",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "init_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "importPath": "database",
+        "description": "database",
+        "isExtraImport": true,
+        "detail": "database",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_optional_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_optional_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_optional_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_optional_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_optional_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_optional_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_optional_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_optional_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_optional_user",
+        "importPath": "deps",
+        "description": "deps",
+        "isExtraImport": true,
+        "detail": "deps",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "date",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "date",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "JWTError",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "jwt",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "bcrypt",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "bcrypt",
+        "description": "bcrypt",
+        "detail": "bcrypt",
+        "documentation": {}
+    },
+    {
+        "label": "OAuth2PasswordBearer",
+        "importPath": "fastapi.security",
+        "description": "fastapi.security",
+        "isExtraImport": true,
+        "detail": "fastapi.security",
+        "documentation": {}
+    },
+    {
+        "label": "OAuth2PasswordRequestForm",
+        "importPath": "fastapi.security",
+        "description": "fastapi.security",
+        "isExtraImport": true,
+        "detail": "fastapi.security",
+        "documentation": {}
+    },
+    {
+        "label": "OAuth2PasswordBearer",
+        "importPath": "fastapi.security",
+        "description": "fastapi.security",
+        "isExtraImport": true,
+        "detail": "fastapi.security",
+        "documentation": {}
+    },
+    {
+        "label": "hash_password",
+        "importPath": "auth.jwt",
+        "description": "auth.jwt",
+        "isExtraImport": true,
+        "detail": "auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "verify_password",
+        "importPath": "auth.jwt",
+        "description": "auth.jwt",
+        "isExtraImport": true,
+        "detail": "auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "create_access_token",
+        "importPath": "auth.jwt",
+        "description": "auth.jwt",
+        "isExtraImport": true,
+        "detail": "auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "create_refresh_token",
+        "importPath": "auth.jwt",
+        "description": "auth.jwt",
+        "isExtraImport": true,
+        "detail": "auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "decode_token",
+        "importPath": "auth.jwt",
+        "description": "auth.jwt",
+        "isExtraImport": true,
+        "detail": "auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "decode_token",
+        "importPath": "auth.jwt",
+        "description": "auth.jwt",
+        "isExtraImport": true,
+        "detail": "auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "uuid",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "uuid",
+        "description": "uuid",
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "send_notification",
+        "importPath": "notifications.router",
+        "description": "notifications.router",
+        "isExtraImport": true,
+        "detail": "notifications.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "notifications.router",
+        "description": "notifications.router",
+        "isExtraImport": true,
+        "detail": "notifications.router",
+        "documentation": {}
+    },
+    {
+        "label": "read_and_validate_image",
+        "importPath": "utils",
+        "description": "utils",
+        "isExtraImport": true,
+        "detail": "utils",
+        "documentation": {}
+    },
+    {
+        "label": "read_and_validate_image",
+        "importPath": "utils",
+        "description": "utils",
+        "isExtraImport": true,
+        "detail": "utils",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "genai",
+        "importPath": "google",
+        "description": "google",
+        "isExtraImport": true,
+        "detail": "google",
+        "documentation": {}
+    },
+    {
+        "label": "genai",
+        "importPath": "google",
+        "description": "google",
+        "isExtraImport": true,
+        "detail": "google",
+        "documentation": {}
+    },
+    {
+        "label": "genai",
+        "importPath": "google",
+        "description": "google",
+        "isExtraImport": true,
+        "detail": "google",
+        "documentation": {}
+    },
+    {
+        "label": "genai",
+        "importPath": "google",
+        "description": "google",
+        "isExtraImport": true,
+        "detail": "google",
+        "documentation": {}
+    },
+    {
+        "label": "genai",
+        "importPath": "google",
+        "description": "google",
+        "isExtraImport": true,
+        "detail": "google",
+        "documentation": {}
+    },
+    {
+        "label": "re",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "re",
+        "description": "re",
+        "detail": "re",
+        "documentation": {}
+    },
+    {
+        "label": "io",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "io",
+        "description": "io",
+        "detail": "io",
+        "documentation": {}
+    },
+    {
+        "label": "StreamingResponse",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "JSONResponse",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "A4",
+        "importPath": "reportlab.lib.pagesizes",
+        "description": "reportlab.lib.pagesizes",
+        "isExtraImport": true,
+        "detail": "reportlab.lib.pagesizes",
+        "documentation": {}
+    },
+    {
+        "label": "canvas",
+        "importPath": "reportlab.pdfgen",
+        "description": "reportlab.pdfgen",
+        "isExtraImport": true,
+        "detail": "reportlab.pdfgen",
+        "documentation": {}
+    },
+    {
+        "label": "pdfmetrics",
+        "importPath": "reportlab.pdfbase",
+        "description": "reportlab.pdfbase",
+        "isExtraImport": true,
+        "detail": "reportlab.pdfbase",
+        "documentation": {}
+    },
+    {
+        "label": "TTFont",
+        "importPath": "reportlab.pdfbase.ttfonts",
+        "description": "reportlab.pdfbase.ttfonts",
+        "isExtraImport": true,
+        "detail": "reportlab.pdfbase.ttfonts",
+        "documentation": {}
+    },
+    {
+        "label": "os,",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os.",
+        "description": "os.",
+        "detail": "os.",
+        "documentation": {}
+    },
+    {
+        "label": "random",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "random",
+        "description": "random",
+        "detail": "random",
+        "documentation": {}
+    },
+    {
+        "label": "string",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "string",
+        "description": "string",
+        "detail": "string",
+        "documentation": {}
+    },
+    {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
+        "label": "check_payment_streak",
+        "importPath": "events.router",
+        "description": "events.router",
+        "isExtraImport": true,
+        "detail": "events.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "events.router",
+        "description": "events.router",
+        "isExtraImport": true,
+        "detail": "events.router",
+        "documentation": {}
+    },
+    {
+        "label": "sqlite3",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sqlite3",
+        "description": "sqlite3",
+        "detail": "sqlite3",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "defaultdict",
+        "importPath": "collections",
+        "description": "collections",
+        "isExtraImport": true,
+        "detail": "collections",
+        "documentation": {}
+    },
+    {
+        "label": "CORSMiddleware",
+        "importPath": "fastapi.middleware.cors",
+        "description": "fastapi.middleware.cors",
+        "isExtraImport": true,
+        "detail": "fastapi.middleware.cors",
+        "documentation": {}
+    },
+    {
+        "label": "StaticFiles",
+        "importPath": "fastapi.staticfiles",
+        "description": "fastapi.staticfiles",
+        "isExtraImport": true,
+        "detail": "fastapi.staticfiles",
+        "documentation": {}
+    },
+    {
+        "label": "asynccontextmanager",
+        "importPath": "contextlib",
+        "description": "contextlib",
+        "isExtraImport": true,
+        "detail": "contextlib",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "auth.router",
+        "description": "auth.router",
+        "isExtraImport": true,
+        "detail": "auth.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "characters.router",
+        "description": "characters.router",
+        "isExtraImport": true,
+        "detail": "characters.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "chat.router",
+        "description": "chat.router",
+        "isExtraImport": true,
+        "detail": "chat.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "users.router",
+        "description": "users.router",
+        "isExtraImport": true,
+        "detail": "users.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "party.router",
+        "description": "party.router",
+        "isExtraImport": true,
+        "detail": "party.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "likes.router",
+        "description": "likes.router",
+        "isExtraImport": true,
+        "detail": "likes.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "follows.router",
+        "description": "follows.router",
+        "isExtraImport": true,
+        "detail": "follows.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "banners.router",
+        "description": "banners.router",
+        "isExtraImport": true,
+        "detail": "banners.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "suggestions.router",
+        "description": "suggestions.router",
+        "isExtraImport": true,
+        "detail": "suggestions.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "tokens.router",
+        "description": "tokens.router",
+        "isExtraImport": true,
+        "detail": "tokens.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "achievements.router",
+        "description": "achievements.router",
+        "isExtraImport": true,
+        "detail": "achievements.router",
+        "documentation": {}
+    },
+    {
+        "label": "init_achievements",
+        "importPath": "achievements.router",
+        "description": "achievements.router",
+        "isExtraImport": true,
+        "detail": "achievements.router",
+        "documentation": {}
+    },
+    {
+        "label": "start_scheduler",
+        "importPath": "scheduler",
+        "description": "scheduler",
+        "isExtraImport": true,
+        "detail": "scheduler",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "support.router",
+        "description": "support.router",
+        "isExtraImport": true,
+        "detail": "support.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "admin.router",
+        "description": "admin.router",
+        "isExtraImport": true,
+        "detail": "admin.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "purchases.router",
+        "description": "purchases.router",
+        "isExtraImport": true,
+        "detail": "purchases.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "reviews.router",
+        "description": "reviews.router",
+        "isExtraImport": true,
+        "detail": "reviews.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "notices.router",
+        "description": "notices.router",
+        "isExtraImport": true,
+        "detail": "notices.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "community.router",
+        "description": "community.router",
+        "isExtraImport": true,
+        "detail": "community.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "importPath": "terms.router",
+        "description": "terms.router",
+        "isExtraImport": true,
+        "detail": "terms.router",
+        "documentation": {}
+    },
+    {
+        "label": "init_terms_db",
+        "importPath": "terms.router",
+        "description": "terms.router",
+        "isExtraImport": true,
+        "detail": "terms.router",
+        "documentation": {}
+    },
+    {
+        "label": "BackgroundScheduler",
+        "importPath": "apscheduler.schedulers.background",
+        "description": "apscheduler.schedulers.background",
+        "isExtraImport": true,
+        "detail": "apscheduler.schedulers.background",
+        "documentation": {}
+    },
+    {
+        "label": "lldb",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "lldb",
+        "description": "lldb",
+        "detail": "lldb",
+        "documentation": {}
+    },
+    {
+        "label": "EquipTitleRequest",
+        "kind": 6,
+        "importPath": "backend.achievements.router",
+        "description": "backend.achievements.router",
+        "peekOfCode": "class EquipTitleRequest(BaseModel):\n    prefix_title: str = \"\"\n    suffix_title: str = \"\"\n@router.patch(\"/me/equip-title\", summary=\"칭호 장착\")\nasync def equip_title(\n        request: EquipTitleRequest,\n        current_user: dict = Depends(get_current_user)):\n    conn = get_db()\n    cursor = conn.cursor()\n    # 앞 칭호 검증",
+        "detail": "backend.achievements.router",
+        "documentation": {}
+    },
+    {
+        "label": "init_achievements",
+        "kind": 2,
+        "importPath": "backend.achievements.router",
+        "description": "backend.achievements.router",
+        "peekOfCode": "def init_achievements():\n    conn = get_db()\n    cursor = conn.cursor()\n    for a in ACHIEVEMENTS:\n        cursor.execute(\"\"\"\n            INSERT OR IGNORE INTO achievements\n            (code, title, description, difficulty, reward_token, prefix_title, suffix_title)\n            VALUES (?, ?, ?, ?, ?, ?, ?)\n        \"\"\", (a[\"code\"], a[\"title\"], a[\"description\"], a[\"difficulty\"],\n              a[\"reward_token\"], a.get(\"prefix_title\", \"\"), a.get(\"suffix_title\", \"\")))",
+        "detail": "backend.achievements.router",
+        "documentation": {}
+    },
+    {
+        "label": "check_and_grant",
+        "kind": 2,
+        "importPath": "backend.achievements.router",
+        "description": "backend.achievements.router",
+        "peekOfCode": "def check_and_grant(user_id: int, code: str):\n    from tokens.router import add_token\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"\"\"\n        SELECT id FROM user_achievements WHERE user_id = ? AND achievement_code = ?\n    \"\"\", (user_id, code))\n    if cursor.fetchone():\n        conn.close()\n        return None",
+        "detail": "backend.achievements.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.achievements.router",
+        "description": "backend.achievements.router",
+        "peekOfCode": "router = APIRouter(\n    prefix=\"/achievements\",\n    tags=[\"업적\"],\n    responses={404: {\"description\": \"찾을 수 없습니다\"}}\n)\nACHIEVEMENTS = [\n    # 브론즈 (500)\n    {\"code\": \"first_signup\", \"title\": \"새로운 시작\", \"description\": \"회원가입을 완료했습니다.\", \"difficulty\": \"bronze\", \"reward_token\": 500, \"prefix_title\": \"별의\", \"suffix_title\": \"방랑자\"},\n    {\"code\": \"first_chat\", \"title\": \"첫 대화\", \"description\": \"처음으로 AI와 대화했습니다.\", \"difficulty\": \"bronze\", \"reward_token\": 500, \"prefix_title\": \"\", \"suffix_title\": \"수다쟁이\"},\n    {\"code\": \"first_follow\", \"title\": \"첫 팔로우\", \"description\": \"처음으로 창작자를 팔로우했습니다.\", \"difficulty\": \"bronze\", \"reward_token\": 500, \"prefix_title\": \"별빛\", \"suffix_title\": \"탐험가\"},",
+        "detail": "backend.achievements.router",
+        "documentation": {}
+    },
+    {
+        "label": "ACHIEVEMENTS",
+        "kind": 5,
+        "importPath": "backend.achievements.router",
+        "description": "backend.achievements.router",
+        "peekOfCode": "ACHIEVEMENTS = [\n    # 브론즈 (500)\n    {\"code\": \"first_signup\", \"title\": \"새로운 시작\", \"description\": \"회원가입을 완료했습니다.\", \"difficulty\": \"bronze\", \"reward_token\": 500, \"prefix_title\": \"별의\", \"suffix_title\": \"방랑자\"},\n    {\"code\": \"first_chat\", \"title\": \"첫 대화\", \"description\": \"처음으로 AI와 대화했습니다.\", \"difficulty\": \"bronze\", \"reward_token\": 500, \"prefix_title\": \"\", \"suffix_title\": \"수다쟁이\"},\n    {\"code\": \"first_follow\", \"title\": \"첫 팔로우\", \"description\": \"처음으로 창작자를 팔로우했습니다.\", \"difficulty\": \"bronze\", \"reward_token\": 500, \"prefix_title\": \"별빛\", \"suffix_title\": \"탐험가\"},\n    {\"code\": \"first_like\", \"title\": \"첫 좋아요\", \"description\": \"처음으로 캐릭터에 좋아요를 눌렀습니다.\", \"difficulty\": \"bronze\", \"reward_token\": 500, \"prefix_title\": \"\", \"suffix_title\": \"취향저격\"},\n    {\"code\": \"attendance_1\", \"title\": \"출석 1일\", \"description\": \"첫 출석을 완료했습니다.\", \"difficulty\": \"bronze\", \"reward_token\": 500, \"prefix_title\": \"성실한\", \"suffix_title\": \"\"},\n    {\"code\": \"first_character\", \"title\": \"첫 캐릭터\", \"description\": \"처음으로 캐릭터를 생성했습니다.\", \"difficulty\": \"bronze\", \"reward_token\": 500, \"prefix_title\": \"새내기\", \"suffix_title\": \"창작자\"},\n    # 실버 (1000)\n    {\"code\": \"chat_10\", \"title\": \"대화 10회\", \"description\": \"총 10회 대화했습니다.\", \"difficulty\": \"silver\", \"reward_token\": 1000, \"prefix_title\": \"\", \"suffix_title\": \"이야기꾼\"},",
+        "detail": "backend.achievements.router",
+        "documentation": {}
+    },
+    {
+        "label": "DIFFICULTY_COLOR",
+        "kind": 5,
+        "importPath": "backend.achievements.router",
+        "description": "backend.achievements.router",
+        "peekOfCode": "DIFFICULTY_COLOR = {\n    \"bronze\": \"#cd7f32\",\n    \"silver\": \"#c0c0c0\",\n    \"gold\": \"#f6c65b\",\n    \"platinum\": \"#8b7cff\",\n    \"anniversary\": \"#ff9af3\",\n}\ndef init_achievements():\n    conn = get_db()\n    cursor = conn.cursor()",
+        "detail": "backend.achievements.router",
+        "documentation": {}
+    },
+    {
+        "label": "AnswerRequest",
+        "kind": 6,
+        "importPath": "backend.admin.router",
+        "description": "backend.admin.router",
+        "peekOfCode": "class AnswerRequest(BaseModel):\n    answer: str\n@router.patch(\"/inquiries/{inquiry_id}/answer\", summary=\"문의 답변\")\nasync def answer_inquiry(\n        inquiry_id: int,\n        request: AnswerRequest,\n        admin: dict = Depends(require_admin)):\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"\"\"",
+        "detail": "backend.admin.router",
+        "documentation": {}
+    },
+    {
+        "label": "TokenGrantRequest",
+        "kind": 6,
+        "importPath": "backend.admin.router",
+        "description": "backend.admin.router",
+        "peekOfCode": "class TokenGrantRequest(BaseModel):\n    amount: int\n    reason: str\n@router.post(\"/users/{user_id}/grant-token\", summary=\"토큰 지급\")\nasync def grant_token(\n        user_id: int,\n        request: TokenGrantRequest,\n        admin: dict = Depends(require_admin)):\n    from notifications.router import send_notification\n    from tokens.router import add_token",
+        "detail": "backend.admin.router",
+        "documentation": {}
+    },
+    {
+        "label": "require_admin",
+        "kind": 2,
+        "importPath": "backend.admin.router",
+        "description": "backend.admin.router",
+        "peekOfCode": "def require_admin(current_user: dict = Depends(get_current_user)):\n    if not current_user.get(\"is_admin\"):\n        raise HTTPException(status_code=403, detail=\"관리자만 접근 가능합니다.\")\n    return current_user\n# ===== 통계 =====\n@router.get(\"/stats\", summary=\"전체 통계\")\nasync def get_stats(admin: dict = Depends(require_admin)):\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT COUNT(*) as cnt FROM users\")",
+        "detail": "backend.admin.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.admin.router",
+        "description": "backend.admin.router",
+        "peekOfCode": "router = APIRouter(prefix=\"/admin\", tags=[\"관리자\"])\ndef require_admin(current_user: dict = Depends(get_current_user)):\n    if not current_user.get(\"is_admin\"):\n        raise HTTPException(status_code=403, detail=\"관리자만 접근 가능합니다.\")\n    return current_user\n# ===== 통계 =====\n@router.get(\"/stats\", summary=\"전체 통계\")\nasync def get_stats(admin: dict = Depends(require_admin)):\n    conn = get_db()\n    cursor = conn.cursor()",
+        "detail": "backend.admin.router",
+        "documentation": {}
+    },
+    {
+        "label": "hash_password",
+        "kind": 2,
+        "importPath": "backend.auth.jwt",
+        "description": "backend.auth.jwt",
+        "peekOfCode": "def hash_password(password: str) -> str:\n    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')\ndef verify_password(plain: str, hashed: str) -> bool:\n    return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))\ndef create_access_token(user_id: int, email: str) -> str:\n    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)\n    data = {\"sub\": str(user_id), \"email\": email, \"exp\": expire, \"type\": \"access\"}\n    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)\ndef create_refresh_token(user_id: int, email: str) -> str:\n    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)",
+        "detail": "backend.auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "verify_password",
+        "kind": 2,
+        "importPath": "backend.auth.jwt",
+        "description": "backend.auth.jwt",
+        "peekOfCode": "def verify_password(plain: str, hashed: str) -> bool:\n    return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))\ndef create_access_token(user_id: int, email: str) -> str:\n    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)\n    data = {\"sub\": str(user_id), \"email\": email, \"exp\": expire, \"type\": \"access\"}\n    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)\ndef create_refresh_token(user_id: int, email: str) -> str:\n    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)\n    data = {\"sub\": str(user_id), \"email\": email, \"exp\": expire, \"type\": \"refresh\"}\n    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)",
+        "detail": "backend.auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "create_access_token",
+        "kind": 2,
+        "importPath": "backend.auth.jwt",
+        "description": "backend.auth.jwt",
+        "peekOfCode": "def create_access_token(user_id: int, email: str) -> str:\n    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)\n    data = {\"sub\": str(user_id), \"email\": email, \"exp\": expire, \"type\": \"access\"}\n    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)\ndef create_refresh_token(user_id: int, email: str) -> str:\n    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)\n    data = {\"sub\": str(user_id), \"email\": email, \"exp\": expire, \"type\": \"refresh\"}\n    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)\ndef decode_token(token: str) -> dict:\n    try:",
+        "detail": "backend.auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "create_refresh_token",
+        "kind": 2,
+        "importPath": "backend.auth.jwt",
+        "description": "backend.auth.jwt",
+        "peekOfCode": "def create_refresh_token(user_id: int, email: str) -> str:\n    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)\n    data = {\"sub\": str(user_id), \"email\": email, \"exp\": expire, \"type\": \"refresh\"}\n    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)\ndef decode_token(token: str) -> dict:\n    try:\n        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])\n        return payload\n    except JWTError:\n        return None",
+        "detail": "backend.auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "decode_token",
+        "kind": 2,
+        "importPath": "backend.auth.jwt",
+        "description": "backend.auth.jwt",
+        "peekOfCode": "def decode_token(token: str) -> dict:\n    try:\n        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])\n        return payload\n    except JWTError:\n        return None",
+        "detail": "backend.auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "SECRET_KEY",
+        "kind": 5,
+        "importPath": "backend.auth.jwt",
+        "description": "backend.auth.jwt",
+        "peekOfCode": "SECRET_KEY = os.getenv(\"JWT_SECRET\", \"your-secret-key-change-this\")\nALGORITHM = \"HS256\"\nACCESS_TOKEN_EXPIRE_MINUTES = 60 * 2       # 2시간\nREFRESH_TOKEN_EXPIRE_DAYS = 30             # 30일\ndef hash_password(password: str) -> str:\n    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')\ndef verify_password(plain: str, hashed: str) -> bool:\n    return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))\ndef create_access_token(user_id: int, email: str) -> str:\n    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)",
+        "detail": "backend.auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "ALGORITHM",
+        "kind": 5,
+        "importPath": "backend.auth.jwt",
+        "description": "backend.auth.jwt",
+        "peekOfCode": "ALGORITHM = \"HS256\"\nACCESS_TOKEN_EXPIRE_MINUTES = 60 * 2       # 2시간\nREFRESH_TOKEN_EXPIRE_DAYS = 30             # 30일\ndef hash_password(password: str) -> str:\n    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')\ndef verify_password(plain: str, hashed: str) -> bool:\n    return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))\ndef create_access_token(user_id: int, email: str) -> str:\n    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)\n    data = {\"sub\": str(user_id), \"email\": email, \"exp\": expire, \"type\": \"access\"}",
+        "detail": "backend.auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "ACCESS_TOKEN_EXPIRE_MINUTES",
+        "kind": 5,
+        "importPath": "backend.auth.jwt",
+        "description": "backend.auth.jwt",
+        "peekOfCode": "ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 2       # 2시간\nREFRESH_TOKEN_EXPIRE_DAYS = 30             # 30일\ndef hash_password(password: str) -> str:\n    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')\ndef verify_password(plain: str, hashed: str) -> bool:\n    return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))\ndef create_access_token(user_id: int, email: str) -> str:\n    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)\n    data = {\"sub\": str(user_id), \"email\": email, \"exp\": expire, \"type\": \"access\"}\n    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)",
+        "detail": "backend.auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "REFRESH_TOKEN_EXPIRE_DAYS",
+        "kind": 5,
+        "importPath": "backend.auth.jwt",
+        "description": "backend.auth.jwt",
+        "peekOfCode": "REFRESH_TOKEN_EXPIRE_DAYS = 30             # 30일\ndef hash_password(password: str) -> str:\n    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')\ndef verify_password(plain: str, hashed: str) -> bool:\n    return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))\ndef create_access_token(user_id: int, email: str) -> str:\n    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)\n    data = {\"sub\": str(user_id), \"email\": email, \"exp\": expire, \"type\": \"access\"}\n    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)\ndef create_refresh_token(user_id: int, email: str) -> str:",
+        "detail": "backend.auth.jwt",
+        "documentation": {}
+    },
+    {
+        "label": "RegisterRequest",
+        "kind": 6,
+        "importPath": "backend.auth.router",
+        "description": "backend.auth.router",
+        "peekOfCode": "class RegisterRequest(BaseModel):\n    email: str\n    username: str\n    password: str\nclass TokenResponse(BaseModel):\n    access_token: str\n    refresh_token: str\n    token_type: str = \"bearer\"\n    username: str\nclass RefreshRequest(BaseModel):",
+        "detail": "backend.auth.router",
+        "documentation": {}
+    },
+    {
+        "label": "TokenResponse",
+        "kind": 6,
+        "importPath": "backend.auth.router",
+        "description": "backend.auth.router",
+        "peekOfCode": "class TokenResponse(BaseModel):\n    access_token: str\n    refresh_token: str\n    token_type: str = \"bearer\"\n    username: str\nclass RefreshRequest(BaseModel):\n    refresh_token: str\ndef _issue_tokens(user_id: int, email: str, username: str, cursor, conn) -> TokenResponse:\n    access = create_access_token(user_id, email)\n    refresh = create_refresh_token(user_id, email)",
+        "detail": "backend.auth.router",
+        "documentation": {}
+    },
+    {
+        "label": "RefreshRequest",
+        "kind": 6,
+        "importPath": "backend.auth.router",
+        "description": "backend.auth.router",
+        "peekOfCode": "class RefreshRequest(BaseModel):\n    refresh_token: str\ndef _issue_tokens(user_id: int, email: str, username: str, cursor, conn) -> TokenResponse:\n    access = create_access_token(user_id, email)\n    refresh = create_refresh_token(user_id, email)\n    expires_at = datetime.utcnow() + timedelta(days=30)\n    cursor.execute(\"DELETE FROM refresh_tokens WHERE user_id = ?\", (user_id,))\n    cursor.execute(\n        \"INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)\",\n        (user_id, refresh, expires_at)",
+        "detail": "backend.auth.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.auth.router",
+        "description": "backend.auth.router",
+        "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"인증\"])\noauth2_scheme = OAuth2PasswordBearer(tokenUrl=\"/auth/login\")\nclass RegisterRequest(BaseModel):\n    email: str\n    username: str\n    password: str\nclass TokenResponse(BaseModel):\n    access_token: str\n    refresh_token: str\n    token_type: str = \"bearer\"",
+        "detail": "backend.auth.router",
+        "documentation": {}
+    },
+    {
+        "label": "oauth2_scheme",
+        "kind": 5,
+        "importPath": "backend.auth.router",
+        "description": "backend.auth.router",
+        "peekOfCode": "oauth2_scheme = OAuth2PasswordBearer(tokenUrl=\"/auth/login\")\nclass RegisterRequest(BaseModel):\n    email: str\n    username: str\n    password: str\nclass TokenResponse(BaseModel):\n    access_token: str\n    refresh_token: str\n    token_type: str = \"bearer\"\n    username: str",
+        "detail": "backend.auth.router",
+        "documentation": {}
+    },
+    {
+        "label": "BannerRequest",
+        "kind": 6,
+        "importPath": "backend.banners.router",
+        "description": "backend.banners.router",
+        "peekOfCode": "class BannerRequest(BaseModel):\n    title: str\n    image_url: str\n    link_url: str = \"\"\n    order_num: int = 0\n@router.get(\"\", summary=\"배너 목록\", description=\"활성화된 배너 목록을 반환합니다.\")\nasync def get_banners():\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"\"\"",
+        "detail": "backend.banners.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.banners.router",
+        "description": "backend.banners.router",
+        "peekOfCode": "router = APIRouter(\n    prefix=\"/banners\",\n    tags=[\"배너\"],\n    responses={404: {\"description\": \"찾을 수 없습니다\"}}\n)\nclass BannerRequest(BaseModel):\n    title: str\n    image_url: str\n    link_url: str = \"\"\n    order_num: int = 0",
+        "detail": "backend.banners.router",
+        "documentation": {}
+    },
+    {
+        "label": "CreateCharacterRequest",
+        "kind": 6,
+        "importPath": "backend.characters.router",
+        "description": "backend.characters.router",
+        "peekOfCode": "class CreateCharacterRequest(BaseModel):\n    name: str\n    age: int\n    job: str\n    personality: str\n    likes: str\n    dislikes: str\n    speech_style: str\n    description: str = \"\"\n    first_message: str = \"\"",
+        "detail": "backend.characters.router",
+        "documentation": {}
+    },
+    {
+        "label": "UpdateCharacterRequest",
+        "kind": 6,
+        "importPath": "backend.characters.router",
+        "description": "backend.characters.router",
+        "peekOfCode": "class UpdateCharacterRequest(BaseModel):\n    name: Optional[str] = None\n    age: Optional[int] = None\n    job: Optional[str] = None\n    personality: Optional[str] = None\n    likes: Optional[str] = None\n    dislikes: Optional[str] = None\n    speech_style: Optional[str] = None\n    description: Optional[str] = None\n    first_message: Optional[str] = None",
+        "detail": "backend.characters.router",
+        "documentation": {}
+    },
+    {
+        "label": "ReportRequest",
+        "kind": 6,
+        "importPath": "backend.characters.router",
+        "description": "backend.characters.router",
+        "peekOfCode": "class ReportRequest(BaseModel):\n    reason: str\nclass AutoCompleteRequest(BaseModel):\n    name: str\n    description: str = \"\"\n    job: str = \"\"\n    age: int = 20\n@router.post(\"/auto-complete\", summary=\"캐릭터 자동완성\")\nasync def auto_complete_character(\n        request: AutoCompleteRequest,",
+        "detail": "backend.characters.router",
+        "documentation": {}
+    },
+    {
+        "label": "AutoCompleteRequest",
+        "kind": 6,
+        "importPath": "backend.characters.router",
+        "description": "backend.characters.router",
+        "peekOfCode": "class AutoCompleteRequest(BaseModel):\n    name: str\n    description: str = \"\"\n    job: str = \"\"\n    age: int = 20\n@router.post(\"/auto-complete\", summary=\"캐릭터 자동완성\")\nasync def auto_complete_character(\n        request: AutoCompleteRequest,\n        current_user: dict = Depends(get_current_user)):\n    prompt = f\"\"\"",
+        "detail": "backend.characters.router",
+        "documentation": {}
+    },
+    {
+        "label": "client",
+        "kind": 5,
+        "importPath": "backend.characters.router",
+        "description": "backend.characters.router",
+        "peekOfCode": "client = genai.Client(api_key=os.getenv(\"GEMINI_API_KEY\"))\nrouter = APIRouter(prefix=\"/characters\", tags=[\"캐릭터\"])\nclass CreateCharacterRequest(BaseModel):\n    name: str\n    age: int\n    job: str\n    personality: str\n    likes: str\n    dislikes: str\n    speech_style: str",
+        "detail": "backend.characters.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.characters.router",
+        "description": "backend.characters.router",
+        "peekOfCode": "router = APIRouter(prefix=\"/characters\", tags=[\"캐릭터\"])\nclass CreateCharacterRequest(BaseModel):\n    name: str\n    age: int\n    job: str\n    personality: str\n    likes: str\n    dislikes: str\n    speech_style: str\n    description: str = \"\"",
+        "detail": "backend.characters.router",
+        "documentation": {}
+    },
+    {
+        "label": "EMOTIONS",
+        "kind": 5,
+        "importPath": "backend.characters.router",
+        "description": "backend.characters.router",
+        "peekOfCode": "EMOTIONS = [\"neutral\", \"happy\", \"sad\", \"angry\", \"shy\", \"surprised\", \"love\", \"embarrassed\", \"crying\", \"serious\"]\nSITUATIONS = [\"default\", \"indoor\", \"outdoor\", \"night\", \"cafe\", \"forest\", \"rain\", \"sunny\", \"fantasy\", \"dramatic\"]\n@router.post(\"/{character_id}/emotions/{emotion}\", summary=\"감정별 이미지 업로드\")\nasync def upload_emotion_image(\n        character_id: str,\n        emotion: str,\n        file: UploadFile = File(...),\n        current_user: dict = Depends(get_current_user)):\n    if emotion not in EMOTIONS:\n        raise HTTPException(status_code=400, detail=f\"유효하지 않은 감정 태그예요. 가능: {EMOTIONS}\")",
+        "detail": "backend.characters.router",
+        "documentation": {}
+    },
+    {
+        "label": "SITUATIONS",
+        "kind": 5,
+        "importPath": "backend.characters.router",
+        "description": "backend.characters.router",
+        "peekOfCode": "SITUATIONS = [\"default\", \"indoor\", \"outdoor\", \"night\", \"cafe\", \"forest\", \"rain\", \"sunny\", \"fantasy\", \"dramatic\"]\n@router.post(\"/{character_id}/emotions/{emotion}\", summary=\"감정별 이미지 업로드\")\nasync def upload_emotion_image(\n        character_id: str,\n        emotion: str,\n        file: UploadFile = File(...),\n        current_user: dict = Depends(get_current_user)):\n    if emotion not in EMOTIONS:\n        raise HTTPException(status_code=400, detail=f\"유효하지 않은 감정 태그예요. 가능: {EMOTIONS}\")\n    conn = get_db()",
+        "detail": "backend.characters.router",
+        "documentation": {}
+    },
+    {
+        "label": "ChatRequest",
+        "kind": 6,
+        "importPath": "backend.chat.router",
+        "description": "backend.chat.router",
+        "peekOfCode": "class ChatRequest(BaseModel):\n    character_id: str\n    message: str\n    session_id: str\nclass RatingRequest(BaseModel):\n    session_id: str\n    message_id: int\n    rating: str\nclass OocRequest(BaseModel):\n    session_id: str",
+        "detail": "backend.chat.router",
+        "documentation": {}
+    },
+    {
+        "label": "RatingRequest",
+        "kind": 6,
+        "importPath": "backend.chat.router",
+        "description": "backend.chat.router",
+        "peekOfCode": "class RatingRequest(BaseModel):\n    session_id: str\n    message_id: int\n    rating: str\nclass OocRequest(BaseModel):\n    session_id: str\n    character_id: str\n    message_id: int\n    new_content: str\nasync def auto_summarize(history: list, character_name: str) -> list:",
+        "detail": "backend.chat.router",
+        "documentation": {}
+    },
+    {
+        "label": "OocRequest",
+        "kind": 6,
+        "importPath": "backend.chat.router",
+        "description": "backend.chat.router",
+        "peekOfCode": "class OocRequest(BaseModel):\n    session_id: str\n    character_id: str\n    message_id: int\n    new_content: str\nasync def auto_summarize(history: list, character_name: str) -> list:\n    old_history = history[:-RECENT_TURNS]\n    recent_history = history[-RECENT_TURNS:]\n    history_text = \"\\n\".join(\n        [",
+        "detail": "backend.chat.router",
+        "documentation": {}
+    },
+    {
+        "label": "check_harmful_content",
+        "kind": 2,
+        "importPath": "backend.chat.router",
+        "description": "backend.chat.router",
+        "peekOfCode": "def check_harmful_content(message: str) -> bool:\n    for keyword in SEXUAL_KEYWORDS:\n        if keyword.lower() in message.lower():\n            return True\n    return False\nclass ChatRequest(BaseModel):\n    character_id: str\n    message: str\n    session_id: str\nclass RatingRequest(BaseModel):",
+        "detail": "backend.chat.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.chat.router",
+        "description": "backend.chat.router",
+        "peekOfCode": "router = APIRouter(prefix=\"/chat\", tags=[\"대화\"])\nload_dotenv()\nclient = genai.Client(api_key=os.getenv(\"GEMINI_API_KEY\"))\nchat_histories = {}\nOUTPUT_LENGTH = {\"short\": 300, \"medium\": 1000, \"long\": 2000}\nCHAT_DEDUCT = 50\nAUTO_SUMMARY_THRESHOLD = 100\nRECENT_TURNS = 40\nSEXUAL_KEYWORDS = [\"로리\", \"쇼타\", \"loli\", \"shota\", \"어린이 성\", \"아동 성\"]\nTAG_INSTRUCTION = \"\"\"",
+        "detail": "backend.chat.router",
+        "documentation": {}
+    },
+    {
+        "label": "client",
+        "kind": 5,
+        "importPath": "backend.chat.router",
+        "description": "backend.chat.router",
+        "peekOfCode": "client = genai.Client(api_key=os.getenv(\"GEMINI_API_KEY\"))\nchat_histories = {}\nOUTPUT_LENGTH = {\"short\": 300, \"medium\": 1000, \"long\": 2000}\nCHAT_DEDUCT = 50\nAUTO_SUMMARY_THRESHOLD = 100\nRECENT_TURNS = 40\nSEXUAL_KEYWORDS = [\"로리\", \"쇼타\", \"loli\", \"shota\", \"어린이 성\", \"아동 성\"]\nTAG_INSTRUCTION = \"\"\"\n응답 마지막에 반드시 아래 형식으로 태그를 추가해줘. 태그는 대화 내용을 분석해서 결정해.\n[EMOTION:태그] [SITUATION:태그]",
+        "detail": "backend.chat.router",
+        "documentation": {}
+    },
+    {
+        "label": "chat_histories",
+        "kind": 5,
+        "importPath": "backend.chat.router",
+        "description": "backend.chat.router",
+        "peekOfCode": "chat_histories = {}\nOUTPUT_LENGTH = {\"short\": 300, \"medium\": 1000, \"long\": 2000}\nCHAT_DEDUCT = 50\nAUTO_SUMMARY_THRESHOLD = 100\nRECENT_TURNS = 40\nSEXUAL_KEYWORDS = [\"로리\", \"쇼타\", \"loli\", \"shota\", \"어린이 성\", \"아동 성\"]\nTAG_INSTRUCTION = \"\"\"\n응답 마지막에 반드시 아래 형식으로 태그를 추가해줘. 태그는 대화 내용을 분석해서 결정해.\n[EMOTION:태그] [SITUATION:태그]\n감정 태그 옵션: neutral, happy, sad, angry, shy, surprised, love, embarrassed, crying, serious",
+        "detail": "backend.chat.router",
+        "documentation": {}
+    },
+    {
+        "label": "OUTPUT_LENGTH",
+        "kind": 5,
+        "importPath": "backend.chat.router",
+        "description": "backend.chat.router",
+        "peekOfCode": "OUTPUT_LENGTH = {\"short\": 300, \"medium\": 1000, \"long\": 2000}\nCHAT_DEDUCT = 50\nAUTO_SUMMARY_THRESHOLD = 100\nRECENT_TURNS = 40\nSEXUAL_KEYWORDS = [\"로리\", \"쇼타\", \"loli\", \"shota\", \"어린이 성\", \"아동 성\"]\nTAG_INSTRUCTION = \"\"\"\n응답 마지막에 반드시 아래 형식으로 태그를 추가해줘. 태그는 대화 내용을 분석해서 결정해.\n[EMOTION:태그] [SITUATION:태그]\n감정 태그 옵션: neutral, happy, sad, angry, shy, surprised, love, embarrassed, crying, serious\n상황 태그 옵션: default, indoor, outdoor, night, cafe, forest, rain, sunny, fantasy, dramatic",
+        "detail": "backend.chat.router",
+        "documentation": {}
+    },
+    {
+        "label": "CHAT_DEDUCT",
+        "kind": 5,
+        "importPath": "backend.chat.router",
+        "description": "backend.chat.router",
+        "peekOfCode": "CHAT_DEDUCT = 50\nAUTO_SUMMARY_THRESHOLD = 100\nRECENT_TURNS = 40\nSEXUAL_KEYWORDS = [\"로리\", \"쇼타\", \"loli\", \"shota\", \"어린이 성\", \"아동 성\"]\nTAG_INSTRUCTION = \"\"\"\n응답 마지막에 반드시 아래 형식으로 태그를 추가해줘. 태그는 대화 내용을 분석해서 결정해.\n[EMOTION:태그] [SITUATION:태그]\n감정 태그 옵션: neutral, happy, sad, angry, shy, surprised, love, embarrassed, crying, serious\n상황 태그 옵션: default, indoor, outdoor, night, cafe, forest, rain, sunny, fantasy, dramatic\n예시: [EMOTION:happy] [SITUATION:cafe]",
+        "detail": "backend.chat.router",
+        "documentation": {}
+    },
+    {
+        "label": "AUTO_SUMMARY_THRESHOLD",
+        "kind": 5,
+        "importPath": "backend.chat.router",
+        "description": "backend.chat.router",
+        "peekOfCode": "AUTO_SUMMARY_THRESHOLD = 100\nRECENT_TURNS = 40\nSEXUAL_KEYWORDS = [\"로리\", \"쇼타\", \"loli\", \"shota\", \"어린이 성\", \"아동 성\"]\nTAG_INSTRUCTION = \"\"\"\n응답 마지막에 반드시 아래 형식으로 태그를 추가해줘. 태그는 대화 내용을 분석해서 결정해.\n[EMOTION:태그] [SITUATION:태그]\n감정 태그 옵션: neutral, happy, sad, angry, shy, surprised, love, embarrassed, crying, serious\n상황 태그 옵션: default, indoor, outdoor, night, cafe, forest, rain, sunny, fantasy, dramatic\n예시: [EMOTION:happy] [SITUATION:cafe]\n\"\"\"",
+        "detail": "backend.chat.router",
+        "documentation": {}
+    },
+    {
+        "label": "RECENT_TURNS",
+        "kind": 5,
+        "importPath": "backend.chat.router",
+        "description": "backend.chat.router",
+        "peekOfCode": "RECENT_TURNS = 40\nSEXUAL_KEYWORDS = [\"로리\", \"쇼타\", \"loli\", \"shota\", \"어린이 성\", \"아동 성\"]\nTAG_INSTRUCTION = \"\"\"\n응답 마지막에 반드시 아래 형식으로 태그를 추가해줘. 태그는 대화 내용을 분석해서 결정해.\n[EMOTION:태그] [SITUATION:태그]\n감정 태그 옵션: neutral, happy, sad, angry, shy, surprised, love, embarrassed, crying, serious\n상황 태그 옵션: default, indoor, outdoor, night, cafe, forest, rain, sunny, fantasy, dramatic\n예시: [EMOTION:happy] [SITUATION:cafe]\n\"\"\"\ndef check_harmful_content(message: str) -> bool:",
+        "detail": "backend.chat.router",
+        "documentation": {}
+    },
+    {
+        "label": "SEXUAL_KEYWORDS",
+        "kind": 5,
+        "importPath": "backend.chat.router",
+        "description": "backend.chat.router",
+        "peekOfCode": "SEXUAL_KEYWORDS = [\"로리\", \"쇼타\", \"loli\", \"shota\", \"어린이 성\", \"아동 성\"]\nTAG_INSTRUCTION = \"\"\"\n응답 마지막에 반드시 아래 형식으로 태그를 추가해줘. 태그는 대화 내용을 분석해서 결정해.\n[EMOTION:태그] [SITUATION:태그]\n감정 태그 옵션: neutral, happy, sad, angry, shy, surprised, love, embarrassed, crying, serious\n상황 태그 옵션: default, indoor, outdoor, night, cafe, forest, rain, sunny, fantasy, dramatic\n예시: [EMOTION:happy] [SITUATION:cafe]\n\"\"\"\ndef check_harmful_content(message: str) -> bool:\n    for keyword in SEXUAL_KEYWORDS:",
+        "detail": "backend.chat.router",
+        "documentation": {}
+    },
+    {
+        "label": "TAG_INSTRUCTION",
+        "kind": 5,
+        "importPath": "backend.chat.router",
+        "description": "backend.chat.router",
+        "peekOfCode": "TAG_INSTRUCTION = \"\"\"\n응답 마지막에 반드시 아래 형식으로 태그를 추가해줘. 태그는 대화 내용을 분석해서 결정해.\n[EMOTION:태그] [SITUATION:태그]\n감정 태그 옵션: neutral, happy, sad, angry, shy, surprised, love, embarrassed, crying, serious\n상황 태그 옵션: default, indoor, outdoor, night, cafe, forest, rain, sunny, fantasy, dramatic\n예시: [EMOTION:happy] [SITUATION:cafe]\n\"\"\"\ndef check_harmful_content(message: str) -> bool:\n    for keyword in SEXUAL_KEYWORDS:\n        if keyword.lower() in message.lower():",
+        "detail": "backend.chat.router",
+        "documentation": {}
+    },
+    {
+        "label": "CommentRequest",
+        "kind": 6,
+        "importPath": "backend.community.router",
+        "description": "backend.community.router",
+        "peekOfCode": "class CommentRequest(BaseModel):\n    content: str\n@router.post(\"/{post_id}/comments\", summary=\"댓글 작성\")\nasync def create_comment(\n    post_id: int,\n    request: CommentRequest,\n    current_user: dict = Depends(get_current_user)\n):\n    conn = get_db()\n    cursor = conn.cursor()",
+        "detail": "backend.community.router",
+        "documentation": {}
+    },
+    {
+        "label": "UpdatePostRequest",
+        "kind": 6,
+        "importPath": "backend.community.router",
+        "description": "backend.community.router",
+        "peekOfCode": "class UpdatePostRequest(BaseModel):\n    title: Optional[str] = None\n    content: Optional[str] = None\n@router.put(\"/{post_id}\", summary=\"게시글 수정\")\nasync def update_post(\n    post_id: int,\n    request: UpdatePostRequest,\n    current_user: dict = Depends(get_current_user)\n):\n    conn = get_db()",
+        "detail": "backend.community.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.community.router",
+        "description": "backend.community.router",
+        "peekOfCode": "router = APIRouter(prefix=\"/community\", tags=[\"커뮤니티\"])\nclient = genai.Client(api_key=os.getenv(\"GEMINI_API_KEY\"))\nGENRE_OPTIONS = [\"fantasy\", \"modern\", \"sf\", \"horror\", \"romance\", \"other\"]\n# ── Gemini Vision: 장르 분류 + 설명 자동생성 ──────────────────\nasync def analyze_image_with_gemini(image_bytes: bytes, content: str) -> dict:\n    try:\n        image_b64 = base64.b64encode(image_bytes).decode()\n        response = client.models.generate_content(\n            model=\"gemini-2.5-flash\",\n            contents=[{",
+        "detail": "backend.community.router",
+        "documentation": {}
+    },
+    {
+        "label": "client",
+        "kind": 5,
+        "importPath": "backend.community.router",
+        "description": "backend.community.router",
+        "peekOfCode": "client = genai.Client(api_key=os.getenv(\"GEMINI_API_KEY\"))\nGENRE_OPTIONS = [\"fantasy\", \"modern\", \"sf\", \"horror\", \"romance\", \"other\"]\n# ── Gemini Vision: 장르 분류 + 설명 자동생성 ──────────────────\nasync def analyze_image_with_gemini(image_bytes: bytes, content: str) -> dict:\n    try:\n        image_b64 = base64.b64encode(image_bytes).decode()\n        response = client.models.generate_content(\n            model=\"gemini-2.5-flash\",\n            contents=[{\n                \"role\": \"user\",",
+        "detail": "backend.community.router",
+        "documentation": {}
+    },
+    {
+        "label": "GENRE_OPTIONS",
+        "kind": 5,
+        "importPath": "backend.community.router",
+        "description": "backend.community.router",
+        "peekOfCode": "GENRE_OPTIONS = [\"fantasy\", \"modern\", \"sf\", \"horror\", \"romance\", \"other\"]\n# ── Gemini Vision: 장르 분류 + 설명 자동생성 ──────────────────\nasync def analyze_image_with_gemini(image_bytes: bytes, content: str) -> dict:\n    try:\n        image_b64 = base64.b64encode(image_bytes).decode()\n        response = client.models.generate_content(\n            model=\"gemini-2.5-flash\",\n            contents=[{\n                \"role\": \"user\",\n                \"parts\": [",
+        "detail": "backend.community.router",
+        "documentation": {}
+    },
+    {
+        "label": "generate_code",
+        "kind": 2,
+        "importPath": "backend.events.router",
+        "description": "backend.events.router",
+        "peekOfCode": "def generate_code():\n    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))\n@router.get(\"/referral-code\")\ndef get_referral_code(current_user=Depends(get_current_user)):\n    db = get_db()\n    row = db.execute(\n        \"SELECT code FROM referral_codes WHERE user_id = ?\", (current_user[\"id\"],)\n    ).fetchone()\n    if row:\n        return {\"code\": row[\"code\"]}",
+        "detail": "backend.events.router",
+        "documentation": {}
+    },
+    {
+        "label": "get_referral_code",
+        "kind": 2,
+        "importPath": "backend.events.router",
+        "description": "backend.events.router",
+        "peekOfCode": "def get_referral_code(current_user=Depends(get_current_user)):\n    db = get_db()\n    row = db.execute(\n        \"SELECT code FROM referral_codes WHERE user_id = ?\", (current_user[\"id\"],)\n    ).fetchone()\n    if row:\n        return {\"code\": row[\"code\"]}\n    # 없으면 생성\n    while True:\n        code = generate_code()",
+        "detail": "backend.events.router",
+        "documentation": {}
+    },
+    {
+        "label": "use_referral_code",
+        "kind": 2,
+        "importPath": "backend.events.router",
+        "description": "backend.events.router",
+        "peekOfCode": "def use_referral_code(body: dict, request: Request, current_user=Depends(get_current_user)):\n    code = body.get(\"code\", \"\").strip().upper()\n    if not code:\n        raise HTTPException(400, \"초대 코드를 입력해주세요.\")\n    db = get_db()\n    referred_ip = request.client.host\n    # 이미 초대 코드 사용했는지\n    already = db.execute(\n        \"SELECT id FROM referrals WHERE referred_id = ?\", (current_user[\"id\"],)\n    ).fetchone()",
+        "detail": "backend.events.router",
+        "documentation": {}
+    },
+    {
+        "label": "claim_streak_reward",
+        "kind": 2,
+        "importPath": "backend.events.router",
+        "description": "backend.events.router",
+        "peekOfCode": "def claim_streak_reward(current_user=Depends(get_current_user)):\n    db = get_db()\n    user = db.execute(\"SELECT * FROM users WHERE id = ?\", (current_user[\"id\"],)).fetchone()\n    if user[\"attendance_streak\"] < 7:\n        raise HTTPException(400, \"7일 연속 출석이 필요합니다.\")\n    # 오늘 이미 수령했는지 (streak 달성 후 1회만)\n    claimed = user[\"streak_reward_claimed_at\"]\n    if claimed:\n        claimed_date = datetime.fromisoformat(claimed).date()\n        # 마지막 출석일 기준으로 이미 지급됐으면 차단",
+        "detail": "backend.events.router",
+        "documentation": {}
+    },
+    {
+        "label": "check_payment_streak",
+        "kind": 2,
+        "importPath": "backend.events.router",
+        "description": "backend.events.router",
+        "peekOfCode": "def check_payment_streak(user_id: int, purchased_tokens: int, db):\n    \"\"\"구매 완료 시 호출. purchases 라우터에서 import해서 사용.\"\"\"\n    today = date.today().isoformat()\n    user = db.execute(\"SELECT * FROM users WHERE id = ?\", (user_id,)).fetchone()\n    last_purchase = user[\"last_purchase_date\"]\n    streak = user[\"consecutive_purchase_days\"]\n    streak_total = user[\"purchase_streak_total_tokens\"]\n    streak_start = user[\"consecutive_purchase_start_date\"]\n    if last_purchase == today:\n        # 오늘 이미 구매함 → streak 유지, total만 누적",
+        "detail": "backend.events.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.events.router",
+        "description": "backend.events.router",
+        "peekOfCode": "router = APIRouter(prefix=\"/events\", tags=[\"이벤트\"])\n# ── 초대 코드 생성 (유저당 1개 고정) ──────────────────────────\ndef generate_code():\n    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))\n@router.get(\"/referral-code\")\ndef get_referral_code(current_user=Depends(get_current_user)):\n    db = get_db()\n    row = db.execute(\n        \"SELECT code FROM referral_codes WHERE user_id = ?\", (current_user[\"id\"],)\n    ).fetchone()",
+        "detail": "backend.events.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.follows.router",
+        "description": "backend.follows.router",
+        "peekOfCode": "router = APIRouter(\n    prefix=\"/follows\",\n    tags=[\"팔로우\"],\n    responses={404: {\"description\": \"찾을 수 없습니다\"}}\n)\n@router.get(\"/me/followers\", summary=\"내 팔로워 목록\")\nasync def get_my_followers(current_user: dict = Depends(get_current_user)):\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"\"\"",
+        "detail": "backend.follows.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.likes.router",
+        "description": "backend.likes.router",
+        "peekOfCode": "router = APIRouter(\n    prefix=\"/likes\",\n    tags=[\"좋아요\"],\n    responses={404: {\"description\": \"찾을 수 없습니다\"}}\n)\n@router.get(\"/me\", summary=\"내 좋아요 목록\", description=\"내가 좋아요한 캐릭터 목록을 반환합니다.\")\nasync def get_my_likes(current_user: dict = Depends(get_current_user)):\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"\"\"",
+        "detail": "backend.likes.router",
+        "documentation": {}
+    },
+    {
+        "label": "NoticeRequest",
+        "kind": 6,
+        "importPath": "backend.notices.router",
+        "description": "backend.notices.router",
+        "peekOfCode": "class NoticeRequest(BaseModel):\n    title: str\n    content: str\n    is_pinned: int = 0\n@router.get(\"\", summary=\"공지사항 목록\")\nasync def get_notices(\n        page: int = 1,\n        size: int = 20,\n        current_user: Optional[dict] = Depends(get_optional_user)):\n    conn = get_db()",
+        "detail": "backend.notices.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.notices.router",
+        "description": "backend.notices.router",
+        "peekOfCode": "router = APIRouter(prefix=\"/notices\", tags=[\"공지사항\"])\nclass NoticeRequest(BaseModel):\n    title: str\n    content: str\n    is_pinned: int = 0\n@router.get(\"\", summary=\"공지사항 목록\")\nasync def get_notices(\n        page: int = 1,\n        size: int = 20,\n        current_user: Optional[dict] = Depends(get_optional_user)):",
+        "detail": "backend.notices.router",
+        "documentation": {}
+    },
+    {
+        "label": "send_notification",
+        "kind": 2,
+        "importPath": "backend.notifications.router",
+        "description": "backend.notifications.router",
+        "peekOfCode": "def send_notification(user_id: int, type: str, title: str, message: str, link: str = \"\"):\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"\"\"\n        INSERT INTO notifications (user_id, type, title, message, link)\n        VALUES (?, ?, ?, ?, ?)\n    \"\"\", (user_id, type, title, message, link))\n    conn.commit()\n    conn.close()\n@router.get(\"\", summary=\"알림 목록\")",
+        "detail": "backend.notifications.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.notifications.router",
+        "description": "backend.notifications.router",
+        "peekOfCode": "router = APIRouter(prefix=\"/notifications\", tags=[\"알림\"])\ndef send_notification(user_id: int, type: str, title: str, message: str, link: str = \"\"):\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"\"\"\n        INSERT INTO notifications (user_id, type, title, message, link)\n        VALUES (?, ?, ?, ?, ?)\n    \"\"\", (user_id, type, title, message, link))\n    conn.commit()\n    conn.close()",
+        "detail": "backend.notifications.router",
+        "documentation": {}
+    },
+    {
+        "label": "CreateRoomRequest",
+        "kind": 6,
+        "importPath": "backend.party.router",
+        "description": "backend.party.router",
+        "peekOfCode": "class CreateRoomRequest(BaseModel):\n    story_id: int\n    max_members: int = 4\nclass JoinRoomRequest(BaseModel):\n    code: str\n    character_stats: dict\nclass RoomSettingsRequest(BaseModel):\n    output_multiplier: float = 1.0\nclass CreateStoryRequest(BaseModel):\n    title: str",
+        "detail": "backend.party.router",
+        "documentation": {}
+    },
+    {
+        "label": "JoinRoomRequest",
+        "kind": 6,
+        "importPath": "backend.party.router",
+        "description": "backend.party.router",
+        "peekOfCode": "class JoinRoomRequest(BaseModel):\n    code: str\n    character_stats: dict\nclass RoomSettingsRequest(BaseModel):\n    output_multiplier: float = 1.0\nclass CreateStoryRequest(BaseModel):\n    title: str\n    genre: str = \"기타\"\n    background: str\n    system_prompt: str",
+        "detail": "backend.party.router",
+        "documentation": {}
+    },
+    {
+        "label": "RoomSettingsRequest",
+        "kind": 6,
+        "importPath": "backend.party.router",
+        "description": "backend.party.router",
+        "peekOfCode": "class RoomSettingsRequest(BaseModel):\n    output_multiplier: float = 1.0\nclass CreateStoryRequest(BaseModel):\n    title: str\n    genre: str = \"기타\"\n    background: str\n    system_prompt: str\n    image_url: str = \"\"\n    recommended_players: int = 4\n    min_players: int = 2",
+        "detail": "backend.party.router",
+        "documentation": {}
+    },
+    {
+        "label": "CreateStoryRequest",
+        "kind": 6,
+        "importPath": "backend.party.router",
+        "description": "backend.party.router",
+        "peekOfCode": "class CreateStoryRequest(BaseModel):\n    title: str\n    genre: str = \"기타\"\n    background: str\n    system_prompt: str\n    image_url: str = \"\"\n    recommended_players: int = 4\n    min_players: int = 2\n    max_players: int = 6\ndef get_party_tokens(user_id: int, room_code: str) -> int:",
+        "detail": "backend.party.router",
+        "documentation": {}
+    },
+    {
+        "label": "generate_room_code",
+        "kind": 2,
+        "importPath": "backend.party.router",
+        "description": "backend.party.router",
+        "peekOfCode": "def generate_room_code():\n    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))\nclass CreateRoomRequest(BaseModel):\n    story_id: int\n    max_members: int = 4\nclass JoinRoomRequest(BaseModel):\n    code: str\n    character_stats: dict\nclass RoomSettingsRequest(BaseModel):\n    output_multiplier: float = 1.0",
+        "detail": "backend.party.router",
+        "documentation": {}
+    },
+    {
+        "label": "get_party_tokens",
+        "kind": 2,
+        "importPath": "backend.party.router",
+        "description": "backend.party.router",
+        "peekOfCode": "def get_party_tokens(user_id: int, room_code: str) -> int:\n    member_count = len(room_connections.get(room_code, []))\n    member_count = max(member_count, 1)\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT output_multiplier FROM users WHERE id = ?\", (user_id,))\n    u = cursor.fetchone()\n    conn.close()\n    multiplier = u[\"output_multiplier\"] if u and u[\"output_multiplier\"] else 1.0\n    return min(int(1000 * member_count * multiplier), 8000)",
+        "detail": "backend.party.router",
+        "documentation": {}
+    },
+    {
+        "label": "client",
+        "kind": 5,
+        "importPath": "backend.party.router",
+        "description": "backend.party.router",
+        "peekOfCode": "client = genai.Client(api_key=os.getenv(\"GEMINI_API_KEY\"))\nrouter = APIRouter(prefix=\"/party\", tags=[\"파티챗\"])\nroom_connections: dict[str, list[tuple]] = {}\nkick_votes: dict[str, dict[int, dict[int, str]]] = {}\ndef generate_room_code():\n    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))\nclass CreateRoomRequest(BaseModel):\n    story_id: int\n    max_members: int = 4\nclass JoinRoomRequest(BaseModel):",
+        "detail": "backend.party.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.party.router",
+        "description": "backend.party.router",
+        "peekOfCode": "router = APIRouter(prefix=\"/party\", tags=[\"파티챗\"])\nroom_connections: dict[str, list[tuple]] = {}\nkick_votes: dict[str, dict[int, dict[int, str]]] = {}\ndef generate_room_code():\n    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))\nclass CreateRoomRequest(BaseModel):\n    story_id: int\n    max_members: int = 4\nclass JoinRoomRequest(BaseModel):\n    code: str",
+        "detail": "backend.party.router",
+        "documentation": {}
+    },
+    {
+        "label": "get_purchase_history",
+        "kind": 2,
+        "importPath": "backend.purchases.router",
+        "description": "backend.purchases.router",
+        "peekOfCode": "def get_purchase_history(current_user=Depends(get_current_user)):\n    db = get_db()\n    rows = db.execute(\n        \"SELECT * FROM purchases WHERE user_id = ? ORDER BY created_at DESC\",\n        (current_user[\"id\"],)\n    ).fetchall()\n    return [dict(r) for r in rows]\n# ── 구매 요청 (PG사 연동 전 임시 - 관리자 수동 지급용) ──────────\n@router.post(\"/manual\")\ndef manual_purchase(body: dict, current_user=Depends(get_current_user)):",
+        "detail": "backend.purchases.router",
+        "documentation": {}
+    },
+    {
+        "label": "manual_purchase",
+        "kind": 2,
+        "importPath": "backend.purchases.router",
+        "description": "backend.purchases.router",
+        "peekOfCode": "def manual_purchase(body: dict, current_user=Depends(get_current_user)):\n    \"\"\"\n    PG사 연동 전 임시 엔드포인트.\n    실제 결제 연동 후 이 함수 내부만 교체하면 됨.\n    \"\"\"\n    db = get_db()\n    token_amount = body.get(\"token_amount\", 0)\n    if token_amount <= 0:\n        raise HTTPException(400, \"올바른 토큰 수량을 입력해주세요.\")\n    now = datetime.utcnow().isoformat()",
+        "detail": "backend.purchases.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.purchases.router",
+        "description": "backend.purchases.router",
+        "peekOfCode": "router = APIRouter(prefix=\"/purchases\", tags=[\"결제\"])\n# ── 구매 내역 조회 ─────────────────────────────────────────────\n@router.get(\"/history\")\ndef get_purchase_history(current_user=Depends(get_current_user)):\n    db = get_db()\n    rows = db.execute(\n        \"SELECT * FROM purchases WHERE user_id = ? ORDER BY created_at DESC\",\n        (current_user[\"id\"],)\n    ).fetchall()\n    return [dict(r) for r in rows]",
+        "detail": "backend.purchases.router",
+        "documentation": {}
+    },
+    {
+        "label": "ReviewRequest",
+        "kind": 6,
+        "importPath": "backend.reviews.router",
+        "description": "backend.reviews.router",
+        "peekOfCode": "class ReviewRequest(BaseModel):\n    rating: int\n    content: str = \"\"\n@router.post(\"/{character_id}\", summary=\"리뷰 작성/수정\")\nasync def create_or_update_review(\n        character_id: str,\n        request: ReviewRequest,\n        current_user: dict = Depends(get_current_user)):\n    if request.rating < 1 or request.rating > 5:\n        raise HTTPException(status_code=400, detail=\"별점은 1~5 사이여야 해요.\")",
+        "detail": "backend.reviews.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.reviews.router",
+        "description": "backend.reviews.router",
+        "peekOfCode": "router = APIRouter(prefix=\"/reviews\", tags=[\"리뷰\"])\nclass ReviewRequest(BaseModel):\n    rating: int\n    content: str = \"\"\n@router.post(\"/{character_id}\", summary=\"리뷰 작성/수정\")\nasync def create_or_update_review(\n        character_id: str,\n        request: ReviewRequest,\n        current_user: dict = Depends(get_current_user)):\n    if request.rating < 1 or request.rating > 5:",
+        "detail": "backend.reviews.router",
+        "documentation": {}
+    },
+    {
+        "label": "SuggestionRequest",
+        "kind": 6,
+        "importPath": "backend.suggestions.router",
+        "description": "backend.suggestions.router",
+        "peekOfCode": "class SuggestionRequest(BaseModel):\n    category: str = \"기타\"\n    content: str\n@router.post(\"\", summary=\"건의사항 제출\", description=\"건의사항을 제출합니다.\")\nasync def create_suggestion(\n        request: SuggestionRequest,\n        current_user: dict = Depends(get_optional_user)):\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"\"\"",
+        "detail": "backend.suggestions.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.suggestions.router",
+        "description": "backend.suggestions.router",
+        "peekOfCode": "router = APIRouter(\n    prefix=\"/suggestions\",\n    tags=[\"건의사항\"],\n    responses={404: {\"description\": \"찾을 수 없습니다\"}}\n)\nclass SuggestionRequest(BaseModel):\n    category: str = \"기타\"\n    content: str\n@router.post(\"\", summary=\"건의사항 제출\", description=\"건의사항을 제출합니다.\")\nasync def create_suggestion(",
+        "detail": "backend.suggestions.router",
+        "documentation": {}
+    },
+    {
+        "label": "InquiryRequest",
+        "kind": 6,
+        "importPath": "backend.support.router",
+        "description": "backend.support.router",
+        "peekOfCode": "class InquiryRequest(BaseModel):\n    title: str\n    content: str\nclass AiAskRequest(BaseModel):\n    message: str\n# ===== FAQ 목록 =====\n@router.get(\"/faq\", summary=\"FAQ 목록\")\nasync def get_faq(category: Optional[str] = None):\n    if category:\n        return [f for f in FAQ_LIST if f[\"category\"] == category]",
+        "detail": "backend.support.router",
+        "documentation": {}
+    },
+    {
+        "label": "AiAskRequest",
+        "kind": 6,
+        "importPath": "backend.support.router",
+        "description": "backend.support.router",
+        "peekOfCode": "class AiAskRequest(BaseModel):\n    message: str\n# ===== FAQ 목록 =====\n@router.get(\"/faq\", summary=\"FAQ 목록\")\nasync def get_faq(category: Optional[str] = None):\n    if category:\n        return [f for f in FAQ_LIST if f[\"category\"] == category]\n    return FAQ_LIST\n# ===== AI 1차 답변 (문의 전 자동 답변) =====\n@router.post(\"/ask\", summary=\"AI 자동 답변\")",
+        "detail": "backend.support.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.support.router",
+        "description": "backend.support.router",
+        "peekOfCode": "router = APIRouter(prefix=\"/support\", tags=[\"고객센터\"])\nload_dotenv()\nclient = genai.Client(api_key=os.getenv(\"GEMINI_API_KEY\"))\n# ===== FAQ 데이터 =====\nFAQ_LIST = [\n    {\"id\": 1, \"category\": \"토큰\", \"question\": \"토큰은 어떻게 충전하나요?\", \"answer\": \"앱 내 상점에서 토큰을 구매할 수 있습니다.\"},\n    {\"id\": 2, \"category\": \"토큰\", \"question\": \"무료 토큰을 받을 수 있나요?\", \"answer\": \"출석 체크, 광고 시청, 이벤트 참여를 통해 무료 토큰을 받을 수 있습니다.\"},\n    {\"id\": 3, \"category\": \"캐릭터\", \"question\": \"캐릭터는 어떻게 만드나요?\", \"answer\": \"캐릭터 생성 메뉴에서 이름, 설명, 프롬프트를 입력하면 나만의 캐릭터를 만들 수 있습니다.\"},\n    {\"id\": 4, \"category\": \"계정\", \"question\": \"비밀번호를 잊어버렸어요.\", \"answer\": \"로그인 화면의 '비밀번호 찾기'를 통해 이메일로 재설정할 수 있습니다.\"},\n    {\"id\": 5, \"category\": \"계정\", \"question\": \"회원 탈퇴는 어떻게 하나요?\", \"answer\": \"설정 > 계정 관리 > 회원 탈퇴에서 진행할 수 있습니다. 탈퇴 시 모든 데이터가 삭제됩니다.\"},",
+        "detail": "backend.support.router",
+        "documentation": {}
+    },
+    {
+        "label": "client",
+        "kind": 5,
+        "importPath": "backend.support.router",
+        "description": "backend.support.router",
+        "peekOfCode": "client = genai.Client(api_key=os.getenv(\"GEMINI_API_KEY\"))\n# ===== FAQ 데이터 =====\nFAQ_LIST = [\n    {\"id\": 1, \"category\": \"토큰\", \"question\": \"토큰은 어떻게 충전하나요?\", \"answer\": \"앱 내 상점에서 토큰을 구매할 수 있습니다.\"},\n    {\"id\": 2, \"category\": \"토큰\", \"question\": \"무료 토큰을 받을 수 있나요?\", \"answer\": \"출석 체크, 광고 시청, 이벤트 참여를 통해 무료 토큰을 받을 수 있습니다.\"},\n    {\"id\": 3, \"category\": \"캐릭터\", \"question\": \"캐릭터는 어떻게 만드나요?\", \"answer\": \"캐릭터 생성 메뉴에서 이름, 설명, 프롬프트를 입력하면 나만의 캐릭터를 만들 수 있습니다.\"},\n    {\"id\": 4, \"category\": \"계정\", \"question\": \"비밀번호를 잊어버렸어요.\", \"answer\": \"로그인 화면의 '비밀번호 찾기'를 통해 이메일로 재설정할 수 있습니다.\"},\n    {\"id\": 5, \"category\": \"계정\", \"question\": \"회원 탈퇴는 어떻게 하나요?\", \"answer\": \"설정 > 계정 관리 > 회원 탈퇴에서 진행할 수 있습니다. 탈퇴 시 모든 데이터가 삭제됩니다.\"},\n    {\"id\": 6, \"category\": \"대화\", \"question\": \"대화 기록이 사라졌어요.\", \"answer\": \"대화 기록은 로그인 상태에서만 저장됩니다. 비로그인 상태에서는 앱 종료 시 삭제됩니다.\"},\n    {\"id\": 7, \"category\": \"결제\", \"question\": \"결제했는데 토큰이 안 들어왔어요.\", \"answer\": \"결제 후 최대 5분이 소요될 수 있습니다. 이후에도 문제가 있으면 문의해주세요.\"},",
+        "detail": "backend.support.router",
+        "documentation": {}
+    },
+    {
+        "label": "FAQ_LIST",
+        "kind": 5,
+        "importPath": "backend.support.router",
+        "description": "backend.support.router",
+        "peekOfCode": "FAQ_LIST = [\n    {\"id\": 1, \"category\": \"토큰\", \"question\": \"토큰은 어떻게 충전하나요?\", \"answer\": \"앱 내 상점에서 토큰을 구매할 수 있습니다.\"},\n    {\"id\": 2, \"category\": \"토큰\", \"question\": \"무료 토큰을 받을 수 있나요?\", \"answer\": \"출석 체크, 광고 시청, 이벤트 참여를 통해 무료 토큰을 받을 수 있습니다.\"},\n    {\"id\": 3, \"category\": \"캐릭터\", \"question\": \"캐릭터는 어떻게 만드나요?\", \"answer\": \"캐릭터 생성 메뉴에서 이름, 설명, 프롬프트를 입력하면 나만의 캐릭터를 만들 수 있습니다.\"},\n    {\"id\": 4, \"category\": \"계정\", \"question\": \"비밀번호를 잊어버렸어요.\", \"answer\": \"로그인 화면의 '비밀번호 찾기'를 통해 이메일로 재설정할 수 있습니다.\"},\n    {\"id\": 5, \"category\": \"계정\", \"question\": \"회원 탈퇴는 어떻게 하나요?\", \"answer\": \"설정 > 계정 관리 > 회원 탈퇴에서 진행할 수 있습니다. 탈퇴 시 모든 데이터가 삭제됩니다.\"},\n    {\"id\": 6, \"category\": \"대화\", \"question\": \"대화 기록이 사라졌어요.\", \"answer\": \"대화 기록은 로그인 상태에서만 저장됩니다. 비로그인 상태에서는 앱 종료 시 삭제됩니다.\"},\n    {\"id\": 7, \"category\": \"결제\", \"question\": \"결제했는데 토큰이 안 들어왔어요.\", \"answer\": \"결제 후 최대 5분이 소요될 수 있습니다. 이후에도 문제가 있으면 문의해주세요.\"},\n    {\"id\": 8, \"category\": \"신고\", \"question\": \"불쾌한 콘텐츠를 신고하고 싶어요.\", \"answer\": \"해당 캐릭터 또는 메시지의 신고 버튼을 눌러 신고할 수 있습니다.\"},\n]",
+        "detail": "backend.support.router",
+        "documentation": {}
+    },
+    {
+        "label": "FAQ_CONTEXT",
+        "kind": 5,
+        "importPath": "backend.support.router",
+        "description": "backend.support.router",
+        "peekOfCode": "FAQ_CONTEXT = \"\\n\".join([\n    f\"Q: {f['question']}\\nA: {f['answer']}\" for f in FAQ_LIST\n])\nSUPPORT_SYSTEM_PROMPT = f\"\"\"당신은 AI 캐릭터 챗봇 서비스의 친절한 고객센터 AI입니다.\n아래 FAQ를 참고하여 사용자 문의에 답변하세요.\n[FAQ]\n{FAQ_CONTEXT}\n답변 규칙:\n- FAQ에 있는 내용이면 해당 답변을 바탕으로 친절하게 답변하세요.\n- FAQ에 없는 내용이면 \"담당자에게 문의가 접수됩니다. 빠른 시일 내에 답변드리겠습니다.\"라고 안내하세요.",
+        "detail": "backend.support.router",
+        "documentation": {}
+    },
+    {
+        "label": "SUPPORT_SYSTEM_PROMPT",
+        "kind": 5,
+        "importPath": "backend.support.router",
+        "description": "backend.support.router",
+        "peekOfCode": "SUPPORT_SYSTEM_PROMPT = f\"\"\"당신은 AI 캐릭터 챗봇 서비스의 친절한 고객센터 AI입니다.\n아래 FAQ를 참고하여 사용자 문의에 답변하세요.\n[FAQ]\n{FAQ_CONTEXT}\n답변 규칙:\n- FAQ에 있는 내용이면 해당 답변을 바탕으로 친절하게 답변하세요.\n- FAQ에 없는 내용이면 \"담당자에게 문의가 접수됩니다. 빠른 시일 내에 답변드리겠습니다.\"라고 안내하세요.\n- 답변은 간결하고 친절하게 2~4문장으로 작성하세요.\n- 모르는 내용을 추측하여 답변하지 마세요.\n\"\"\"",
+        "detail": "backend.support.router",
+        "documentation": {}
+    },
+    {
+        "label": "TermsUpdateRequest",
+        "kind": 6,
+        "importPath": "backend.terms.router",
+        "description": "backend.terms.router",
+        "peekOfCode": "class TermsUpdateRequest(BaseModel):\n    content: str\n    version: Optional[str] = None\n@router.put(\"/{type}\", summary=\"약관 수정 (관리자)\")\nasync def update_terms(\n    type: str,\n    request: TermsUpdateRequest,\n    current_user: dict = Depends(get_current_user)\n):\n    if not current_user.get(\"is_admin\"):",
+        "detail": "backend.terms.router",
+        "documentation": {}
+    },
+    {
+        "label": "init_terms_db",
+        "kind": 2,
+        "importPath": "backend.terms.router",
+        "description": "backend.terms.router",
+        "peekOfCode": "def init_terms_db():\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"\"\"\n        CREATE TABLE IF NOT EXISTS terms (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            type TEXT UNIQUE NOT NULL,  -- 'terms' | 'privacy'\n            content TEXT NOT NULL,\n            version TEXT DEFAULT '1.0',\n            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "detail": "backend.terms.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.terms.router",
+        "description": "backend.terms.router",
+        "peekOfCode": "router = APIRouter(prefix=\"/terms\", tags=[\"약관\"])\n# ── DB 테이블 초기화 (main.py init_db 대신 여기서 관리) ──────\ndef init_terms_db():\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"\"\"\n        CREATE TABLE IF NOT EXISTS terms (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            type TEXT UNIQUE NOT NULL,  -- 'terms' | 'privacy'\n            content TEXT NOT NULL,",
+        "detail": "backend.terms.router",
+        "documentation": {}
+    },
+    {
+        "label": "add_token",
+        "kind": 2,
+        "importPath": "backend.tokens.router",
+        "description": "backend.tokens.router",
+        "peekOfCode": "def add_token(user_id: int, amount: int, token_type: str, reason: str, expires_at=None):\n    conn = get_db()\n    cursor = conn.cursor()\n    if token_type == \"event\":\n        cursor.execute(\"\"\"\n            UPDATE users SET token_event = token_event + ?,\n            token_balance = token_balance + ? WHERE id = ?\n        \"\"\", (amount, amount, user_id))\n    else:\n        cursor.execute(\"\"\"",
+        "detail": "backend.tokens.router",
+        "documentation": {}
+    },
+    {
+        "label": "deduct_token",
+        "kind": 2,
+        "importPath": "backend.tokens.router",
+        "description": "backend.tokens.router",
+        "peekOfCode": "def deduct_token(user_id: int, amount: int, reason: str):\n    from notifications.router import send_notification\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"\"\"\n        SELECT token_event, token_purchased, token_balance FROM users WHERE id = ?\n    \"\"\", (user_id,))\n    user = cursor.fetchone()\n    if user[\"token_balance\"] < amount:\n        conn.close()",
+        "detail": "backend.tokens.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.tokens.router",
+        "description": "backend.tokens.router",
+        "peekOfCode": "router = APIRouter(\n    prefix=\"/tokens\",\n    tags=[\"토큰\"],\n    responses={404: {\"description\": \"찾을 수 없습니다\"}}\n)\n# 토큰 설정\nSIGNUP_TOKEN = 3000\nATTENDANCE_TOKEN = 1000\nAD_TOKEN = 500\nAD_DAILY_LIMIT = 2",
+        "detail": "backend.tokens.router",
+        "documentation": {}
+    },
+    {
+        "label": "SIGNUP_TOKEN",
+        "kind": 5,
+        "importPath": "backend.tokens.router",
+        "description": "backend.tokens.router",
+        "peekOfCode": "SIGNUP_TOKEN = 3000\nATTENDANCE_TOKEN = 1000\nAD_TOKEN = 500\nAD_DAILY_LIMIT = 2\nCHAT_DEDUCT = 50\nEVENT_EXPIRE_DAYS = 21\n# 메모리 패스 가격\nMEMORY_PASS_30DAY_COINS = 24900\nMEMORY_PASS_CASH_PRICE = 9900\n# 토큰 패키지",
+        "detail": "backend.tokens.router",
+        "documentation": {}
+    },
+    {
+        "label": "ATTENDANCE_TOKEN",
+        "kind": 5,
+        "importPath": "backend.tokens.router",
+        "description": "backend.tokens.router",
+        "peekOfCode": "ATTENDANCE_TOKEN = 1000\nAD_TOKEN = 500\nAD_DAILY_LIMIT = 2\nCHAT_DEDUCT = 50\nEVENT_EXPIRE_DAYS = 21\n# 메모리 패스 가격\nMEMORY_PASS_30DAY_COINS = 24900\nMEMORY_PASS_CASH_PRICE = 9900\n# 토큰 패키지\nTOKEN_PACKAGES = [",
+        "detail": "backend.tokens.router",
+        "documentation": {}
+    },
+    {
+        "label": "AD_TOKEN",
+        "kind": 5,
+        "importPath": "backend.tokens.router",
+        "description": "backend.tokens.router",
+        "peekOfCode": "AD_TOKEN = 500\nAD_DAILY_LIMIT = 2\nCHAT_DEDUCT = 50\nEVENT_EXPIRE_DAYS = 21\n# 메모리 패스 가격\nMEMORY_PASS_30DAY_COINS = 24900\nMEMORY_PASS_CASH_PRICE = 9900\n# 토큰 패키지\nTOKEN_PACKAGES = [\n    {\"id\": 1, \"price\": 1900, \"token_amount\": 2000, \"label\": \"2,000토큰\"},",
+        "detail": "backend.tokens.router",
+        "documentation": {}
+    },
+    {
+        "label": "AD_DAILY_LIMIT",
+        "kind": 5,
+        "importPath": "backend.tokens.router",
+        "description": "backend.tokens.router",
+        "peekOfCode": "AD_DAILY_LIMIT = 2\nCHAT_DEDUCT = 50\nEVENT_EXPIRE_DAYS = 21\n# 메모리 패스 가격\nMEMORY_PASS_30DAY_COINS = 24900\nMEMORY_PASS_CASH_PRICE = 9900\n# 토큰 패키지\nTOKEN_PACKAGES = [\n    {\"id\": 1, \"price\": 1900, \"token_amount\": 2000, \"label\": \"2,000토큰\"},\n    {\"id\": 2, \"price\": 3800, \"token_amount\": 4200, \"label\": \"4,200토큰 (+200 보너스)\"},",
+        "detail": "backend.tokens.router",
+        "documentation": {}
+    },
+    {
+        "label": "CHAT_DEDUCT",
+        "kind": 5,
+        "importPath": "backend.tokens.router",
+        "description": "backend.tokens.router",
+        "peekOfCode": "CHAT_DEDUCT = 50\nEVENT_EXPIRE_DAYS = 21\n# 메모리 패스 가격\nMEMORY_PASS_30DAY_COINS = 24900\nMEMORY_PASS_CASH_PRICE = 9900\n# 토큰 패키지\nTOKEN_PACKAGES = [\n    {\"id\": 1, \"price\": 1900, \"token_amount\": 2000, \"label\": \"2,000토큰\"},\n    {\"id\": 2, \"price\": 3800, \"token_amount\": 4200, \"label\": \"4,200토큰 (+200 보너스)\"},\n    {\"id\": 3, \"price\": 9500, \"token_amount\": 11000, \"label\": \"11,000토큰 (+1,000 보너스)\"},",
+        "detail": "backend.tokens.router",
+        "documentation": {}
+    },
+    {
+        "label": "EVENT_EXPIRE_DAYS",
+        "kind": 5,
+        "importPath": "backend.tokens.router",
+        "description": "backend.tokens.router",
+        "peekOfCode": "EVENT_EXPIRE_DAYS = 21\n# 메모리 패스 가격\nMEMORY_PASS_30DAY_COINS = 24900\nMEMORY_PASS_CASH_PRICE = 9900\n# 토큰 패키지\nTOKEN_PACKAGES = [\n    {\"id\": 1, \"price\": 1900, \"token_amount\": 2000, \"label\": \"2,000토큰\"},\n    {\"id\": 2, \"price\": 3800, \"token_amount\": 4200, \"label\": \"4,200토큰 (+200 보너스)\"},\n    {\"id\": 3, \"price\": 9500, \"token_amount\": 11000, \"label\": \"11,000토큰 (+1,000 보너스)\"},\n    {\"id\": 4, \"price\": 19000, \"token_amount\": 23000, \"label\": \"23,000토큰 (+3,000 보너스)\"},",
+        "detail": "backend.tokens.router",
+        "documentation": {}
+    },
+    {
+        "label": "MEMORY_PASS_30DAY_COINS",
+        "kind": 5,
+        "importPath": "backend.tokens.router",
+        "description": "backend.tokens.router",
+        "peekOfCode": "MEMORY_PASS_30DAY_COINS = 24900\nMEMORY_PASS_CASH_PRICE = 9900\n# 토큰 패키지\nTOKEN_PACKAGES = [\n    {\"id\": 1, \"price\": 1900, \"token_amount\": 2000, \"label\": \"2,000토큰\"},\n    {\"id\": 2, \"price\": 3800, \"token_amount\": 4200, \"label\": \"4,200토큰 (+200 보너스)\"},\n    {\"id\": 3, \"price\": 9500, \"token_amount\": 11000, \"label\": \"11,000토큰 (+1,000 보너스)\"},\n    {\"id\": 4, \"price\": 19000, \"token_amount\": 23000, \"label\": \"23,000토큰 (+3,000 보너스)\"},\n]\ndef add_token(user_id: int, amount: int, token_type: str, reason: str, expires_at=None):",
+        "detail": "backend.tokens.router",
+        "documentation": {}
+    },
+    {
+        "label": "MEMORY_PASS_CASH_PRICE",
+        "kind": 5,
+        "importPath": "backend.tokens.router",
+        "description": "backend.tokens.router",
+        "peekOfCode": "MEMORY_PASS_CASH_PRICE = 9900\n# 토큰 패키지\nTOKEN_PACKAGES = [\n    {\"id\": 1, \"price\": 1900, \"token_amount\": 2000, \"label\": \"2,000토큰\"},\n    {\"id\": 2, \"price\": 3800, \"token_amount\": 4200, \"label\": \"4,200토큰 (+200 보너스)\"},\n    {\"id\": 3, \"price\": 9500, \"token_amount\": 11000, \"label\": \"11,000토큰 (+1,000 보너스)\"},\n    {\"id\": 4, \"price\": 19000, \"token_amount\": 23000, \"label\": \"23,000토큰 (+3,000 보너스)\"},\n]\ndef add_token(user_id: int, amount: int, token_type: str, reason: str, expires_at=None):\n    conn = get_db()",
+        "detail": "backend.tokens.router",
+        "documentation": {}
+    },
+    {
+        "label": "TOKEN_PACKAGES",
+        "kind": 5,
+        "importPath": "backend.tokens.router",
+        "description": "backend.tokens.router",
+        "peekOfCode": "TOKEN_PACKAGES = [\n    {\"id\": 1, \"price\": 1900, \"token_amount\": 2000, \"label\": \"2,000토큰\"},\n    {\"id\": 2, \"price\": 3800, \"token_amount\": 4200, \"label\": \"4,200토큰 (+200 보너스)\"},\n    {\"id\": 3, \"price\": 9500, \"token_amount\": 11000, \"label\": \"11,000토큰 (+1,000 보너스)\"},\n    {\"id\": 4, \"price\": 19000, \"token_amount\": 23000, \"label\": \"23,000토큰 (+3,000 보너스)\"},\n]\ndef add_token(user_id: int, amount: int, token_type: str, reason: str, expires_at=None):\n    conn = get_db()\n    cursor = conn.cursor()\n    if token_type == \"event\":",
+        "detail": "backend.tokens.router",
+        "documentation": {}
+    },
+    {
+        "label": "NoteRequest",
+        "kind": 6,
+        "importPath": "backend.users.router",
+        "description": "backend.users.router",
+        "peekOfCode": "class NoteRequest(BaseModel):\n    character_id: str\n    content: str\nclass PersonaRequest(BaseModel):\n    character_id: str\n    name: str = \"\"\n    content: str\nclass MemoryBookRequest(BaseModel):\n    character_id: str\n    title: str = \"\"",
+        "detail": "backend.users.router",
+        "documentation": {}
+    },
+    {
+        "label": "PersonaRequest",
+        "kind": 6,
+        "importPath": "backend.users.router",
+        "description": "backend.users.router",
+        "peekOfCode": "class PersonaRequest(BaseModel):\n    character_id: str\n    name: str = \"\"\n    content: str\nclass MemoryBookRequest(BaseModel):\n    character_id: str\n    title: str = \"\"\n    content: str\nclass SettingsRequest(BaseModel):\n    safety_mode: int = None",
+        "detail": "backend.users.router",
+        "documentation": {}
+    },
+    {
+        "label": "MemoryBookRequest",
+        "kind": 6,
+        "importPath": "backend.users.router",
+        "description": "backend.users.router",
+        "peekOfCode": "class MemoryBookRequest(BaseModel):\n    character_id: str\n    title: str = \"\"\n    content: str\nclass SettingsRequest(BaseModel):\n    safety_mode: int = None\n    output_length: str = None\n    output_multiplier: float = None\n    image_mode_chat: int = None\n    image_mode_bg: int = None",
+        "detail": "backend.users.router",
+        "documentation": {}
+    },
+    {
+        "label": "SettingsRequest",
+        "kind": 6,
+        "importPath": "backend.users.router",
+        "description": "backend.users.router",
+        "peekOfCode": "class SettingsRequest(BaseModel):\n    safety_mode: int = None\n    output_length: str = None\n    output_multiplier: float = None\n    image_mode_chat: int = None\n    image_mode_bg: int = None\n    image_mode_bottom: int = None\n    image_mode_multi: int = None\nclass UpdateProfileRequest(BaseModel):\n    username: Optional[str] = None",
+        "detail": "backend.users.router",
+        "documentation": {}
+    },
+    {
+        "label": "UpdateProfileRequest",
+        "kind": 6,
+        "importPath": "backend.users.router",
+        "description": "backend.users.router",
+        "peekOfCode": "class UpdateProfileRequest(BaseModel):\n    username: Optional[str] = None\nclass ChangePasswordRequest(BaseModel):\n    current_password: str\n    new_password: str\n@router.get(\"/me/characters\", summary=\"내 캐릭터 목록\")\nasync def get_my_characters(current_user: dict = Depends(get_current_user)):\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT * FROM characters WHERE user_id = ? ORDER BY created_at DESC\",",
+        "detail": "backend.users.router",
+        "documentation": {}
+    },
+    {
+        "label": "ChangePasswordRequest",
+        "kind": 6,
+        "importPath": "backend.users.router",
+        "description": "backend.users.router",
+        "peekOfCode": "class ChangePasswordRequest(BaseModel):\n    current_password: str\n    new_password: str\n@router.get(\"/me/characters\", summary=\"내 캐릭터 목록\")\nasync def get_my_characters(current_user: dict = Depends(get_current_user)):\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT * FROM characters WHERE user_id = ? ORDER BY created_at DESC\",\n                   (current_user[\"id\"],))\n    rows = cursor.fetchall()",
+        "detail": "backend.users.router",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.users.router",
+        "description": "backend.users.router",
+        "peekOfCode": "router = APIRouter(prefix=\"/users\", tags=[\"유저\"])\nclass NoteRequest(BaseModel):\n    character_id: str\n    content: str\nclass PersonaRequest(BaseModel):\n    character_id: str\n    name: str = \"\"\n    content: str\nclass MemoryBookRequest(BaseModel):\n    character_id: str",
+        "detail": "backend.users.router",
+        "documentation": {}
+    },
+    {
+        "label": "get_db",
+        "kind": 2,
+        "importPath": "backend.database",
+        "description": "backend.database",
+        "peekOfCode": "def get_db():\n    conn = sqlite3.connect(DB_PATH)\n    conn.row_factory = sqlite3.Row\n    return conn\ndef init_db():\n    conn = get_db()\n    cursor = conn.cursor()\n    # 유저\n    cursor.execute(\"\"\"\n        CREATE TABLE IF NOT EXISTS users (",
+        "detail": "backend.database",
+        "documentation": {}
+    },
+    {
+        "label": "init_db",
+        "kind": 2,
+        "importPath": "backend.database",
+        "description": "backend.database",
+        "peekOfCode": "def init_db():\n    conn = get_db()\n    cursor = conn.cursor()\n    # 유저\n    cursor.execute(\"\"\"\n        CREATE TABLE IF NOT EXISTS users (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            email TEXT UNIQUE NOT NULL,\n            username TEXT NOT NULL,\n            password TEXT NOT NULL,",
+        "detail": "backend.database",
+        "documentation": {}
+    },
+    {
+        "label": "DB_PATH",
+        "kind": 5,
+        "importPath": "backend.database",
+        "description": "backend.database",
+        "peekOfCode": "DB_PATH = \"chatbot.db\"\ndef get_db():\n    conn = sqlite3.connect(DB_PATH)\n    conn.row_factory = sqlite3.Row\n    return conn\ndef init_db():\n    conn = get_db()\n    cursor = conn.cursor()\n    # 유저\n    cursor.execute(\"\"\"",
+        "detail": "backend.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "kind": 2,
+        "importPath": "backend.deps",
+        "description": "backend.deps",
+        "peekOfCode": "def get_current_user(token: str = Depends(oauth2_scheme)):\n    payload = decode_token(token)\n    if not payload:\n        raise HTTPException(status_code=401, detail=\"유효하지 않은 토큰입니다.\")\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT * FROM users WHERE id = ?\", (int(payload[\"sub\"]),))\n    user = cursor.fetchone()\n    conn.close()\n    if not user:",
+        "detail": "backend.deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_optional_user",
+        "kind": 2,
+        "importPath": "backend.deps",
+        "description": "backend.deps",
+        "peekOfCode": "def get_optional_user(token: str = Depends(oauth2_scheme_optional)):\n    if not token:\n        return None\n    payload = decode_token(token)\n    if not payload:\n        return None\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT * FROM users WHERE id = ?\", (int(payload[\"sub\"]),))\n    user = cursor.fetchone()",
+        "detail": "backend.deps",
+        "documentation": {}
+    },
+    {
+        "label": "oauth2_scheme",
+        "kind": 5,
+        "importPath": "backend.deps",
+        "description": "backend.deps",
+        "peekOfCode": "oauth2_scheme = OAuth2PasswordBearer(tokenUrl=\"/auth/login\")\noauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl=\"/auth/login\", auto_error=False)\ndef get_current_user(token: str = Depends(oauth2_scheme)):\n    payload = decode_token(token)\n    if not payload:\n        raise HTTPException(status_code=401, detail=\"유효하지 않은 토큰입니다.\")\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT * FROM users WHERE id = ?\", (int(payload[\"sub\"]),))\n    user = cursor.fetchone()",
+        "detail": "backend.deps",
+        "documentation": {}
+    },
+    {
+        "label": "oauth2_scheme_optional",
+        "kind": 5,
+        "importPath": "backend.deps",
+        "description": "backend.deps",
+        "peekOfCode": "oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl=\"/auth/login\", auto_error=False)\ndef get_current_user(token: str = Depends(oauth2_scheme)):\n    payload = decode_token(token)\n    if not payload:\n        raise HTTPException(status_code=401, detail=\"유효하지 않은 토큰입니다.\")\n    conn = get_db()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT * FROM users WHERE id = ?\", (int(payload[\"sub\"]),))\n    user = cursor.fetchone()\n    conn.close()",
+        "detail": "backend.deps",
+        "documentation": {}
+    },
+    {
+        "label": "get_client_ip",
+        "kind": 2,
+        "importPath": "backend.main",
+        "description": "backend.main",
+        "peekOfCode": "def get_client_ip(request: Request) -> str:\n    forwarded = request.headers.get(\"X-Forwarded-For\")\n    if forwarded:\n        return forwarded.split(\",\")[0].strip()\n    return request.client.host\ndef is_rate_limited(key: str, limit: int, window: int) -> bool:\n    now = time.time()\n    rate_limit_store[key] = [t for t in rate_limit_store[key] if now - t < window]\n    if len(rate_limit_store[key]) >= limit:\n        return True",
+        "detail": "backend.main",
+        "documentation": {}
+    },
+    {
+        "label": "is_rate_limited",
+        "kind": 2,
+        "importPath": "backend.main",
+        "description": "backend.main",
+        "peekOfCode": "def is_rate_limited(key: str, limit: int, window: int) -> bool:\n    now = time.time()\n    rate_limit_store[key] = [t for t in rate_limit_store[key] if now - t < window]\n    if len(rate_limit_store[key]) >= limit:\n        return True\n    rate_limit_store[key].append(now)\n    return False\n# ── XSS 필터 ─────────────────────────────────────────────────\nXSS_PATTERN = re.compile(\n    r'<script.*?>.*?</script>|javascript:|on\\w+\\s*=|<iframe|<object|<embed|<link|<meta',",
+        "detail": "backend.main",
+        "documentation": {}
+    },
+    {
+        "label": "contains_xss",
+        "kind": 2,
+        "importPath": "backend.main",
+        "description": "backend.main",
+        "peekOfCode": "def contains_xss(value: str) -> bool:\n    return bool(XSS_PATTERN.search(value))\nasync def check_xss_in_body(request: Request) -> bool:\n    try:\n        body = await request.body()\n        if body:\n            text = body.decode(\"utf-8\", errors=\"ignore\")\n            return contains_xss(text)\n    except:\n        pass",
+        "detail": "backend.main",
+        "documentation": {}
+    },
+    {
+        "label": "rate_limit_store",
+        "kind": 5,
+        "importPath": "backend.main",
+        "description": "backend.main",
+        "peekOfCode": "rate_limit_store = defaultdict(list)\nRATE_LIMIT_RULES = {\n    \"/auth/login\":        (5,  60),\n    \"/auth/register\":     (3,  60),\n    \"/chat\":              (30, 60),\n    \"/community\":         (60, 60),\n}\ndef get_client_ip(request: Request) -> str:\n    forwarded = request.headers.get(\"X-Forwarded-For\")\n    if forwarded:",
+        "detail": "backend.main",
+        "documentation": {}
+    },
+    {
+        "label": "RATE_LIMIT_RULES",
+        "kind": 5,
+        "importPath": "backend.main",
+        "description": "backend.main",
+        "peekOfCode": "RATE_LIMIT_RULES = {\n    \"/auth/login\":        (5,  60),\n    \"/auth/register\":     (3,  60),\n    \"/chat\":              (30, 60),\n    \"/community\":         (60, 60),\n}\ndef get_client_ip(request: Request) -> str:\n    forwarded = request.headers.get(\"X-Forwarded-For\")\n    if forwarded:\n        return forwarded.split(\",\")[0].strip()",
+        "detail": "backend.main",
+        "documentation": {}
+    },
+    {
+        "label": "XSS_PATTERN",
+        "kind": 5,
+        "importPath": "backend.main",
+        "description": "backend.main",
+        "peekOfCode": "XSS_PATTERN = re.compile(\n    r'<script.*?>.*?</script>|javascript:|on\\w+\\s*=|<iframe|<object|<embed|<link|<meta',\n    re.IGNORECASE | re.DOTALL\n)\ndef contains_xss(value: str) -> bool:\n    return bool(XSS_PATTERN.search(value))\nasync def check_xss_in_body(request: Request) -> bool:\n    try:\n        body = await request.body()\n        if body:",
+        "detail": "backend.main",
+        "documentation": {}
+    },
+    {
+        "label": "app",
+        "kind": 5,
+        "importPath": "backend.main",
+        "description": "backend.main",
+        "peekOfCode": "app = FastAPI(\n    title=\"AI 챗봇 API\",\n    description=\"AI 캐릭터 챗봇 서비스\",\n    version=\"1.0.0\",\n    lifespan=lifespan,\n    docs_url=\"/docs\" if os.getenv(\"ENV\") != \"production\" else None,\n    redoc_url=None,\n    openapi_tags=[\n        {\"name\": \"인증\",     \"description\": \"회원가입 / 로그인 / 내 정보\"},\n        {\"name\": \"캐릭터\",   \"description\": \"캐릭터 생성 / 조회 / 삭제 / 검색\"},",
+        "detail": "backend.main",
+        "documentation": {}
+    },
+    {
+        "label": "ALLOWED_ORIGINS",
+        "kind": 5,
+        "importPath": "backend.main",
+        "description": "backend.main",
+        "peekOfCode": "ALLOWED_ORIGINS = [\n    \"https://suburb-marrow-radial.ngrok-free.dev\",\n    \"http://localhost:5173\",\n    \"http://localhost:3000\",\n]\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=ALLOWED_ORIGINS,\n    allow_credentials=True,\n    allow_methods=[\"GET\", \"POST\", \"PUT\", \"PATCH\", \"DELETE\"],",
+        "detail": "backend.main",
+        "documentation": {}
+    },
+    {
+        "label": "BASE_DIR",
+        "kind": 5,
+        "importPath": "backend.main",
+        "description": "backend.main",
+        "peekOfCode": "BASE_DIR = os.path.dirname(os.path.abspath(__file__))\napp.mount(\"/\", StaticFiles(directory=os.path.join(BASE_DIR, \"../stellia-frontend/dist\"), html=True), name=\"frontend\")",
+        "detail": "backend.main",
+        "documentation": {}
+    },
+    {
+        "label": "TABLES",
+        "kind": 5,
+        "importPath": "backend.models",
+        "description": "backend.models",
+        "peekOfCode": "TABLES = {\n    \"users\": [\"id\", \"email\", \"username\", \"password\", \"created_at\"],\n    \"characters\": [\"id\", \"user_id\", \"name\", \"description\", \"prompt\",\n                   \"first_message\", \"situation\", \"category\",\n                   \"visibility\", \"image_url\", \"chat_count\", \"created_at\"],\n    \"chat_history\": [\"id\", \"session_id\", \"character_id\", \"user_id\",\n                     \"role\", \"content\", \"created_at\"],\n    \"user_notes\": [\"id\", \"user_id\", \"character_id\", \"content\", \"created_at\"]\n}",
+        "detail": "backend.models",
+        "documentation": {}
+    },
+    {
+        "label": "characters",
+        "kind": 5,
+        "importPath": "backend.prompt",
+        "description": "backend.prompt",
+        "peekOfCode": "characters = {\n    \"mina\": {\n        \"name\": \"미나\",\n        \"description\": \"츤데레 대학생, 게임을 엄청 좋아함\",\n        \"category\": \"로맨스\",\n        \"first_message\": \"뭐야, 갑자기. 귀찮게. ...그래, 뭐. 할 말 있으면 해.\",\n        \"prompt\": \"\"\"\n너는 미나라는 캐릭터야.\n기본 정보:\n- 이름: 미나",
+        "detail": "backend.prompt",
+        "documentation": {}
+    },
+    {
+        "label": "expire_tokens",
+        "kind": 2,
+        "importPath": "backend.scheduler",
+        "description": "backend.scheduler",
+        "peekOfCode": "def expire_tokens():\n    \"\"\"만료된 이벤트 토큰 정리\"\"\"\n    conn = get_db()\n    cursor = conn.cursor()\n    now = datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")\n    # 만료된 이벤트 토큰 내역 조회\n    cursor.execute(\"\"\"\n        SELECT user_id, SUM(amount) as total_expired\n        FROM token_history\n        WHERE token_type = 'event'",
+        "detail": "backend.scheduler",
+        "documentation": {}
+    },
+    {
+        "label": "expire_refresh_tokens",
+        "kind": 2,
+        "importPath": "backend.scheduler",
+        "description": "backend.scheduler",
+        "peekOfCode": "def expire_refresh_tokens():\n    \"\"\"만료된 refresh token 정리\"\"\"\n    conn = get_db()\n    cursor = conn.cursor()\n    now = datetime.now().strftime(\"%Y-%m-%d %H:%M:%S\")\n    cursor.execute(\"DELETE FROM refresh_tokens WHERE expires_at < ?\", (now,))\n    conn.commit()\n    conn.close()\ndef warn_expiring_silver_tokens():\n    \"\"\"은화 만료 D-3 경고 알림\"\"\"",
+        "detail": "backend.scheduler",
+        "documentation": {}
+    },
+    {
+        "label": "warn_expiring_silver_tokens",
+        "kind": 2,
+        "importPath": "backend.scheduler",
+        "description": "backend.scheduler",
+        "peekOfCode": "def warn_expiring_silver_tokens():\n    \"\"\"은화 만료 D-3 경고 알림\"\"\"\n    conn = get_db()\n    cursor = conn.cursor()\n    now = datetime.now()\n    # 3일 후 만료되는 은화 보유 유저\n    three_days_later = (now + __import__('datetime').timedelta(days=3)).strftime(\"%Y-%m-%d %H:%M:%S\")\n    cursor.execute(\"\"\"\n        SELECT user_id, SUM(amount) as total\n        FROM token_history",
+        "detail": "backend.scheduler",
+        "documentation": {}
+    },
+    {
+        "label": "check_anniversary_achievements",
+        "kind": 2,
+        "importPath": "backend.scheduler",
+        "description": "backend.scheduler",
+        "peekOfCode": "def check_anniversary_achievements():\n    \"\"\"가입 기념일 업적 체크 (기존에 있으면 스킵)\"\"\"\n    conn = get_db()\n    cursor = conn.cursor()\n    today = datetime.now().strftime(\"%m-%d\")\n    cursor.execute(\"\"\"\n        SELECT id FROM users\n        WHERE strftime('%m-%d', created_at) = ?\n          AND suspended = 0\n    \"\"\", (today,))",
+        "detail": "backend.scheduler",
+        "documentation": {}
+    },
+    {
+        "label": "start_scheduler",
+        "kind": 2,
+        "importPath": "backend.scheduler",
+        "description": "backend.scheduler",
+        "peekOfCode": "def start_scheduler():\n    scheduler = BackgroundScheduler(timezone=\"Asia/Seoul\")\n    scheduler.add_job(expire_tokens, \"cron\", hour=0, minute=0)\n    scheduler.add_job(expire_refresh_tokens, \"cron\", hour=3, minute=0)\n    scheduler.add_job(warn_expiring_silver_tokens, \"cron\", hour=10, minute=0)  # 매일 오전 10시\n    scheduler.add_job(check_anniversary_achievements, \"cron\", hour=0, minute=5) # 매일 자정 5분\n    scheduler.start()",
+        "detail": "backend.scheduler",
+        "documentation": {}
+    },
+    {
+        "label": "validate_image",
+        "kind": 2,
+        "importPath": "backend.utils",
+        "description": "backend.utils",
+        "peekOfCode": "def validate_image(contents: bytes, max_size: int = MAX_SIZE):\n    # 크기 검증\n    if len(contents) > max_size:\n        raise HTTPException(\n            status_code=400,\n            detail=f\"파일 크기는 {max_size // (1024*1024)}MB 이하여야 합니다.\"\n        )\n    # 매직바이트 검증\n    detected = None\n    for magic, mime in MAGIC_BYTES.items():",
+        "detail": "backend.utils",
+        "documentation": {}
+    },
+    {
+        "label": "ALLOWED_TYPES",
+        "kind": 5,
+        "importPath": "backend.utils",
+        "description": "backend.utils",
+        "peekOfCode": "ALLOWED_TYPES = [\"image/jpeg\", \"image/png\", \"image/webp\", \"image/gif\"]\nMAX_SIZE = 10 * 1024 * 1024  # 10MB\n# 매직바이트 시그니처\nMAGIC_BYTES = {\n    b'\\xff\\xd8\\xff': \"image/jpeg\",\n    b'\\x89PNG': \"image/png\",\n    b'GIF8': \"image/gif\",\n    b'RIFF': \"image/webp\",\n}\ndef validate_image(contents: bytes, max_size: int = MAX_SIZE):",
+        "detail": "backend.utils",
+        "documentation": {}
+    },
+    {
+        "label": "MAX_SIZE",
+        "kind": 5,
+        "importPath": "backend.utils",
+        "description": "backend.utils",
+        "peekOfCode": "MAX_SIZE = 10 * 1024 * 1024  # 10MB\n# 매직바이트 시그니처\nMAGIC_BYTES = {\n    b'\\xff\\xd8\\xff': \"image/jpeg\",\n    b'\\x89PNG': \"image/png\",\n    b'GIF8': \"image/gif\",\n    b'RIFF': \"image/webp\",\n}\ndef validate_image(contents: bytes, max_size: int = MAX_SIZE):\n    # 크기 검증",
+        "detail": "backend.utils",
+        "documentation": {}
+    },
+    {
+        "label": "MAGIC_BYTES",
+        "kind": 5,
+        "importPath": "backend.utils",
+        "description": "backend.utils",
+        "peekOfCode": "MAGIC_BYTES = {\n    b'\\xff\\xd8\\xff': \"image/jpeg\",\n    b'\\x89PNG': \"image/png\",\n    b'GIF8': \"image/gif\",\n    b'RIFF': \"image/webp\",\n}\ndef validate_image(contents: bytes, max_size: int = MAX_SIZE):\n    # 크기 검증\n    if len(contents) > max_size:\n        raise HTTPException(",
+        "detail": "backend.utils",
+        "documentation": {}
+    },
+    {
+        "label": "_Known",
+        "kind": 6,
+        "importPath": "stellia-frontend.node_modules.flatted.python.flatted",
+        "description": "stellia-frontend.node_modules.flatted.python.flatted",
+        "peekOfCode": "class _Known:\n    def __init__(self):\n        self.key = []\n        self.value = []\nclass _String:\n    def __init__(self, value):\n        self.value = value\ndef _array_keys(value):\n    for i in range(len(value)):\n        yield i",
+        "detail": "stellia-frontend.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "_String",
+        "kind": 6,
+        "importPath": "stellia-frontend.node_modules.flatted.python.flatted",
+        "description": "stellia-frontend.node_modules.flatted.python.flatted",
+        "peekOfCode": "class _String:\n    def __init__(self, value):\n        self.value = value\ndef _array_keys(value):\n    for i in range(len(value)):\n        yield i\ndef _object_keys(value):\n    for key in value:\n        yield key\ndef _is_array(value):",
+        "detail": "stellia-frontend.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "parse",
+        "kind": 2,
+        "importPath": "stellia-frontend.node_modules.flatted.python.flatted",
+        "description": "stellia-frontend.node_modules.flatted.python.flatted",
+        "peekOfCode": "def parse(value, *args, **kwargs):\n    json = _json.loads(value, *args, **kwargs)\n    wrapped = []\n    for value in json:\n        wrapped.append(_wrap(value))\n    input = []\n    for value in wrapped:\n        if isinstance(value, _String):\n            input.append(value.value)\n        else:",
+        "detail": "stellia-frontend.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "stringify",
+        "kind": 2,
+        "importPath": "stellia-frontend.node_modules.flatted.python.flatted",
+        "description": "stellia-frontend.node_modules.flatted.python.flatted",
+        "peekOfCode": "def stringify(value, *args, **kwargs):\n    known = _Known()\n    input = []\n    output = []\n    i = int(_index(known, input, value))\n    while i < len(input):\n        output.append(_transform(known, input, input[i]))\n        i += 1\n    return _json.dumps(output, *args, **kwargs)",
+        "detail": "stellia-frontend.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "handle_new_rx_page",
+        "kind": 2,
+        "importPath": "stellia_app.ios.Flutter.ephemeral.flutter_lldb_helper",
+        "description": "stellia_app.ios.Flutter.ephemeral.flutter_lldb_helper",
+        "peekOfCode": "def handle_new_rx_page(frame: lldb.SBFrame, bp_loc, extra_args, intern_dict):\n    \"\"\"Intercept NOTIFY_DEBUGGER_ABOUT_RX_PAGES and touch the pages.\"\"\"\n    base = frame.register[\"x0\"].GetValueAsAddress()\n    page_len = frame.register[\"x1\"].GetValueAsUnsigned()\n    # Note: NOTIFY_DEBUGGER_ABOUT_RX_PAGES will check contents of the\n    # first page to see if handled it correctly. This makes diagnosing\n    # misconfiguration (e.g. missing breakpoint) easier.\n    data = bytearray(page_len)\n    data[0:8] = b'IHELPED!'\n    error = lldb.SBError()",
+        "detail": "stellia_app.ios.Flutter.ephemeral.flutter_lldb_helper",
+        "documentation": {}
+    }
+]
