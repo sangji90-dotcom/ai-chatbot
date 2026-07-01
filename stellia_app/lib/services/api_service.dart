@@ -346,4 +346,44 @@ class ApiService {
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
   }
+
+  static Future<Map<String, dynamic>> getRoomInfo(String code) async {
+    final token = await getToken();
+    final res = await _dio.get(
+      '/party/rooms/$code',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return res.data;
+  }
+
+  static Future<void> leaveRoom(String code) async {
+    final token = await getToken();
+    await _dio.delete(
+      '/party/rooms/$code/leave',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  static Future<Map<String, dynamic>> createRoom(
+    int storyId,
+    int maxMembers,
+  ) async {
+    final token = await getToken();
+    final res = await _dio.post(
+      '/party/rooms',
+      data: {'story_id': storyId, 'max_members': maxMembers},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return res.data;
+  }
+
+  static Future<Map<String, dynamic>> joinRoom(String code) async {
+    final token = await getToken();
+    final res = await _dio.post(
+      '/party/rooms/join',
+      data: {'code': code, 'character_stats': {}},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return res.data;
+  }
 }
