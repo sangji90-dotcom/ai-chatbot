@@ -223,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
           type: BottomNavigationBarType.fixed,
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: '홈'),
-            BottomNavigationBarItem(icon: Icon(Icons.explore_rounded), label: '탐색'),
+            BottomNavigationBarItem(icon: Icon(Icons.explore_rounded), label: '커뮤니티'),
             BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_rounded), label: '채팅'),
             BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: '프로필'),
           ],

@@ -7,6 +7,11 @@ import 'events_screen.dart';
 import 'token_screen.dart';
 import 'ranking_screen.dart';
 import 'create_character_screen.dart';
+import 'my_characters_screen.dart';
+import 'liked_characters_screen.dart';
+import 'bookmarks_screen.dart';
+import 'achievements_screen.dart';
+import 'settings_screen.dart';
 
 class MyPageScreen extends StatefulWidget {
   const MyPageScreen({super.key});
@@ -60,14 +65,19 @@ class _MyPageScreenState extends State<MyPageScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0A0F),
         elevation: 0,
-        title: const Text('마이페이지', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        title: const Text(
+          '마이페이지',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(color: const Color(0xFF1F1F2E), height: 1),
         ),
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF7C6CFF)))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF7C6CFF)),
+            )
           : RefreshIndicator(
               color: const Color(0xFF7C6CFF),
               backgroundColor: const Color(0xFF0F0F18),
@@ -86,7 +96,8 @@ class _MyPageScreenState extends State<MyPageScreen> {
                     child: Row(
                       children: [
                         Container(
-                          width: 64, height: 64,
+                          width: 64,
+                          height: 64,
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               colors: [Color(0xFF7C6CFF), Color(0xFF5FD6FF)],
@@ -96,7 +107,11 @@ class _MyPageScreenState extends State<MyPageScreen> {
                           child: Center(
                             child: Text(
                               (_user?['username'] ?? '?')[0].toUpperCase(),
-                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.white),
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -107,20 +122,34 @@ class _MyPageScreenState extends State<MyPageScreen> {
                             children: [
                               Text(
                                 _user?['username'] ?? '',
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 _user?['email'] ?? '',
-                                style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+                                style: const TextStyle(
+                                  color: Color(0xFF6B7280),
+                                  fontSize: 13,
+                                ),
                               ),
                               const SizedBox(height: 8),
                               Row(
                                 children: [
-                                  const Text('✦ ', style: TextStyle(color: Color(0xFFFFD700))),
+                                  const Text(
+                                    '✦ ',
+                                    style: TextStyle(color: Color(0xFFFFD700)),
+                                  ),
                                   Text(
-                                    '${(_user?['token_balance'] ?? 0).toLocaleString()} 럭키코인',
-                                    style: const TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.w600, fontSize: 13),
+                                    '${((_user?['token_balance'] ?? 0) as int).toLocaleString()} 럭키코인',
+                                    style: const TextStyle(
+                                      color: Color(0xFFFFD700),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -134,57 +163,96 @@ class _MyPageScreenState extends State<MyPageScreen> {
                   const SizedBox(height: 24),
 
                   // 메뉴
-                
                   _MenuItem(
                     icon: Icons.star_rounded,
                     label: '내 캐릭터',
                     subtitle: '${_myCharacters.length}개',
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const MyCharactersScreen(),
+                      ),
+                    ),
                   ),
                   _MenuItem(
                     icon: Icons.favorite_rounded,
                     label: '좋아요한 캐릭터',
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const LikedCharactersScreen(),
+                      ),
+                    ),
                   ),
                   _MenuItem(
                     icon: Icons.bookmark_rounded,
                     label: '북마크',
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const BookmarksScreen(),
+                      ),
+                    ),
                   ),
                   _MenuItem(
                     icon: Icons.emoji_events_rounded,
                     label: '업적',
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AchievementsScreen(),
+                      ),
+                    ),
                   ),
                   _MenuItem(
                     icon: Icons.history_rounded,
                     label: '토큰 내역',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TokenScreen())),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TokenScreen()),
+                    ),
                   ),
                   _MenuItem(
                     icon: Icons.campaign_rounded,
                     label: '공지사항',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NoticeScreen())),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const NoticeScreen()),
+                    ),
                   ),
                   _MenuItem(
                     icon: Icons.celebration_rounded,
                     label: '이벤트',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EventsScreen())),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const EventsScreen()),
+                    ),
                   ),
                   _MenuItem(
                     icon: Icons.emoji_events_rounded,
                     label: '랭킹',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RankingScreen())),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RankingScreen()),
+                    ),
                   ),
                   _MenuItem(
                     icon: Icons.add_rounded,
                     label: '캐릭터 만들기',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateCharacterScreen())),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CreateCharacterScreen(),
+                      ),
+                    ),
                   ),
                   _MenuItem(
                     icon: Icons.settings_rounded,
                     label: '설정',
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    ),
                   ),
 
                   const SizedBox(height: 12),
@@ -201,9 +269,19 @@ class _MyPageScreenState extends State<MyPageScreen> {
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.logout_rounded, color: Color(0xFFFF6B8A), size: 20),
+                          Icon(
+                            Icons.logout_rounded,
+                            color: Color(0xFFFF6B8A),
+                            size: 20,
+                          ),
                           SizedBox(width: 12),
-                          Text('로그아웃', style: TextStyle(color: Color(0xFFFF6B8A), fontWeight: FontWeight.w600)),
+                          Text(
+                            '로그아웃',
+                            style: TextStyle(
+                              color: Color(0xFFFF6B8A),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -221,7 +299,12 @@ class _MenuItem extends StatelessWidget {
   final String? subtitle;
   final VoidCallback onTap;
 
-  const _MenuItem({required this.icon, required this.label, this.subtitle, required this.onTap});
+  const _MenuItem({
+    required this.icon,
+    required this.label,
+    this.subtitle,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -240,12 +323,25 @@ class _MenuItem extends StatelessWidget {
             Icon(icon, color: const Color(0xFF7C6CFF), size: 20),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
             if (subtitle != null)
-              Text(subtitle!, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
+              Text(
+                subtitle!,
+                style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13),
+              ),
             const SizedBox(width: 8),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFF6B7280), size: 18),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFF6B7280),
+              size: 18,
+            ),
           ],
         ),
       ),

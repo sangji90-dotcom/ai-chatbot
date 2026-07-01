@@ -17,9 +17,27 @@ class _TokenScreenState extends State<TokenScreen> {
 
   final List<Map<String, dynamic>> _packages = [
     {'id': 1, 'price': 1900, 'token_amount': 2000, 'label': '2,000 금화'},
-    {'id': 2, 'price': 3800, 'token_amount': 4200, 'label': '4,200 금화', 'bonus': '+200 보너스'},
-    {'id': 3, 'price': 9500, 'token_amount': 11000, 'label': '11,000 금화', 'bonus': '+1,000 보너스'},
-    {'id': 4, 'price': 19000, 'token_amount': 23000, 'label': '23,000 금화', 'bonus': '+3,000 보너스'},
+    {
+      'id': 2,
+      'price': 3800,
+      'token_amount': 4200,
+      'label': '4,200 금화',
+      'bonus': '+200 보너스',
+    },
+    {
+      'id': 3,
+      'price': 9500,
+      'token_amount': 11000,
+      'label': '11,000 금화',
+      'bonus': '+1,000 보너스',
+    },
+    {
+      'id': 4,
+      'price': 19000,
+      'token_amount': 23000,
+      'label': '23,000 금화',
+      'bonus': '+3,000 보너스',
+    },
   ];
 
   @override
@@ -44,7 +62,10 @@ class _TokenScreenState extends State<TokenScreen> {
   }
 
   Future<void> _purchase(int packageId) async {
-    setState(() { _purchasing = true; _message = ''; });
+    setState(() {
+      _purchasing = true;
+      _message = '';
+    });
     try {
       final res = await ApiService.purchaseToken(packageId);
       setState(() => _message = res['message'] ?? '구매 완료!');
@@ -59,13 +80,19 @@ class _TokenScreenState extends State<TokenScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         backgroundColor: const Color(0xFF0A0A0F),
         appBar: AppBar(
           backgroundColor: const Color(0xFF0A0A0F),
           elevation: 0,
-          title: const Text('럭키 코인', style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.w700)),
+          title: const Text(
+            '럭키 코인',
+            style: TextStyle(
+              color: Color(0xFFFFD700),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           bottom: const TabBar(
             indicatorColor: Color(0xFF7C6CFF),
             labelColor: Colors.white,
@@ -73,18 +100,20 @@ class _TokenScreenState extends State<TokenScreen> {
             tabs: [
               Tab(text: '내 코인'),
               Tab(text: '충전소'),
+              Tab(text: '메모리 패스'),
             ],
           ),
         ),
         body: _loading
-            ? const Center(child: CircularProgressIndicator(color: Color(0xFF7C6CFF)))
+            ? const Center(
+                child: CircularProgressIndicator(color: Color(0xFF7C6CFF)),
+              )
             : TabBarView(
                 children: [
                   // 내 코인 탭
                   ListView(
                     padding: const EdgeInsets.all(20),
                     children: [
-                      // 코인 현황
                       Row(
                         children: [
                           Expanded(
@@ -92,21 +121,44 @@ class _TokenScreenState extends State<TokenScreen> {
                               padding: const EdgeInsets.all(18),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [const Color(0xFFFFD700).withOpacity(0.18), const Color(0xFFFFD700).withOpacity(0.05)],
+                                  colors: [
+                                    const Color(0xFFFFD700).withOpacity(0.18),
+                                    const Color(0xFFFFD700).withOpacity(0.05),
+                                  ],
                                 ),
                                 borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+                                border: Border.all(
+                                  color: const Color(
+                                    0xFFFFD700,
+                                  ).withOpacity(0.3),
+                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('🥇 금화', style: TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
+                                  const Text(
+                                    '🥇 금화',
+                                    style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 12,
+                                    ),
+                                  ),
                                   const SizedBox(height: 8),
                                   Text(
                                     '${_coinData?['token_purchased'] ?? 0}',
-                                    style: const TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.w700, fontSize: 22),
+                                    style: const TextStyle(
+                                      color: Color(0xFFFFD700),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 22,
+                                    ),
                                   ),
-                                  const Text('만료 없음', style: TextStyle(color: Color(0xFF6B7280), fontSize: 11)),
+                                  const Text(
+                                    '만료 없음',
+                                    style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 11,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -118,29 +170,48 @@ class _TokenScreenState extends State<TokenScreen> {
                               decoration: BoxDecoration(
                                 color: const Color(0xFF0F0F18),
                                 borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: const Color(0xFF1F1F2E)),
+                                border: Border.all(
+                                  color: const Color(0xFF1F1F2E),
+                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('🥈 은화', style: TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
+                                  const Text(
+                                    '🥈 은화',
+                                    style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 12,
+                                    ),
+                                  ),
                                   const SizedBox(height: 8),
                                   Text(
                                     '${_coinData?['token_event'] ?? 0}',
-                                    style: const TextStyle(color: Color(0xFFC0C0C0), fontWeight: FontWeight.w700, fontSize: 22),
+                                    style: const TextStyle(
+                                      color: Color(0xFFC0C0C0),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 22,
+                                    ),
                                   ),
-                                  const Text('21일 만료', style: TextStyle(color: Color(0xFF6B7280), fontSize: 11)),
+                                  const Text(
+                                    '21일 만료',
+                                    style: TextStyle(
+                                      color: Color(0xFF6B7280),
+                                      fontSize: 11,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 12),
-
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 14,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF0F0F18),
                           borderRadius: BorderRadius.circular(14),
@@ -149,52 +220,89 @@ class _TokenScreenState extends State<TokenScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('총 잔액', style: TextStyle(color: Color(0xFF6B7280), fontSize: 14)),
+                            const Text(
+                              '총 잔액',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 14,
+                              ),
+                            ),
                             Text(
                               '✦ ${_coinData?['token_balance'] ?? 0}',
-                              style: const TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.w700, fontSize: 18),
+                              style: const TextStyle(
+                                color: Color(0xFFFFD700),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 18,
+                              ),
                             ),
                           ],
                         ),
                       ),
-
                       const SizedBox(height: 24),
-                      const Text('토큰 내역', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                      const Text(
+                        '토큰 내역',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
                       const SizedBox(height: 12),
-
-                      ..._history.map((h) => Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0F0F18),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF1F1F2E)),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(h['reason'] ?? '', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    h['created_at']?.toString().substring(0, 10) ?? '',
-                                    style: const TextStyle(color: Color(0xFF6B7280), fontSize: 11),
-                                  ),
-                                ],
+                      ..._history.map(
+                        (h) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0F0F18),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFF1F1F2E)),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      h['reason'] ?? '',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      h['created_at']?.toString().substring(
+                                            0,
+                                            10,
+                                          ) ??
+                                          '',
+                                      style: const TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            Text(
-                              '${h['amount'] > 0 ? '+' : ''}${h['amount']}',
-                              style: TextStyle(
-                                color: h['amount'] > 0 ? const Color(0xFF49D89A) : const Color(0xFFFF6B8A),
-                                fontWeight: FontWeight.w700, fontSize: 15,
+                              Text(
+                                '${h['amount'] > 0 ? '+' : ''}${h['amount']}',
+                                style: TextStyle(
+                                  color: h['amount'] > 0
+                                      ? const Color(0xFF49D89A)
+                                      : const Color(0xFFFF6B8A),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      )),
+                      ),
                     ],
                   ),
 
@@ -209,57 +317,358 @@ class _TokenScreenState extends State<TokenScreen> {
                           decoration: BoxDecoration(
                             color: const Color(0xFF49D89A).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFF49D89A).withOpacity(0.3)),
+                            border: Border.all(
+                              color: const Color(0xFF49D89A).withOpacity(0.3),
+                            ),
                           ),
-                          child: Text(_message, style: const TextStyle(color: Color(0xFF49D89A), fontSize: 13), textAlign: TextAlign.center),
+                          child: Text(
+                            _message,
+                            style: const TextStyle(
+                              color: Color(0xFF49D89A),
+                              fontSize: 13,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
-
                       const Text(
                         '※ 현재 테스트 모드 — 실제 결제 없이 지급',
-                        style: TextStyle(color: Color(0xFFFF6B8A), fontSize: 12),
+                        style: TextStyle(
+                          color: Color(0xFFFF6B8A),
+                          fontSize: 12,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 16),
-
-                      ..._packages.map((pkg) => GestureDetector(
-                        onTap: _purchasing ? null : () => _purchase(pkg['id']),
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          padding: const EdgeInsets.all(18),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [const Color(0xFFFFD700).withOpacity(0.08), const Color(0xFFFFD700).withOpacity(0.03)],
+                      ..._packages.map(
+                        (pkg) => GestureDetector(
+                          onTap: _purchasing
+                              ? null
+                              : () => _purchase(pkg['id']),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  const Color(0xFFFFD700).withOpacity(0.08),
+                                  const Color(0xFFFFD700).withOpacity(0.03),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: const Color(0xFFFFD700).withOpacity(0.3),
+                              ),
                             ),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '🥇 ${pkg['label']}',
+                                        style: const TextStyle(
+                                          color: Color(0xFFFFD700),
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      if (pkg['bonus'] != null)
+                                        Text(
+                                          pkg['bonus'],
+                                          style: const TextStyle(
+                                            color: Color(0xFF49D89A),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFFFFD700,
+                                    ).withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    '${pkg['price'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}원',
+                                    style: const TextStyle(
+                                      color: Color(0xFFFFD700),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // 메모리 패스 탭
+                  ListView(
+                    padding: const EdgeInsets.all(20),
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F0F18),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: const Color(0xFF7C6CFF).withOpacity(0.3),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Text('🧠 ', style: TextStyle(fontSize: 28)),
+                                SizedBox(width: 8),
+                                Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('🥇 ${pkg['label']}', style: const TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.w700, fontSize: 15)),
-                                    if (pkg['bonus'] != null)
-                                      Text(pkg['bonus'], style: const TextStyle(color: Color(0xFF49D89A), fontSize: 12)),
+                                    Text(
+                                      '메모리 패스',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    Text(
+                                      '비활성화',
+                                      style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 13,
+                                      ),
+                                    ),
                                   ],
                                 ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              '• AI가 중요한 대화 내용을 자동으로 기억해요',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 13,
+                                height: 1.7,
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFFD700).withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(10),
+                            ),
+                            const Text(
+                              '• 메모리 청크 최대 20개 저장',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 13,
+                                height: 1.7,
+                              ),
+                            ),
+                            const Text(
+                              '• 장기 대화에서도 맥락을 유지해요',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 13,
+                                height: 1.7,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F0F18),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFF1F1F2E)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '💳 현금 구매',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    Text(
+                                      '30일권',
+                                      style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                child: Text(
-                                  '${pkg['price'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}원',
-                                  style: const TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.w700, fontSize: 14),
+                                Text(
+                                  '9,900원',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              '• 메모리 청크 20개',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {},
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1F1F2E),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text(
+                                  '구매하기',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFFFFD700).withOpacity(0.4),
+                          ),
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFFFFD700).withOpacity(0.1),
+                              const Color(0xFFFFD700).withOpacity(0.04),
                             ],
                           ),
                         ),
-                      )),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '🥇 금화 구매',
+                                      style: TextStyle(
+                                        color: Color(0xFFFFD700),
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    Text(
+                                      '30일권 + 보너스',
+                                      style: TextStyle(
+                                        color: Color(0xFF6B7280),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      '24,900 금화',
+                                      style: TextStyle(
+                                        color: Color(0xFFFFD700),
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    Text(
+                                      '≈ 약 8,200원 상당',
+                                      style: TextStyle(
+                                        color: Color(0xFF49D89A),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              '• 메모리 청크 20개 기본',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                              ),
+                            ),
+                            const Text(
+                              '• 보너스 청크 5개 추가 지급',
+                              style: TextStyle(
+                                color: Color(0xFF49D89A),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Text(
+                              '• 현금보다 약 17% 저렴',
+                              style: TextStyle(
+                                color: Color(0xFF6B7280),
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {},
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(
+                                    0xFFFFD700,
+                                  ).withOpacity(0.3),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text(
+                                  '구매하기 + 청크 5개',
+                                  style: TextStyle(
+                                    color: Color(0xFFFFD700),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ],

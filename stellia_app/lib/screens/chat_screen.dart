@@ -86,9 +86,12 @@ class _ChatScreenState extends State<ChatScreen> {
               child: widget.character.imageUrl.isNotEmpty
                   ? Image.network(
                       widget.character.imageUrl,
-                      width: 36, height: 36, fit: BoxFit.cover,
+                      width: 36,
+                      height: 36,
+                      fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Container(
-                        width: 36, height: 36,
+                        width: 36,
+                        height: 36,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [Color(0xFF7C6CFF), Color(0xFF5FD6FF)],
@@ -98,13 +101,17 @@ class _ChatScreenState extends State<ChatScreen> {
                         child: Center(
                           child: Text(
                             widget.character.name[0],
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),
                     )
                   : Container(
-                      width: 36, height: 36,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [Color(0xFF7C6CFF), Color(0xFF5FD6FF)],
@@ -114,7 +121,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       child: Center(
                         child: Text(
                           widget.character.name[0],
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
@@ -125,7 +135,11 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 Text(
                   widget.character.name,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
                 const Text(
                   '온라인',
@@ -183,13 +197,18 @@ class _ChatScreenState extends State<ChatScreen> {
                       controller: _controller,
                       style: const TextStyle(color: Colors.white, fontSize: 15),
                       maxLines: null,
+                      keyboardType: TextInputType.multiline,
+                      textInputAction: TextInputAction.newline,
+                      enableIMEPersonalizedLearning: false,
                       decoration: InputDecoration(
                         hintText: '${widget.character.name}에게 메시지...',
                         hintStyle: const TextStyle(color: Color(0xFF6B7280)),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 12,
+                        ),
                       ),
-                      onSubmitted: (_) => _send(),
                     ),
                   ),
                 ),
@@ -197,14 +216,19 @@ class _ChatScreenState extends State<ChatScreen> {
                 GestureDetector(
                   onTap: _send,
                   child: Container(
-                    width: 46, height: 46,
+                    width: 46,
+                    height: 46,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFF7C6CFF), Color(0xFF5FD6FF)],
                       ),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ),
               ],
@@ -232,12 +256,15 @@ class _MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser) ...[
             Container(
-              width: 32, height: 32,
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF7C6CFF), Color(0xFF5FD6FF)],
@@ -247,7 +274,11 @@ class _MessageBubble extends StatelessWidget {
               child: Center(
                 child: Text(
                   characterName[0],
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),
@@ -258,7 +289,9 @@ class _MessageBubble extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 gradient: isUser
-                    ? const LinearGradient(colors: [Color(0xFF7C6CFF), Color(0xFF6A5AE0)])
+                    ? const LinearGradient(
+                        colors: [Color(0xFF7C6CFF), Color(0xFF6A5AE0)],
+                      )
                     : null,
                 color: isUser ? null : const Color(0xFF0F0F18),
                 borderRadius: BorderRadius.only(
@@ -267,11 +300,17 @@ class _MessageBubble extends StatelessWidget {
                   bottomLeft: Radius.circular(isUser ? 18 : 4),
                   bottomRight: Radius.circular(isUser ? 4 : 18),
                 ),
-                border: isUser ? null : Border.all(color: const Color(0xFF1F1F2E)),
+                border: isUser
+                    ? null
+                    : Border.all(color: const Color(0xFF1F1F2E)),
               ),
               child: Text(
                 content,
-                style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.6),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  height: 1.6,
+                ),
               ),
             ),
           ),
@@ -292,7 +331,8 @@ class _TypingIndicator extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 32, height: 32,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFF7C6CFF), Color(0xFF5FD6FF)],
@@ -302,7 +342,11 @@ class _TypingIndicator extends StatelessWidget {
             child: Center(
               child: Text(
                 name[0],
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
               ),
             ),
           ),
@@ -349,9 +393,10 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _animation = Tween(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween(
+      begin: 0.4,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     Future.delayed(Duration(milliseconds: widget.delay), () {
       if (mounted) _controller.repeat(reverse: true);
     });
@@ -368,7 +413,8 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
     return FadeTransition(
       opacity: _animation,
       child: Container(
-        width: 8, height: 8,
+        width: 8,
+        height: 8,
         decoration: const BoxDecoration(
           color: Color(0xFF7C6CFF),
           shape: BoxShape.circle,

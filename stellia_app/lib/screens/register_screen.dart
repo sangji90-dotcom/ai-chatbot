@@ -184,7 +184,7 @@ class _InputField extends StatelessWidget {
     return TextField(
       controller: controller,
       obscureText: obscure,
-      keyboardType: keyboardType,
+      keyboardType: keyboardType ?? TextInputType.text,
       style: const TextStyle(color: Colors.white, fontSize: 15),
       decoration: InputDecoration(
         hintText: hint,
