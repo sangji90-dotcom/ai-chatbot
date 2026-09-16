@@ -9,6 +9,7 @@ from notifications.router import send_notification
 from utils import read_image_with_ext
 from pydantic import field_validator
 from core.config import MIN_CHARACTER_AGE, UPLOAD_DIR
+from core.serializers import not_blocked_sql
 from chat import llm
 
 router = APIRouter(prefix="/characters", tags=["캐릭터"])
@@ -237,6 +238,7 @@ async def get_ranking(
     cursor = conn.cursor()
     is_adult = current_user.get("is_adult", 0) if current_user else 0
     adult_filter = "" if is_adult else "AND c.is_adult = 0"
+    adult_filter += f" AND {not_blocked_sql(current_user, 'c.user_id')}"
 
     sort_map = {
         "popular": "c.like_count DESC, c.chat_count DESC",
@@ -277,6 +279,7 @@ async def get_new_characters(
     cursor = conn.cursor()
     is_adult = current_user.get("is_adult", 0) if current_user else 0
     adult_filter = "" if is_adult else "AND c.is_adult = 0"
+    adult_filter += f" AND {not_blocked_sql(current_user, 'c.user_id')}"
     cursor.execute(f"""
         SELECT c.*, GROUP_CONCAT(ct.tag) as tags
         FROM characters c
@@ -302,6 +305,7 @@ async def get_characters_by_category(
     cursor = conn.cursor()
     is_adult = current_user.get("is_adult", 0) if current_user else 0
     adult_filter = "" if is_adult else "AND c.is_adult = 0"
+    adult_filter += f" AND {not_blocked_sql(current_user, 'c.user_id')}"
     cursor.execute(f"""
         SELECT c.*, GROUP_CONCAT(ct.tag) as tags
         FROM characters c
@@ -329,6 +333,7 @@ async def get_characters(
     cursor = conn.cursor()
     is_adult = current_user.get("is_adult", 0) if current_user else 0
     adult_filter = "" if is_adult else "AND c.is_adult = 0"
+    adult_filter += f" AND {not_blocked_sql(current_user, 'c.user_id')}"
 
     sort_map = {
         "popular": "c.like_count DESC, c.chat_count DESC",
@@ -398,6 +403,7 @@ async def search_characters(
     cursor = conn.cursor()
     is_adult = current_user.get("is_adult", 0) if current_user else 0
     adult_filter = "" if is_adult else "AND c.is_adult = 0"
+    adult_filter += f" AND {not_blocked_sql(current_user, 'c.user_id')}"
 
     sort_map = {
         "popular": "c.like_count DESC, c.chat_count DESC",
@@ -441,6 +447,7 @@ async def get_characters_by_user(
     cursor = conn.cursor()
     is_adult = current_user.get("is_adult", 0) if current_user else 0
     adult_filter = "" if is_adult else "AND c.is_adult = 0"
+    adult_filter += f" AND {not_blocked_sql(current_user, 'c.user_id')}"
     cursor.execute(f"""
         SELECT c.*, GROUP_CONCAT(ct.tag) as tags
         FROM characters c

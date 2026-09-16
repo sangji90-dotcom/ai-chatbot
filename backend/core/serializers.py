@@ -24,6 +24,22 @@ def public_character(row, viewer_id: int | None = None) -> dict:
     return data
 
 
+def not_blocked_sql(user: dict | None, user_col: str) -> str:
+    """차단한 상대의 콘텐츠를 제외하는 SQL 조각.
+
+    user_blocks 테이블은 넣고 빼고 목록만 보여줄 뿐,
+    어떤 목록 쿼리에서도 필터링에 쓰이지 않았다 — 차단해도 상대 글이 그대로 보였다.
+    """
+    if not user:
+        return "1=1"
+    uid = int(user["id"])
+    return (
+        f"({user_col} IS NULL OR {user_col} NOT IN ("
+        f"  SELECT blocked_id FROM user_blocks WHERE blocker_id = {uid}"
+        f"))"
+    )
+
+
 def visible_character_filter(user: dict | None, alias: str = "c") -> str:
     """목록 쿼리에 붙일 공개/성인 필터 SQL 조각."""
     parts = [f"{alias}.visibility = 'public'"]

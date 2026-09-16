@@ -3,7 +3,7 @@ import sqlite3
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
 from deps import get_current_user
-from core.serializers import public_character, visible_character_filter
+from core.serializers import not_blocked_sql, public_character, visible_character_filter
 from typing import Optional, List
 
 router = APIRouter(
@@ -117,6 +117,7 @@ async def get_following_new_characters(current_user: dict = Depends(get_current_
         JOIN follows f ON c.user_id = f.following_id
         WHERE f.follower_id = ?
           AND {visible_character_filter(current_user)}
+          AND {not_blocked_sql(current_user, "c.user_id")}
         ORDER BY c.created_at DESC
         LIMIT 20
     """, (current_user["id"],))

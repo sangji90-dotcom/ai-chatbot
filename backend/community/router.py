@@ -8,6 +8,7 @@ from deps import get_current_user, get_optional_user
 import os, base64
 from utils import EXT_BY_MIME, read_image_with_ext
 from core.config import UPLOAD_DIR
+from core.serializers import not_blocked_sql
 from chat import llm
 
 router = APIRouter(prefix="/community", tags=["커뮤니티"])
@@ -86,6 +87,9 @@ async def get_posts(
     # is_adult 컬럼이 있는데 목록에서 전혀 쓰지 않아 성인 게시글이 그대로 노출됐다
     if not (current_user and current_user.get("is_adult")):
         where.append("p.is_adult = 0")
+
+    # 차단한 유저의 게시글 제외
+    where.append(not_blocked_sql(current_user, "p.user_id"))
 
     if post_type:
         where.append("p.post_type = ?")
@@ -289,11 +293,12 @@ async def get_post(post_id: int, current_user: dict = Depends(get_optional_user)
         post["is_liked"] = False
 
     # 댓글
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT c.*, u.username, u.profile_image_url
         FROM community_comments c
         JOIN users u ON c.user_id = u.id
         WHERE c.post_id = ? AND c.status = 'active'
+          AND {not_blocked_sql(current_user, "c.user_id")}
         ORDER BY c.created_at ASC
     """, (post_id,))
     post["comments"] = [dict(r) for r in cursor.fetchall()]
