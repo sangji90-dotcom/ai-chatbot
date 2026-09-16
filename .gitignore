@@ -7,6 +7,9 @@ stellia-frontend/.env
 stellia-frontend/.env.*
 !stellia-frontend/.env.example
 
+# backups
+backups/
+
 # database
 *.db
 *.db-wal

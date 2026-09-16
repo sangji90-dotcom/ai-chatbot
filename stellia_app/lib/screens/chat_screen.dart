@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../models/character.dart';
+import '../widgets/message_feedback.dart';
 
 class ChatScreen extends StatefulWidget {
   final Character character;
@@ -14,7 +15,8 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
-  final List<Map<String, String>> _messages = [];
+  // message_id 를 함께 담아야 피드백을 보낼 수 있어 dynamic 으로 둔다
+  final List<Map<String, dynamic>> _messages = [];
   bool _typing = false;
   late String _sessionId;
 
@@ -52,6 +54,8 @@ class _ChatScreenState extends State<ChatScreen> {
             _messages.add({
               'sender': msg['role'] == 'user' ? 'user' : 'ai',
               'content': msg['content'],
+              // 복원된 메시지도 피드백을 보낼 수 있게 서버 id 를 유지한다
+              'message_id': msg['id'],
             });
           }
         });
@@ -91,7 +95,11 @@ class _ChatScreenState extends State<ChatScreen> {
         sessionId: _sessionId,
       );
       setState(() {
-        _messages.add({'sender': 'ai', 'content': res['message'] ?? ''});
+        _messages.add({
+          'sender': 'ai',
+          'content': res['message'] ?? '',
+          'message_id': res['message_id'],
+        });
       });
     } catch (e) {
       setState(() {
@@ -215,10 +223,25 @@ class _ChatScreenState extends State<ChatScreen> {
                 }
                 final msg = _messages[index];
                 final isUser = msg['sender'] == 'user';
-                return _MessageBubble(
-                  content: msg['content'] ?? '',
+                final bubble = _MessageBubble(
+                  content: msg['content'] as String? ?? '',
                   isUser: isUser,
                   characterName: widget.character.name,
+                );
+                // 유저 말풍선은 Row 의 우측 정렬에 의존한다.
+                // Column(crossAxisAlignment: start) 로 감싸면 Row 가 shrink-wrap 돼
+                // 우측 정렬이 깨지므로, 피드백이 붙는 AI 메시지만 감싼다.
+                final messageId = msg['message_id'];
+                if (isUser || messageId is! int) return bubble;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    bubble,
+                    MessageFeedback(
+                      sessionId: _sessionId,
+                      messageId: messageId,
+                    ),
+                  ],
                 );
               },
             ),

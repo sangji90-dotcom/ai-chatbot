@@ -119,6 +119,28 @@ class ApiService {
     return res.data;
   }
 
+  /// 메시지 평가. reason 은 dislike 일 때만 의미가 있다.
+  /// 사유가 없으면 '기억을 못한다' 인지 '말투가 이상하다' 인지 구분할 수 없어
+  /// 기억 품질을 측정할 수 없다.
+  static Future<void> rateMessage({
+    required String sessionId,
+    required int messageId,
+    required String rating,
+    String reason = '',
+  }) async {
+    final token = await getToken();
+    await _dio.post(
+      '/chat/rating',
+      data: {
+        'session_id': sessionId,
+        'message_id': messageId,
+        'rating': rating,
+        'reason': reason,
+      },
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
   static Future<Map<String, dynamic>> getMe() async {
     final token = await getToken();
     final res = await _dio.get(

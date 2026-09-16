@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useToast } from "./Toast";
+import MemoryStatsPanel from "./MemoryStatsPanel";
 
 interface AdminPageProps {
   apiUrl: string;
@@ -11,7 +12,7 @@ interface AdminPageProps {
 export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
   const headers = { Authorization: `Bearer ${token}` };
   const toast = useToast();
-  const [activeTab, setActiveTab] = useState<"stats" | "users" | "reports" | "inquiries" | "banners" | "stories" | "notices">("stats");
+  const [activeTab, setActiveTab] = useState<"stats" | "memory" | "users" | "reports" | "inquiries" | "banners" | "stories" | "notices">("stats");
   const [stats, setStats] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
@@ -166,6 +167,7 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
 
   const tabs = [
     { id: "stats", label: "📊 통계" },
+    { id: "memory", label: "🧠 기억" },
     { id: "users", label: "👥 유저" },
     { id: "reports", label: "🚨 신고" },
     { id: "inquiries", label: "💬 문의" },
@@ -221,6 +223,11 @@ export default function AdminPage({ apiUrl, token, onBack }: AdminPageProps) {
             }}>{tab.label}</button>
           ))}
         </div>
+
+        {/* 기억 품질 지표 */}
+        {activeTab === "memory" && (
+          <MemoryStatsPanel apiUrl={apiUrl} token={token} />
+        )}
 
         {/* 통계 */}
         {activeTab === "stats" && stats && (
