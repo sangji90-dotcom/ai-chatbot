@@ -62,6 +62,12 @@ class _TokenScreenState extends State<TokenScreen> {
   }
 
   Future<void> _purchase(int packageId) async {
+    // 결제는 PG 연동 후 열린다. 그 전까지 서버가 403 을 주므로
+    // 실패 토스트 대신 상태를 명확히 안내한다.
+    if (!ApiService.purchaseEnabled) {
+      setState(() => _message = '결제 기능은 준비 중이에요. 출석·광고 보상으로 코인을 받아보세요!');
+      return;
+    }
     setState(() {
       _purchasing = true;
       _message = '';

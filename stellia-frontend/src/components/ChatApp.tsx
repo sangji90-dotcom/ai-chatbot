@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import ChatHeader from "./ChatHeader";
 import MessageBubble from "./MessageBubble";
+import MessageFeedback from "./MessageFeedback";
 import ChatInput from "./ChatInput";
 import CharacterProfileModal from "./CharacterProfileModal";
 import ChatRoomModal from "./ChatRoomModal";
@@ -219,6 +220,7 @@ export default function ChatApp({ apiUrl, token, user, character, forceNewSessio
         id: crypto.randomUUID(),
         sender: "ai",
         content: res.data.message,
+        messageId: res.data.message_id,   // 피드백 전송에 필요
         timestamp: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
       }]);
       refreshCoins();
@@ -353,6 +355,16 @@ export default function ChatApp({ apiUrl, token, user, character, forceNewSessio
             ? emotionImages[currentEmotion]
             : undefined
           }
+            feedback={
+              message.sender === "ai" && message.messageId && sessionId ? (
+                <MessageFeedback
+                  apiUrl={apiUrl}
+                  token={token}
+                  sessionId={sessionId}
+                  messageId={message.messageId}
+                />
+              ) : undefined
+            }
         />
           );
         })}

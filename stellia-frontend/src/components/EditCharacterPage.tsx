@@ -108,6 +108,8 @@ export default function EditCharacterPage({ apiUrl, token, characterId, onBack, 
   };
 
   const handleSubmit = async () => {
+    // 이 화면은 age/job 을 다루지 않는다. 서버가 기존 값을 그대로 보존하므로
+    // 여기서 보내지 않아야 안전하다 (예전엔 안 보내면 0세로 초기화됐다).
     setLoading(true);
     try {
       await axios.put(`${apiUrl}/characters/${characterId}`, formData, { headers });

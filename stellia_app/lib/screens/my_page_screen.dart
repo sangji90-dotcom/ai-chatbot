@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
 import 'notice_screen.dart';
@@ -12,6 +11,7 @@ import 'liked_characters_screen.dart';
 import 'bookmarks_screen.dart';
 import 'achievements_screen.dart';
 import 'settings_screen.dart';
+import '../services/token_storage.dart';
 
 class MyPageScreen extends StatefulWidget {
   const MyPageScreen({super.key});
@@ -47,8 +47,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
   }
 
   Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('access_token');
+    await TokenStorage.clear();
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,

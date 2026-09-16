@@ -47,6 +47,8 @@ export interface Message {
   sender: "user" | "ai";
   content: string;
   timestamp: string;
+  /** 서버 chat_history.id — 메시지 피드백(기억 신고)에 필요 */
+  messageId?: number;
 }
 
 export interface User {
@@ -68,9 +70,9 @@ function AppRoutes() {
   const [token, setToken] = useState<string | null>(localStorage.getItem("access_token"));
   const [user, setUser] = useState<User | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  const [sharedCharacter, setSharedCharacter] = useState<Character | null>(null);
+  const [, setSharedCharacter] = useState<Character | null>(null);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
-  const [creatorUserId, setCreatorUserId] = useState<number | null>(null);
+  const [, setCreatorUserId] = useState<number | null>(null);
   const [profileModalChar, setProfileModalChar] = useState<Character | null>(null);
 
   const handleLogout = () => {

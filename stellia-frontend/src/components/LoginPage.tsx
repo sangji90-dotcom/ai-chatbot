@@ -17,8 +17,29 @@ export default function LoginPage({ apiUrl, onLogin, onShowTerms, onShowPrivacy 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  /** 서버 정책과 동일 (8자 이상 + 영문·숫자 혼용). 안 막으면 422 로만 알게 된다. */
+  const validatePassword = (pw: string): string | null => {
+    if (pw.length < 8) return "비밀번호는 8자 이상이어야 해요.";
+    if (!/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) {
+      return "비밀번호는 영문과 숫자를 함께 포함해야 해요.";
+    }
+    return null;
+  };
+
   const handleSubmit = async () => {
     setError("");
+
+    if (isRegister) {
+      const pwError = validatePassword(password);
+      if (pwError) { setError(pwError); return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        setError("이메일 형식을 확인해주세요."); return;
+      }
+      if (username.trim().length < 2) {
+        setError("닉네임은 2자 이상이어야 해요."); return;
+      }
+    }
+
     setLoading(true);
 
     try {

@@ -132,6 +132,11 @@ export default function CreateCharacterPage({ apiUrl, token, onBack, onCreated }
       toast.error("이름, 성격, 말투는 필수예요.");
       return;
     }
+    // 서버가 19세 미만 캐릭터를 거부한다(아동 성적 콘텐츠 방지). 여기서 먼저 안내.
+    if (Number(formData.age) < 19) {
+      toast.error("캐릭터 나이는 19세 이상만 등록할 수 있어요.");
+      return;
+    }
     setLoading(true);
     try {
       const headers = { Authorization: `Bearer ${token}` };

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'home_screen.dart';
+import '../services/token_storage.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -19,9 +19,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _loading = false;
   String? _error;
 
+  /// 서버 정책과 동일하게 맞춘다 (8자 이상 + 영문·숫자 혼용).
+  /// 클라이언트에서 안 막으면 422 응답으로만 알게 돼 UX 가 나쁘다.
+  String? _validatePassword(String pw) {
+    if (pw.length < 8) return '비밀번호는 8자 이상이어야 해요.';
+    final hasLetter = RegExp(r'[A-Za-z]').hasMatch(pw);
+    final hasDigit = RegExp(r'[0-9]').hasMatch(pw);
+    if (!hasLetter || !hasDigit) return '비밀번호는 영문과 숫자를 함께 포함해야 해요.';
+    return null;
+  }
+
   Future<void> _register() async {
     if (_passwordController.text != _passwordConfirmController.text) {
       setState(() => _error = '비밀번호가 일치하지 않아요.');
+      return;
+    }
+    final pwError = _validatePassword(_passwordController.text.trim());
+    if (pwError != null) {
+      setState(() => _error = pwError);
+      return;
+    }
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(_emailController.text.trim())) {
+      setState(() => _error = '이메일 형식을 확인해주세요.');
       return;
     }
     setState(() { _loading = true; _error = null; });
@@ -32,8 +51,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'username': _usernameController.text.trim(),
         'password': _passwordController.text.trim(),
       });
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('access_token', res.data['access_token']);
+      await TokenStorage.save(
+        access: res.data['access_token'],
+        refresh: res.data['refresh_token'],
+      );
       if (mounted) {
         Navigator.pushReplacement(
           context,

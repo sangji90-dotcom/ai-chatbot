@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
+import '../services/token_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -24,8 +24,10 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('access_token', res['access_token']);
+      await TokenStorage.save(
+        access: res['access_token'],
+        refresh: res['refresh_token'],
+      );
       if (mounted) {
         Navigator.pushReplacement(
           context,

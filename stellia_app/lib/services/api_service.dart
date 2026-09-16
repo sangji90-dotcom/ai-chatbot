@@ -1,21 +1,79 @@
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 
+import 'token_storage.dart';
+
 class ApiService {
-  static const String baseUrl = 'https://suburb-marrow-radial.ngrok-free.dev';
-  static final Dio _dio = Dio(
-    BaseOptions(
-      baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 30),
-    ),
+  /// 빌드 시 주입한다:
+  ///   flutter build apk --dart-define=API_BASE_URL=https://api.stellia.example
+  /// (ngrok 주소 하드코딩은 주소가 바뀔 때마다 앱을 다시 배포해야 했다)
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:8000',
   );
 
-  static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('access_token');
+  static final Dio _dio = _buildDio();
+
+  static Dio _buildDio() {
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: baseUrl,
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 60),
+      ),
+    );
+
+    // 401 이면 refresh 토큰으로 1회 갱신 후 재시도한다
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onError: (DioException e, handler) async {
+          final isAuthCall =
+              e.requestOptions.path.startsWith('/auth/');
+          if (e.response?.statusCode != 401 ||
+              isAuthCall ||
+              e.requestOptions.extra['retried'] == true) {
+            return handler.next(e);
+          }
+
+          final refreshed = await _refresh();
+          if (!refreshed) return handler.next(e);
+
+          final token = await TokenStorage.getAccessToken();
+          final opts = e.requestOptions;
+          opts.extra['retried'] = true;
+          opts.headers['Authorization'] = 'Bearer $token';
+          try {
+            final res = await dio.fetch(opts);
+            return handler.resolve(res);
+          } catch (_) {
+            return handler.next(e);
+          }
+        },
+      ),
+    );
+    return dio;
   }
+
+  static Future<bool> _refresh() async {
+    final refresh = await TokenStorage.getRefreshToken();
+    if (refresh == null) return false;
+    try {
+      final res = await Dio(BaseOptions(baseUrl: baseUrl)).post(
+        '/auth/refresh',
+        data: {'refresh_token': refresh},
+      );
+      await TokenStorage.save(
+        access: res.data['access_token'],
+        refresh: res.data['refresh_token'],
+      );
+      return true;
+    } catch (_) {
+      await TokenStorage.clear();
+      return false;
+    }
+  }
+
+  static Future<String?> getToken() => TokenStorage.getAccessToken();
 
   static Future<Map<String, dynamic>> login(
     String email,
@@ -178,13 +236,13 @@ class ApiService {
     return res.data;
   }
 
+  /// PG 연동 전까지 서버의 토큰 지급 엔드포인트는 관리자 전용이다.
+  /// (누구나 호출해 무한 충전할 수 있던 경로를 닫았다)
+  /// PG 를 붙이면 여기서 결제 SDK -> 서버 webhook 검증 순으로 바꾼다.
+  static bool get purchaseEnabled => false;
+
   static Future<Map<String, dynamic>> purchaseToken(int packageId) async {
-    final token = await getToken();
-    final res = await _dio.post(
-      '/tokens/purchase/$packageId',
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
-    );
-    return res.data;
+    throw UnsupportedError('결제 기능 준비 중');
   }
 
   static Future<Map<String, dynamic>> autoComplete({
@@ -382,6 +440,28 @@ class ApiService {
     final res = await _dio.post(
       '/party/rooms/join',
       data: {'code': code, 'character_stats': {}},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return res.data;
+  }
+
+  static Future<List<dynamic>> getChatSessions(String characterId) async {
+    final token = await getToken();
+    final res = await _dio.get(
+      '/chat/sessions/$characterId',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return res.data;
+  }
+
+  static Future<List<dynamic>> getChatHistory(
+    String characterId,
+    String sessionId,
+  ) async {
+    final token = await getToken();
+    final res = await _dio.get(
+      '/chat/history/$characterId',
+      queryParameters: {'session_id': sessionId},
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
     return res.data;

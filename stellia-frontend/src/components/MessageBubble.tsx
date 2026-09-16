@@ -1,12 +1,15 @@
+import type { ReactNode } from "react";
 import type { Message } from "../App";
 
 interface MessageBubbleProps {
   message: Message;
   characterName: string;
   emotionImageUrl?: string;  // 현재 감정 이미지 URL
+  /** AI 메시지 하단에 붙일 피드백 UI (기억 품질 계측용) */
+  feedback?: ReactNode;
 }
 
-export default function MessageBubble({ message, characterName, emotionImageUrl }: MessageBubbleProps) {
+export default function MessageBubble({ message, characterName, emotionImageUrl, feedback }: MessageBubbleProps) {
   const isUser = message.sender === "user";
 
   if (isUser) {
@@ -85,9 +88,12 @@ export default function MessageBubble({ message, characterName, emotionImageUrl 
             </div>
           )}
 
-          <span style={{ fontSize: 12, color: "var(--text-muted)", paddingLeft: 4 }}>
-            {message.timestamp}
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, color: "var(--text-muted)", paddingLeft: 4 }}>
+              {message.timestamp}
+            </span>
+            {feedback}
+          </div>
         </div>
       </div>
 

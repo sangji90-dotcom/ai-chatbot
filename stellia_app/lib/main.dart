@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
+import 'services/token_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('access_token');
+  final token = await TokenStorage.getAccessToken();
   runApp(StellaApp(initialToken: token));
 }
 

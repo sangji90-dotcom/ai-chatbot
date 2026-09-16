@@ -26,7 +26,7 @@ const GENRE_LABEL: Record<string, string> = {
 };
 
 export default function CommunityPage({
-  apiUrl, token, user, onBack, onSelectCharacter, onGoCreator, onLoginRequired
+  apiUrl, token, user, onBack, onGoCreator, onLoginRequired
 }: CommunityPageProps) {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);

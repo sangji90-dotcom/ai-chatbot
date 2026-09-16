@@ -105,6 +105,7 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
   const handleAdultVerify = async () => {
     setAdultLoading(true);
     try {
+      // production 에서는 503 을 돌려준다 (본인확인 미연동 상태에서 자기선언 성인인증 차단)
       await axios.post(`${apiUrl}/users/me/adult-verify`, {}, { headers });
       setUser((prev: any) => ({ ...prev, is_adult: 1 }));
       setShowAdultConfirm(false);

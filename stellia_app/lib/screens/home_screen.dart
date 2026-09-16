@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../models/character.dart';
 import 'login_screen.dart';
@@ -14,6 +13,7 @@ import 'notice_screen.dart';
 import 'events_screen.dart';
 import 'token_screen.dart';
 import 'create_character_screen.dart';
+import '../services/token_storage.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,8 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('access_token');
+    await TokenStorage.clear();
     if (mounted) {
       Navigator.pushReplacement(
         context,

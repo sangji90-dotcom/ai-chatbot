@@ -69,38 +69,15 @@ export default function CoinModal({ apiUrl, token, onClose, onCoinsUpdated }: Co
     }
   };
 
-  const handlePurchase = async (packageId: number) => {
-    setLoading(true);
-    setMessage("");
-    try {
-      const res = await axios.post(`${apiUrl}/tokens/purchase/${packageId}`, {}, { headers });
-      setMessage(res.data.message);
-      await refreshCoins();
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        setMessage(err.response?.data?.detail || "구매에 실패했어요.");
-      }
-    } finally {
-      setLoading(false);
-    }
+  // PG 연동 전까지 서버의 토큰 지급 엔드포인트는 관리자 전용이다.
+  // (누구나 호출해 무한 충전할 수 있던 경로를 닫았다)
+  const handlePurchase = async (_packageId: number) => {
+    setMessage("결제 기능은 준비 중이에요. 출석·광고 보상으로 토큰을 받아보세요!");
   };
 
   const handleMemoryPassCash = async () => {
-    if (!confirm("메모리 패스 30일권을 9,900원에 구매할까요?\n(테스트 모드 — 실제 결제 없이 지급)")) return;
-    setLoading(true);
-    setMessage("");
-    try {
-      const res = await axios.post(`${apiUrl}/tokens/memory-pass/purchase-cash`, {}, { headers });
-      setMessage(res.data.message);
-      const passRes = await axios.get(`${apiUrl}/tokens/memory-pass/status`, { headers });
-      setMemoryPass(passRes.data);
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        setMessage(err.response?.data?.detail || "구매에 실패했어요.");
-      }
-    } finally {
-      setLoading(false);
-    }
+    // 현금 결제도 PG 연동 후 활성화. 금화 구매(handleMemoryPassCoin)는 정상 동작한다.
+    setMessage("현금 결제는 준비 중이에요. 금화로 구매할 수 있어요.");
   };
 
   const handleMemoryPassCoin = async () => {

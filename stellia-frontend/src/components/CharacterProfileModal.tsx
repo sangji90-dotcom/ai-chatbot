@@ -13,27 +13,37 @@ interface CharacterProfileModalProps {
   onStartChat?: (newSession: boolean) => void;
 }
 
-export default function CharacterProfileModal({ character, apiUrl, token, onClose, onGoParty, onGoCreator, onStartChat }: CharacterProfileModalProps) {
+export default function CharacterProfileModal({
+  character,
+  apiUrl,
+  token,
+  onClose,
+  onGoParty,
+  onGoCreator,
+  onStartChat,
+}: CharacterProfileModalProps) {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [partyLoading, setPartyLoading] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [hasHistory, setHasHistory] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [, setSessionId] = useState<string | null>(null);
 
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
     if (!token) return;
-    axios.get(`${apiUrl}/likes/bookmarks/${character.id}/status`, { headers })
-      .then(res => setBookmarked(res.data.bookmarked))
+    axios
+      .get(`${apiUrl}/likes/bookmarks/${character.id}/status`, { headers })
+      .then((res) => setBookmarked(res.data.bookmarked))
       .catch(console.error);
   }, [character.id]);
 
   useEffect(() => {
     if (!token) return;
-    axios.get(`${apiUrl}/chat/sessions/${character.id}`, { headers })
-      .then(res => {
+    axios
+      .get(`${apiUrl}/chat/sessions/${character.id}`, { headers })
+      .then((res) => {
         if (res.data && res.data.length > 0) {
           setHasHistory(true);
           setSessionId(res.data[0].session_id);
@@ -59,9 +69,15 @@ export default function CharacterProfileModal({ character, apiUrl, token, onClos
   const handleBookmark = async () => {
     try {
       if (bookmarked) {
-        await axios.delete(`${apiUrl}/likes/bookmarks/${character.id}`, { headers });
+        await axios.delete(`${apiUrl}/likes/bookmarks/${character.id}`, {
+          headers,
+        });
       } else {
-        await axios.post(`${apiUrl}/likes/bookmarks/${character.id}`, {}, { headers });
+        await axios.post(
+          `${apiUrl}/likes/bookmarks/${character.id}`,
+          {},
+          { headers },
+        );
       }
       setBookmarked(!bookmarked);
     } catch {
@@ -72,12 +88,19 @@ export default function CharacterProfileModal({ character, apiUrl, token, onClos
   const handlePartyChat = async () => {
     setPartyLoading(true);
     try {
-      const res = await axios.post(`${apiUrl}/party/rooms`,
-        { story_id: 1, max_members: 4 }, { headers });
+      const res = await axios.post(
+        `${apiUrl}/party/rooms`,
+        { story_id: null, character_id: character.id, max_members: 4 },
+        { headers },
+      );
       onClose();
       onGoParty?.(res.data.code);
-    } catch {
-      alert("파티방 생성에 실패했어요.");
+    } catch (e: any) {
+      if (e.response?.status === 429) {
+        alert("잠시 후 다시 시도해주세요.");
+      } else {
+        alert("파티방 생성에 실패했어요.");
+      }
     } finally {
       setPartyLoading(false);
     }
@@ -85,100 +108,259 @@ export default function CharacterProfileModal({ character, apiUrl, token, onClos
 
   return (
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,.6)", backdropFilter: "blur(4px)" }} />
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 50,
+          background: "rgba(0,0,0,.6)",
+          backdropFilter: "blur(4px)",
+        }}
+      />
 
-      <div style={{
-        position: "fixed", top: "50%", left: "50%",
-        transform: "translate(-50%, -50%)", zIndex: 51,
-        width: 420, maxWidth: "90vw", maxHeight: "85vh",
-        borderRadius: 28, overflow: "hidden",
-        border: "1px solid var(--border-default)",
-        background: "linear-gradient(180deg, rgba(24,29,54,.98), rgba(9,11,20,.99))",
-        boxShadow: "0 0 60px rgba(0,0,0,.5), 0 0 30px rgba(139,124,255,.1)",
-        display: "flex", flexDirection: "column",
-      }}>
+      <div
+        style={{
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          zIndex: 51,
+          width: 420,
+          maxWidth: "90vw",
+          maxHeight: "85vh",
+          borderRadius: 28,
+          overflow: "hidden",
+          border: "1px solid var(--border-default)",
+          background:
+            "linear-gradient(180deg, rgba(24,29,54,.98), rgba(9,11,20,.99))",
+          boxShadow: "0 0 60px rgba(0,0,0,.5), 0 0 30px rgba(139,124,255,.1)",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         {/* 캐릭터 이미지 */}
         <div style={{ position: "relative", height: 220, flexShrink: 0 }}>
           {character.avatar ? (
-            <img src={character.avatar} alt={character.name}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img
+              src={character.avatar}
+              alt={character.name}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
           ) : (
-            <div style={{
-              width: "100%", height: "100%",
-              background: "var(--gradient-cosmic)",
-              display: "grid", placeItems: "center",
-              fontSize: 80, fontWeight: 700,
-            }}>{character.name[0]}</div>
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                background: "var(--gradient-cosmic)",
+                display: "grid",
+                placeItems: "center",
+                fontSize: 80,
+                fontWeight: 700,
+              }}
+            >
+              {character.name[0]}
+            </div>
           )}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(9,11,20,.95), transparent 50%)" }} />
-          <button onClick={onClose} style={{
-            position: "absolute", top: 16, right: 16,
-            width: 36, height: 36, borderRadius: 10,
-            border: "1px solid rgba(255,255,255,.2)",
-            background: "rgba(0,0,0,.4)",
-            color: "#fff", fontSize: 18, cursor: "pointer",
-            backdropFilter: "blur(8px)",
-          }}>×</button>
-          <div style={{ position: "absolute", bottom: 16, left: 20, right: 20 }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: "#fff" }}>{character.name}</div>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(to top, rgba(9,11,20,.95), transparent 50%)",
+            }}
+          />
+          <button
+            onClick={onClose}
+            style={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,.2)",
+              background: "rgba(0,0,0,.4)",
+              color: "#fff",
+              fontSize: 18,
+              cursor: "pointer",
+              backdropFilter: "blur(8px)",
+            }}
+          >
+            ×
+          </button>
+          <div
+            style={{ position: "absolute", bottom: 16, left: 20, right: 20 }}
+          >
+            <div style={{ fontSize: 24, fontWeight: 700, color: "#fff" }}>
+              {character.name}
+            </div>
             {character.title && (
-              <div style={{ color: "var(--text-secondary)", fontSize: 14, marginTop: 4 }}>{character.title}</div>
+              <div
+                style={{
+                  color: "var(--text-secondary)",
+                  fontSize: 14,
+                  marginTop: 4,
+                }}
+              >
+                {character.title}
+              </div>
             )}
           </div>
         </div>
 
         {/* 내용 */}
-        <div style={{ overflowY: "auto", flex: 1, padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
-
+        <div
+          style={{
+            overflowY: "auto",
+            flex: 1,
+            padding: 20,
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+          }}
+        >
           {/* 창작자 보기 */}
           {character.user_id && onGoCreator && (
-            <button onClick={() => { onClose(); onGoCreator(character.user_id!); }} style={{
-              padding: "8px 16px", borderRadius: 999, fontSize: 13,
-              border: "1px solid var(--border-default)",
-              background: "rgba(255,255,255,.04)",
-              color: "var(--text-muted)", cursor: "pointer",
-              alignSelf: "flex-start",
-            }}>👤 창작자 보기</button>
+            <button
+              onClick={() => {
+                onClose();
+                onGoCreator(character.user_id!);
+              }}
+              style={{
+                padding: "8px 16px",
+                borderRadius: 999,
+                fontSize: 13,
+                border: "1px solid var(--border-default)",
+                background: "rgba(255,255,255,.04)",
+                color: "var(--text-muted)",
+                cursor: "pointer",
+                alignSelf: "flex-start",
+              }}
+            >
+              👤 창작자 보기
+            </button>
           )}
 
           {character.tags.length > 0 && (
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {character.tags.map(tag => (
-                <span key={tag} style={{
-                  padding: "5px 12px", borderRadius: 999,
-                  background: "rgba(139,124,255,.12)",
-                  border: "1px solid rgba(139,124,255,.2)",
-                  color: "var(--primary)", fontSize: 12, fontWeight: 600,
-                }}>#{tag}</span>
+              {character.tags.map((tag) => (
+                <span
+                  key={tag}
+                  style={{
+                    padding: "5px 12px",
+                    borderRadius: 999,
+                    background: "rgba(139,124,255,.12)",
+                    border: "1px solid rgba(139,124,255,.2)",
+                    color: "var(--primary)",
+                    fontSize: 12,
+                    fontWeight: 600,
+                  }}
+                >
+                  #{tag}
+                </span>
               ))}
             </div>
           )}
 
           {character.description && (
-            <div style={{
-              padding: 16, borderRadius: 16,
-              background: "rgba(255,255,255,.03)",
-              border: "1px solid var(--border-subtle)",
-            }}>
-              <div style={{ color: "var(--text-muted)", fontSize: 12, marginBottom: 8, letterSpacing: ".1em" }}>소개</div>
-              <p style={{ color: "var(--text-secondary)", lineHeight: 1.8, fontSize: 14, margin: 0 }}>
+            <div
+              style={{
+                padding: 16,
+                borderRadius: 16,
+                background: "rgba(255,255,255,.03)",
+                border: "1px solid var(--border-subtle)",
+              }}
+            >
+              <div
+                style={{
+                  color: "var(--text-muted)",
+                  fontSize: 12,
+                  marginBottom: 8,
+                  letterSpacing: ".1em",
+                }}
+              >
+                소개
+              </div>
+              <p
+                style={{
+                  color: "var(--text-secondary)",
+                  lineHeight: 1.8,
+                  fontSize: 14,
+                  margin: 0,
+                }}
+              >
                 {character.description}
               </p>
             </div>
           )}
 
           {(character.likes || character.dislikes) && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 10,
+              }}
+            >
               {character.likes && (
-                <div style={{ padding: 14, borderRadius: 14, background: "rgba(73,216,154,.08)", border: "1px solid rgba(73,216,154,.2)" }}>
-                  <div style={{ color: "#49d89a", fontSize: 12, marginBottom: 6, fontWeight: 600 }}>좋아하는 것</div>
-                  <div style={{ color: "var(--text-secondary)", fontSize: 13, lineHeight: 1.6 }}>{character.likes}</div>
-              </div>
+                <div
+                  style={{
+                    padding: 14,
+                    borderRadius: 14,
+                    background: "rgba(73,216,154,.08)",
+                    border: "1px solid rgba(73,216,154,.2)",
+                  }}
+                >
+                  <div
+                    style={{
+                      color: "#49d89a",
+                      fontSize: 12,
+                      marginBottom: 6,
+                      fontWeight: 600,
+                    }}
+                  >
+                    좋아하는 것
+                  </div>
+                  <div
+                    style={{
+                      color: "var(--text-secondary)",
+                      fontSize: 13,
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {character.likes}
+                  </div>
+                </div>
               )}
               {character.dislikes && (
-                <div style={{ padding: 14, borderRadius: 14, background: "rgba(255,107,138,.08)", border: "1px solid rgba(255,107,138,.2)" }}>
-                  <div style={{ color: "#ff6b8a", fontSize: 12, marginBottom: 6, fontWeight: 600 }}>싫어하는 것</div>
-                  <div style={{ color: "var(--text-secondary)", fontSize: 13, lineHeight: 1.6 }}>{character.dislikes}</div>
+                <div
+                  style={{
+                    padding: 14,
+                    borderRadius: 14,
+                    background: "rgba(255,107,138,.08)",
+                    border: "1px solid rgba(255,107,138,.2)",
+                  }}
+                >
+                  <div
+                    style={{
+                      color: "#ff6b8a",
+                      fontSize: 12,
+                      marginBottom: 6,
+                      fontWeight: 600,
+                    }}
+                  >
+                    싫어하는 것
+                  </div>
+                  <div
+                    style={{
+                      color: "var(--text-secondary)",
+                      fontSize: 13,
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {character.dislikes}
+                  </div>
                 </div>
               )}
             </div>
@@ -186,86 +368,172 @@ export default function CharacterProfileModal({ character, apiUrl, token, onClos
 
           {character.created_at && (
             <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
-              📅 {new Date(character.created_at).toLocaleDateString("ko-KR")} 생성
+              📅 {new Date(character.created_at).toLocaleDateString("ko-KR")}{" "}
+              생성
             </div>
           )}
 
           {/* 액션 버튼 */}
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button onClick={handleLike} style={{
-              flex: 1, padding: "12px", borderRadius: 14,
-              border: liked ? "1px solid rgba(255,107,138,.4)" : "1px solid var(--border-default)",
-              background: liked ? "rgba(255,107,138,.12)" : "rgba(255,255,255,.04)",
-              color: liked ? "#ff6b8a" : "var(--text-muted)",
-              fontWeight: 600, fontSize: 14, cursor: "pointer", transition: "all .2s ease",
-            }}>{liked ? "♥" : "♡"} 좋아요</button>
+            <button
+              onClick={handleLike}
+              style={{
+                flex: 1,
+                padding: "12px",
+                borderRadius: 14,
+                border: liked
+                  ? "1px solid rgba(255,107,138,.4)"
+                  : "1px solid var(--border-default)",
+                background: liked
+                  ? "rgba(255,107,138,.12)"
+                  : "rgba(255,255,255,.04)",
+                color: liked ? "#ff6b8a" : "var(--text-muted)",
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: "pointer",
+                transition: "all .2s ease",
+              }}
+            >
+              {liked ? "♥" : "♡"} 좋아요
+            </button>
 
-            <button onClick={() => setShowReview(true)} style={{
-              width: "100%", padding: "12px", borderRadius: 14,
-              border: "1px solid rgba(255,200,80,.3)",
-              background: "rgba(255,200,80,.08)",
-              color: "#ffc850", fontWeight: 600, fontSize: 14, cursor: "pointer",
-            }}>⭐ 리뷰 보기 / 작성</button>
+            <button
+              onClick={() => setShowReview(true)}
+              style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: 14,
+                border: "1px solid rgba(255,200,80,.3)",
+                background: "rgba(255,200,80,.08)",
+                color: "#ffc850",
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: "pointer",
+              }}
+            >
+              ⭐ 리뷰 보기 / 작성
+            </button>
 
-            <button onClick={handleBookmark} style={{
-              flex: 1, padding: "12px", borderRadius: 14,
-              border: bookmarked ? "1px solid rgba(255,200,80,.4)" : "1px solid var(--border-default)",
-              background: bookmarked ? "rgba(255,200,80,.12)" : "rgba(255,255,255,.04)",
-              color: bookmarked ? "#ffc850" : "var(--text-muted)",
-              fontWeight: 600, fontSize: 14, cursor: "pointer", transition: "all .2s ease",
-            }}>{bookmarked ? "★" : "☆"} 북마크</button>
+            <button
+              onClick={handleBookmark}
+              style={{
+                flex: 1,
+                padding: "12px",
+                borderRadius: 14,
+                border: bookmarked
+                  ? "1px solid rgba(255,200,80,.4)"
+                  : "1px solid var(--border-default)",
+                background: bookmarked
+                  ? "rgba(255,200,80,.12)"
+                  : "rgba(255,255,255,.04)",
+                color: bookmarked ? "#ffc850" : "var(--text-muted)",
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: "pointer",
+                transition: "all .2s ease",
+              }}
+            >
+              {bookmarked ? "★" : "☆"} 북마크
+            </button>
 
-            <button onClick={() => {
-              window.location.hash = `#/characters/${character.id}`;
-              navigator.clipboard.writeText(window.location.href);
-            }} style={{
-              flex: 1, padding: "12px", borderRadius: 14,
-              border: "1px solid var(--border-default)",
-              background: "rgba(255,255,255,.04)",
-              color: "var(--text-muted)",
-              fontWeight: 600, fontSize: 14, cursor: "pointer",
-            }}>⤴ 공유</button>
+            <button
+              onClick={() => {
+                window.location.hash = `#/characters/${character.id}`;
+                navigator.clipboard.writeText(window.location.href);
+              }}
+              style={{
+                flex: 1,
+                padding: "12px",
+                borderRadius: 14,
+                border: "1px solid var(--border-default)",
+                background: "rgba(255,255,255,.04)",
+                color: "var(--text-muted)",
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: "pointer",
+              }}
+            >
+              ⤴ 공유
+            </button>
           </div>
 
           <div style={{ display: "flex", gap: 10 }}>
             {hasHistory && (
-              <button onClick={() => { onClose(); onStartChat?.(false); }} style={{
-                flex: 1, padding: "14px", borderRadius: 14, border: "none",
-                background: "var(--gradient-cosmic)",
-                color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer",
-              }}>이어하기</button>
+              <button
+                onClick={() => {
+                  onClose();
+                  onStartChat?.(false);
+                }}
+                style={{
+                  flex: 1,
+                  padding: "14px",
+                  borderRadius: 14,
+                  border: "none",
+                  background: "var(--gradient-cosmic)",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  cursor: "pointer",
+                }}
+              >
+                이어하기
+              </button>
             )}
-          <button onClick={() => { onClose(); onStartChat?.(true); }} style={{
-            flex: 1, padding: "14px", borderRadius: 14,
-            border: hasHistory ? "1px solid var(--border-default)" : "none",
-            background: hasHistory ? "rgba(255,255,255,.04)" : "var(--gradient-cosmic)",
-            color: hasHistory ? "var(--text-muted)" : "#fff",
-            fontWeight: 700, fontSize: 15, cursor: "pointer",
-          }}>새로하기</button>
-        </div>
+            <button
+              onClick={() => {
+                onClose();
+                onStartChat?.(true);
+              }}
+              style={{
+                flex: 1,
+                padding: "14px",
+                borderRadius: 14,
+                border: hasHistory ? "1px solid var(--border-default)" : "none",
+                background: hasHistory
+                  ? "rgba(255,255,255,.04)"
+                  : "var(--gradient-cosmic)",
+                color: hasHistory ? "var(--text-muted)" : "#fff",
+                fontWeight: 700,
+                fontSize: 15,
+                cursor: "pointer",
+              }}
+            >
+              새로하기
+            </button>
+          </div>
 
           {/* 파티챗 버튼 */}
           {character.party_enabled && token && (
-            <button onClick={handlePartyChat} disabled={partyLoading} style={{
-              width: "100%", padding: "12px", borderRadius: 14,
-              border: "1px solid rgba(139,124,255,.4)",
-              background: "rgba(139,124,255,.12)",
-              color: "var(--primary)",
-              fontWeight: 600, fontSize: 14, cursor: "pointer",
-              opacity: partyLoading ? 0.6 : 1,
-            }}>⚔ 파티챗 방 만들기</button>
+            <button
+              onClick={handlePartyChat}
+              disabled={partyLoading}
+              style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: 14,
+                border: "1px solid rgba(139,124,255,.4)",
+                background: "rgba(139,124,255,.12)",
+                color: "var(--primary)",
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: "pointer",
+                opacity: partyLoading ? 0.6 : 1,
+              }}
+            >
+              ⚔ 파티챗 방 만들기
+            </button>
           )}
         </div>
 
         {showReview && (
           <ReviewModal
-            apiUrl={apiUrl}
-            token={token}
             characterId={character.id}
             characterName={character.name}
+            apiUrl={apiUrl}
+            token={token}
             onClose={() => setShowReview(false)}
-            />
-          )}
+          />
+        )}
       </div>
     </>
   );
