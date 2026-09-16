@@ -117,41 +117,38 @@ def warn_expiring_silver_tokens():
 
 
 def check_anniversary_achievements():
-    """가입 기념일 업적 체크 (기존에 있으면 스킵)"""
+    """가입 경과일 기념 업적.
+
+    기존 구현은 정의에 없는 'anniversary' 코드로 user_achievements 에 직접
+    INSERT 했다. achievements 테이블에 없는 코드라 화면에 뜨지도, 보상이 나가지도
+    않았다. 게다가 월-일만 비교해서 가입 당일에도 발동했다.
+
+    정의된 코드(anniversary_30/100/365/730)를 경과일로 판정해 지급한다.
+    """
+    from achievements.router import check_and_grant
+
     conn = get_db()
     cursor = conn.cursor()
-    today = datetime.now().strftime("%m-%d")
-
-    cursor.execute("""
-        SELECT id FROM users
-        WHERE strftime('%m-%d', created_at) = ?
-          AND suspended = 0
-          AND created_at <= datetime('now', '-1 year')
-    """, (today,))
-    users = cursor.fetchall()
-
-    for user in users:
-        user_id = user["id"]
-        already = cursor.execute("""
-            SELECT id FROM user_achievements
-            WHERE user_id = ? AND achievement_code = 'anniversary'
-        """, (user_id,)).fetchone()
-        if already:
-            continue
-
-        cursor.execute("""
-            INSERT OR IGNORE INTO user_achievements (user_id, achievement_code)
-            VALUES (?, 'anniversary')
-        """, (user_id,))
-        cursor.execute("""
-            INSERT INTO notifications (user_id, type, title, message)
-            VALUES (?, 'reward', '가입 기념일!', '함께한 지 1년이 됐어요! 기념 업적을 달성했습니다.')
-        """, (user_id,))
-        
-    conn.commit()
+    granted = 0
+    for days, code in ((30, "anniversary_30"), (100, "anniversary_100"),
+                       (365, "anniversary_365"), (730, "anniversary_730")):
+        cursor.execute(
+            """
+            SELECT id FROM users
+             WHERE suspended = 0
+               AND created_at <= datetime('now', ?)
+               AND id NOT IN (
+                   SELECT user_id FROM user_achievements WHERE achievement_code = ?
+               )
+            """,
+            (f"-{days} days", code),
+        )
+        for row in cursor.fetchall():
+            check_and_grant(row["id"], code)
+            granted += 1
     conn.close()
-
-_scheduler = None
+    if granted:
+        print(f"[scheduler] 기념일 업적 지급: {granted}건")
 
 
 def start_scheduler():

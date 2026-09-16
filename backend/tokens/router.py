@@ -130,6 +130,14 @@ def attendance_check(current_user: dict = Depends(get_current_user)):
         ts.grant(cur, uid, ATTENDANCE_TOKEN, ts.SILVER, "출석 체크", expires_at,
                  idempotency_key=f"attendance:{uid}:{today}")
 
+    # 출석 업적은 정의만 있고 지급 훅이 없어 영원히 받을 수 없었다.
+    # (check_and_grant 는 자체 트랜잭션을 열므로 위 블록 밖에서 호출한다)
+    from achievements.router import check_and_grant
+    for threshold, code in ((1, "attendance_1"), (7, "attendance_7"),
+                            (30, "attendance_30"), (100, "attendance_100")):
+        if new_streak >= threshold:
+            check_and_grant(uid, code)
+
     return {
         "message": f"출석 완료! {ATTENDANCE_TOKEN}토큰 지급 ({EVENT_EXPIRE_DAYS}일 유효)",
         "attendance_streak": new_streak,
