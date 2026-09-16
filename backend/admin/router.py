@@ -1,16 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from database import get_db
-from deps import get_current_user
+from core.db import read_only, transaction
+from deps import get_current_user, require_admin  # require_admin 은 deps 로 일원화
 from typing import Optional
 
 router = APIRouter(prefix="/admin", tags=["관리자"])
-
-
-def require_admin(current_user: dict = Depends(get_current_user)):
-    if not current_user.get("is_admin"):
-        raise HTTPException(status_code=403, detail="관리자만 접근 가능합니다.")
-    return current_user
 
 
 # ===== 통계 =====
@@ -80,6 +75,8 @@ async def get_all_users(
 async def suspend_user(
         user_id: int,
         admin: dict = Depends(require_admin)):
+    if user_id == admin["id"]:
+        raise HTTPException(status_code=400, detail="본인 계정은 정지할 수 없습니다.")
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT id FROM users WHERE id = ?", (user_id,))
@@ -112,6 +109,9 @@ async def grant_admin(
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("UPDATE users SET is_admin = 1 WHERE id = ?", (user_id,))
+    if cursor.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=404, detail="사용자를 찾을 수 없습니다.")
     conn.commit()
     conn.close()
     return {"message": "관리자 권한 부여 완료"}
@@ -180,9 +180,22 @@ async def action_report(
         conn.close()
         raise HTTPException(status_code=404, detail="신고를 찾을 수 없습니다.")
 
-    # 캐릭터 삭제
-    cursor.execute("DELETE FROM character_tags WHERE character_id = ?", (report["character_id"],))
-    cursor.execute("DELETE FROM characters WHERE id = ?", (report["character_id"],))
+    # 캐릭터 삭제 — 연관 레코드까지 정리 (FK CASCADE 가 없어 고아가 남던 문제)
+    cid = report["character_id"]
+    for stmt in (
+        "DELETE FROM character_tags WHERE character_id = ?",
+        "DELETE FROM character_images WHERE character_id = ?",
+        "DELETE FROM character_backgrounds WHERE character_id = ?",
+        "DELETE FROM character_likes WHERE character_id = ?",
+        "DELETE FROM character_bookmarks WHERE character_id = ?",
+        "DELETE FROM character_reviews WHERE character_id = ?",
+        "DELETE FROM chat_history WHERE character_id = ?",
+    ):
+        try:
+            cursor.execute(stmt, (cid,))
+        except Exception:
+            pass
+    cursor.execute("DELETE FROM characters WHERE id = ?", (cid,))
     cursor.execute("UPDATE character_reports SET status = 'actioned' WHERE id = ?", (report_id,))
     conn.commit()
     conn.close()
@@ -256,8 +269,8 @@ async def unset_official_story(
 
 # ===== 토큰 지급 =====
 class TokenGrantRequest(BaseModel):
-    amount: int
-    reason: str
+    amount: int = Field(gt=0, le=1_000_000)
+    reason: str = Field(min_length=1, max_length=200)
 
 @router.post("/users/{user_id}/grant-token", summary="토큰 지급")
 async def grant_token(
@@ -268,8 +281,10 @@ async def grant_token(
     from tokens.router import add_token
     from datetime import datetime, timedelta
 
+    import uuid as _uuid
     expires_at = datetime.now() + timedelta(days=30)
-    add_token(user_id, request.amount, "event", f"관리자 지급: {request.reason}", expires_at)
+    add_token(user_id, request.amount, "event", f"관리자 지급: {request.reason}", expires_at,
+              idempotency_key=f"admin-grant:{_uuid.uuid4().hex}")
 
     send_notification(
         user_id,
@@ -280,3 +295,114 @@ async def grant_token(
     )
 
     return {"message": f"{request.amount}토큰 지급 완료"}
+
+# ===== 기억 품질 지표 =====
+@router.get("/memory-stats", summary="기억 품질 지표")
+async def memory_stats(days: int = 7, admin: dict = Depends(require_admin)):
+    """"기억을 얼마나 잘하는가" 를 감이 아니라 숫자로 본다.
+
+    - extract_rate: 추출을 시도한 구간 중 실제로 기억이 남은 비율.
+      낮으면 프롬프트가 너무 보수적이거나 대화에 기억할 내용이 없다는 뜻.
+    - forgot_reports: 유저가 직접 "기억 못한다" 고 신고한 횟수. 가장 직접적인 신호.
+    - avg_injected: 요청당 주입된 기억 수. chunk 상한에 계속 붙어 있으면 상한이 병목.
+    - summarize: 요약 발동 횟수. 요약 이후 forgot_reports 가 늘면 요약이 범인.
+    """
+    since = f"-{max(1, min(days, 90))} days"
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(f"""
+        SELECT event_type, COUNT(*) AS cnt, AVG(value) AS avg_value
+          FROM memory_events
+         WHERE created_at >= datetime('now', '{since}')
+         GROUP BY event_type
+    """)
+    events = {r["event_type"]: {"count": r["cnt"], "avg_value": round(r["avg_value"] or 0, 2)}
+              for r in cursor.fetchall()}
+
+    extract_ok = events.get("extract", {}).get("count", 0)
+    extract_empty = events.get("extract_empty", {}).get("count", 0)
+    extract_fail = events.get("extract_fail", {}).get("count", 0)
+    attempts = extract_ok + extract_empty + extract_fail
+
+    cursor.execute(f"""
+        SELECT reason, COUNT(*) AS cnt FROM message_ratings
+         WHERE rating = 'dislike' AND created_at >= datetime('now', '{since}')
+         GROUP BY reason
+    """)
+    dislike_reasons = {(r["reason"] or "unspecified"): r["cnt"] for r in cursor.fetchall()}
+
+    cursor.execute(f"""
+        SELECT COUNT(*) AS cnt FROM message_ratings
+         WHERE rating = 'like' AND created_at >= datetime('now', '{since}')
+    """)
+    likes = cursor.fetchone()["cnt"]
+
+    # 세션 길이 분포 — 기억이 의미를 갖는 구간(10턴 이상)에 얼마나 도달하는지
+    cursor.execute(f"""
+        SELECT
+            SUM(CASE WHEN n < 10  THEN 1 ELSE 0 END) AS under_10,
+            SUM(CASE WHEN n >= 10 AND n < 40  THEN 1 ELSE 0 END) AS turns_10_40,
+            SUM(CASE WHEN n >= 40 AND n < 100 THEN 1 ELSE 0 END) AS turns_40_100,
+            SUM(CASE WHEN n >= 100 THEN 1 ELSE 0 END) AS over_100,
+            COUNT(*) AS sessions,
+            AVG(n) AS avg_turns
+        FROM (
+            SELECT session_id, COUNT(*) AS n FROM chat_history
+             WHERE role = 'user' AND created_at >= datetime('now', '{since}')
+             GROUP BY session_id
+        )
+    """)
+    sessions = dict(cursor.fetchone())
+
+    cursor.execute("""
+        SELECT COUNT(*) AS total,
+               COUNT(DISTINCT user_id || ':' || character_id) AS pairs
+          FROM memory_book
+    """)
+    book = dict(cursor.fetchone())
+
+    conn.close()
+    return {
+        "period_days": days,
+        "sessions": {k: (round(v, 1) if isinstance(v, float) else (v or 0))
+                     for k, v in sessions.items()},
+        "memory_book": book,
+        "events": events,
+        "extract_rate": round(extract_ok / attempts, 3) if attempts else None,
+        "avg_injected": events.get("inject", {}).get("avg_value", 0),
+        "forgot_reports": dislike_reasons.get("memory", 0),
+        "feedback": {"likes": likes, "dislikes_by_reason": dislike_reasons},
+    }
+
+
+@router.get("/memory-stats/samples", summary="기억 신고 샘플")
+async def memory_report_samples(limit: int = 20, admin: dict = Depends(require_admin)):
+    """"기억 못한다" 신고가 달린 메시지의 전후 맥락. 원인 분석용."""
+    limit = min(max(1, limit), 100)
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT mr.message_id, mr.session_id, mr.user_id, mr.created_at,
+               ch.character_id, ch.content AS reported_message
+          FROM message_ratings mr
+          JOIN chat_history ch ON mr.message_id = ch.id
+         WHERE mr.rating = 'dislike' AND mr.reason = 'memory'
+         ORDER BY mr.created_at DESC LIMIT ?
+    """, (limit,))
+    samples = []
+    for r in cursor.fetchall():
+        item = dict(r)
+        cursor.execute("""
+            SELECT role, content FROM chat_history
+             WHERE session_id = ? AND id < ? ORDER BY id DESC LIMIT 6
+        """, (r["session_id"], r["message_id"]))
+        item["context_before"] = [dict(x) for x in reversed(cursor.fetchall())]
+        cursor.execute("""
+            SELECT content FROM memory_book
+             WHERE user_id = ? AND character_id = ? ORDER BY id DESC LIMIT 20
+        """, (r["user_id"], r["character_id"]))
+        item["memories_at_the_time"] = [x["content"] for x in cursor.fetchall()]
+        samples.append(item)
+    conn.close()
+    return samples

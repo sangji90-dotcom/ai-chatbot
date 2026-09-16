@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from database import get_db
 from auth.jwt import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
 from datetime import datetime, timedelta
@@ -11,9 +11,17 @@ router = APIRouter(prefix="/auth", tags=["인증"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 class RegisterRequest(BaseModel):
-    email: str
-    username: str
-    password: str
+    email: EmailStr
+    username: str = Field(min_length=2, max_length=20)
+    password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def _strength(cls, v: str) -> str:
+        # 길이만 있는 비밀번호는 bcrypt 로도 못 막는다
+        if v.isdigit() or v.isalpha():
+            raise ValueError("비밀번호는 영문과 숫자를 함께 포함해야 해요.")
+        return v
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -30,7 +38,22 @@ def _issue_tokens(user_id: int, email: str, username: str, cursor, conn) -> Toke
     refresh = create_refresh_token(user_id, email)
     expires_at = datetime.utcnow() + timedelta(days=30)
 
-    cursor.execute("DELETE FROM refresh_tokens WHERE user_id = ?", (user_id,))
+    # 같은 유저의 세션을 전부 끊으면 웹 로그인 시 앱이 튕긴다.
+    # 만료된 것과 상한 초과분만 정리해 멀티 디바이스를 허용한다.
+    cursor.execute(
+        "DELETE FROM refresh_tokens WHERE user_id = ? AND expires_at < datetime('now')", (user_id,)
+    )
+    cursor.execute(
+        """
+        DELETE FROM refresh_tokens
+         WHERE user_id = ?
+           AND id NOT IN (
+               SELECT id FROM refresh_tokens WHERE user_id = ?
+               ORDER BY created_at DESC LIMIT 4
+           )
+        """,
+        (user_id, user_id),
+    )
     cursor.execute(
         "INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)",
         (user_id, refresh, expires_at)

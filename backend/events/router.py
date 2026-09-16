@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from deps import get_current_user
 from database import get_db
+from core import token_service as ts
 import random
 import string
 from datetime import datetime, date, timedelta
@@ -108,25 +109,12 @@ def use_referral_code(body: dict, request: Request, current_user=Depends(get_cur
 
     now = datetime.utcnow().isoformat()
 
-    # 피초대자 금화 300
-    db.execute(
-        "UPDATE users SET token_purchased = token_purchased + 300 WHERE id = ?",
-        (current_user["id"],)
-    )
-    db.execute(
-        "INSERT INTO token_history (user_id, amount, token_type, reason) VALUES (?, 300, 'gold', '친구 초대 수락 보상')",
-        (current_user["id"],)
-    )
-
-    # 초대자 금화 500
-    db.execute(
-        "UPDATE users SET token_purchased = token_purchased + 500 WHERE id = ?",
-        (referrer_id,)
-    )
-    db.execute(
-        "INSERT INTO token_history (user_id, amount, token_type, reason) VALUES (?, 500, 'gold', '친구 초대 보상')",
-        (referrer_id,)
-    )
+    # 피초대자 금화 300 / 초대자 금화 500
+    # token_service 경유 — token_balance 동기화와 멱등키가 함께 적용된다
+    ts.grant(db, current_user["id"], 300, ts.GOLD, "친구 초대 수락 보상",
+             idempotency_key=f"referral-invitee:{current_user['id']}")
+    ts.grant(db, referrer_id, 500, ts.GOLD, "친구 초대 보상",
+             idempotency_key=f"referral-inviter:{referrer_id}:{current_user['id']}")
 
     # 초대자 알림
     db.execute(
@@ -158,15 +146,16 @@ def claim_streak_reward(current_user=Depends(get_current_user)):
 
     now = datetime.utcnow()
 
-    # 은화 5000 지급 (token_event)
-    db.execute(
-        "UPDATE users SET token_event = token_event + 5000, streak_reward_claimed_at = ? WHERE id = ?",
+    # 은화 5000 지급 — 수령 플래그를 조건으로 걸어 동시 요청의 중복 수령을 막는다
+    cur = db.execute(
+        "UPDATE users SET streak_reward_claimed_at = ? WHERE id = ? AND attendance_streak >= 7",
         (now.isoformat(), current_user["id"])
     )
-    db.execute(
-        "INSERT INTO token_history (user_id, amount, token_type, reason, expires_at) VALUES (?, 5000, 'silver', '7일 연속 출석 보상', ?)",
-        (current_user["id"], (now + timedelta(days=21)).isoformat())
-    )
+    if cur.rowcount == 0:
+        raise HTTPException(400, "보상을 받을 수 없습니다.")
+    ts.grant(db, current_user["id"], 5000, ts.SILVER, "7일 연속 출석 보상",
+             (now + timedelta(days=21)).isoformat(),
+             idempotency_key=f"streak7:{current_user['id']}:{user['last_attendance_date']}")
     db.execute(
         "INSERT INTO notifications (user_id, type, title, message) VALUES (?, 'reward', '7일 개근 달성!', '은화 5,000개가 지급되었습니다. 21일 내 사용하세요!')",
         (current_user["id"],)
@@ -224,13 +213,11 @@ def check_payment_streak(user_id: int, purchased_tokens: int, db):
         bonus = avg // 2  # 평균의 50%
 
         db.execute(
-            "UPDATE users SET token_purchased = token_purchased + ?, consecutive_purchase_days = 0, purchase_streak_total_tokens = 0, consecutive_purchase_start_date = NULL WHERE id = ?",
-            (bonus, user_id)
+            "UPDATE users SET consecutive_purchase_days = 0, purchase_streak_total_tokens = 0, consecutive_purchase_start_date = NULL WHERE id = ?",
+            (user_id,)
         )
-        db.execute(
-            "INSERT INTO token_history (user_id, amount, token_type, reason) VALUES (?, ?, 'gold', '5일 연속 결제 보상')",
-            (user_id, bonus)
-        )
+        ts.grant(db, user_id, bonus, ts.GOLD, "5일 연속 결제 보상",
+                 idempotency_key=f"paystreak:{user_id}:{today}")
         db.execute(
             "INSERT INTO notifications (user_id, type, title, message) VALUES (?, 'reward', '5일 연속 결제 달성!', ?)",
             (user_id, f"금화 {bonus:,}개가 추가 지급되었습니다!")

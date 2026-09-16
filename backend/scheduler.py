@@ -73,7 +73,7 @@ def expire_refresh_tokens():
     conn.close()
 
 def warn_expiring_silver_tokens():
-    """은화 만료 D-3 경고 알림"""
+    """은화 만료 D-3 경고 알림 (token_type 은 'event' — 기존엔 'silver' 로 조회해 항상 0건이었다)"""
     conn = get_db()
     cursor = conn.cursor()
     now = datetime.now()
@@ -83,7 +83,7 @@ def warn_expiring_silver_tokens():
     cursor.execute("""
         SELECT user_id, SUM(amount) as total
         FROM token_history
-        WHERE token_type = 'silver'
+        WHERE token_type = 'event'
           AND expires_at IS NOT NULL
           AND expires_at > ?
           AND expires_at <= ?
@@ -126,6 +126,7 @@ def check_anniversary_achievements():
         SELECT id FROM users
         WHERE strftime('%m-%d', created_at) = ?
           AND suspended = 0
+          AND created_at <= datetime('now', '-1 year')
     """, (today,))
     users = cursor.fetchall()
 
@@ -150,10 +151,25 @@ def check_anniversary_achievements():
     conn.commit()
     conn.close()
 
+_scheduler = None
+
+
 def start_scheduler():
+    """주의: 이 스케줄러는 앱 프로세스 안에서 돈다.
+
+    uvicorn --workers N 으로 띄우면 잡이 N번 실행되어 토큰 만료가 N중으로 차감된다.
+    워커를 늘릴 때는 RUN_SCHEDULER=0 으로 두고 전용 프로세스에서만 켤 것.
+    """
+    global _scheduler
+    if _scheduler is not None:
+        return _scheduler
+
     scheduler = BackgroundScheduler(timezone="Asia/Seoul")
+    scheduler.configure(job_defaults={"coalesce": True, "max_instances": 1, "misfire_grace_time": 3600})
     scheduler.add_job(expire_tokens, "cron", hour=0, minute=0)
     scheduler.add_job(expire_refresh_tokens, "cron", hour=3, minute=0)
     scheduler.add_job(warn_expiring_silver_tokens, "cron", hour=10, minute=0)  # 매일 오전 10시
-    scheduler.add_job(check_anniversary_achievements, "cron", hour=0, minute=5) # 매일 자정 5분
+    scheduler.add_job(check_anniversary_achievements, "cron", hour=0, minute=5)
     scheduler.start()
+    _scheduler = scheduler
+    return scheduler

@@ -1,16 +1,15 @@
 import uuid
 import os
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from database import get_db
-from deps import get_current_user, get_optional_user
+from deps import get_current_user, get_optional_user, assert_owner
 from notifications.router import send_notification
-from utils import read_and_validate_image
-from dotenv import load_dotenv
-load_dotenv()
-from google import genai
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+from utils import read_image_with_ext
+from pydantic import field_validator
+from core.config import MIN_CHARACTER_AGE, UPLOAD_DIR
+from chat import llm
 
 router = APIRouter(prefix="/characters", tags=["캐릭터"])
 
@@ -18,6 +17,16 @@ router = APIRouter(prefix="/characters", tags=["캐릭터"])
 class CreateCharacterRequest(BaseModel):
     name: str
     age: int
+
+    @field_validator("age")
+    @classmethod
+    def _adult_only(cls, v: int) -> int:
+        # 프롬프트의 "절대 규칙" 문구는 강제력이 없다. 서버에서 막는다.
+        if v < MIN_CHARACTER_AGE:
+            raise ValueError(f"캐릭터 나이는 {MIN_CHARACTER_AGE}세 이상만 등록할 수 있어요.")
+        if v > 200:
+            raise ValueError("나이가 올바르지 않아요.")
+        return v
     job: str
     personality: str
     likes: str
@@ -36,6 +45,17 @@ class CreateCharacterRequest(BaseModel):
 class UpdateCharacterRequest(BaseModel):
     name: Optional[str] = None
     age: Optional[int] = None
+
+    @field_validator("age")
+    @classmethod
+    def _adult_only(cls, v):
+        if v is None:
+            return v
+        if v < MIN_CHARACTER_AGE:
+            raise ValueError(f"캐릭터 나이는 {MIN_CHARACTER_AGE}세 이상만 등록할 수 있어요.")
+        if v > 200:
+            raise ValueError("나이가 올바르지 않아요.")
+        return v
     job: Optional[str] = None
     personality: Optional[str] = None
     likes: Optional[str] = None
@@ -56,10 +76,17 @@ class ReportRequest(BaseModel):
 
 
 class AutoCompleteRequest(BaseModel):
-    name: str
-    description: str = ""
-    job: str = ""
+    name: str = Field(min_length=1, max_length=40)
+    description: str = Field(default="", max_length=1000)
+    job: str = Field(default="", max_length=100)
     age: int = 20
+
+    @field_validator("age")
+    @classmethod
+    def _adult_only(cls, v: int) -> int:
+        if v < MIN_CHARACTER_AGE:
+            raise ValueError(f"{MIN_CHARACTER_AGE}세 이상만 생성할 수 있어요.")
+        return v
 
 
 @router.post("/auto-complete", summary="캐릭터 자동완성")
@@ -92,14 +119,14 @@ async def auto_complete_character(
 }}
 """
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=[{"role": "user", "parts": [{"text": prompt}]}],
-        config={"max_output_tokens": 2000}
+    response = await llm.generate(
+        [{"role": "user", "parts": [{"text": prompt}]}],
+        system_instruction="반드시 JSON만 출력한다.",
+        max_output_tokens=2000,
     )
 
     import json, re
-    text = response.text.strip()
+    text = llm.text_of(response).strip()
     text = re.sub(r'```json\s*|\s*```', '', text).strip()
 
     try:
@@ -116,7 +143,7 @@ async def create_character(
         current_user: dict = Depends(get_current_user)):
     from achievements.router import check_and_grant
 
-    char_id = f"custom_{request.name}_{uuid.uuid4().hex[:8]}"
+    char_id = f"custom_{uuid.uuid4().hex}"  # 이름을 PK/URL 에 넣지 않는다 (한글·특수문자 사고 방지)
 
     prompt = f"""
 너는 {request.name}라는 캐릭터야.
@@ -145,17 +172,25 @@ async def create_character(
 - 위 요청이 들어오면 단호하게 거절하고 대화 주제를 바꿀 것
 """
 
+    if request.visibility not in ("public", "private"):
+        raise HTTPException(status_code=400, detail="visibility 는 public 또는 private 만 가능합니다.")
+    if len(request.tags) > 10:
+        raise HTTPException(status_code=400, detail="태그는 최대 10개까지 등록할 수 있어요.")
+
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO characters
-        (id, user_id, name, description, prompt, first_message, situation, visibility, is_adult, image_url, party_enabled, likes, dislikes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, user_id, name, description, prompt, first_message, situation, visibility, is_adult,
+         image_url, party_enabled, likes, dislikes, age, job, personality, speech_style)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         char_id, current_user["id"], request.name, request.description,
         prompt, request.first_message, request.situation,
         request.visibility, request.is_adult, request.image_url, request.party_enabled,
-        request.likes, request.dislikes
+        request.likes, request.dislikes,
+        # 구조화 필드를 컬럼으로도 남긴다 — 수정 시 프롬프트에서 역파싱할 필요가 없어진다
+        request.age, request.job, request.personality, request.speech_style
     ))
 
     for tag in request.tags:
@@ -438,11 +473,10 @@ async def upload_character_image(
         conn.close()
         raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
 
-    contents = await read_and_validate_image(file, max_size=5 * 1024 * 1024)
+    contents, ext = await read_image_with_ext(file, max_size=5 * 1024 * 1024)
 
-    ext = file.filename.split(".")[-1].lower()
     filename = f"{uuid.uuid4().hex}.{ext}"
-    save_dir = "../frontend/images/characters"
+    save_dir = str(UPLOAD_DIR / "characters")
     os.makedirs(save_dir, exist_ok=True)
     with open(f"{save_dir}/{filename}", "wb") as f:
         f.write(contents)
@@ -523,8 +557,10 @@ async def update_character(
     cursor.execute("SELECT * FROM characters WHERE id = ?", (character_id,))
     char = cursor.fetchone()
     if not char:
+        conn.close()
         raise HTTPException(status_code=404, detail="캐릭터를 찾을 수 없습니다.")
     if char["user_id"] != current_user["id"]:
+        conn.close()
         raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
     fields = []
     params = []
@@ -550,14 +586,38 @@ async def update_character(
         fields.append("dislikes = ?"); params.append(request.dislikes)
     if any([request.name, request.age, request.job, request.personality,
             request.likes, request.dislikes, request.speech_style]):
+        # 보내지 않은 필드는 기존 값을 유지한다.
+        # 예전에는 0 / "" 으로 떨어져서 저장 한 번에 나이가 0세가 되고 직업·성격이 지워졌다.
+        def _keep(new, column, default):
+            if new not in (None, ""):
+                return new
+            try:
+                stored = char[column]
+            except (IndexError, KeyError):
+                stored = None
+            return stored if stored not in (None, "") else default
+
         name = request.name or char["name"]
-        age = request.age or 0
-        job = request.job or ""
-        personality = request.personality or ""
-        likes = request.likes or ""
-        dislikes = request.dislikes or ""
-        speech_style = request.speech_style or ""
+        age = _keep(request.age, "age", 20)
+        job = _keep(request.job, "job", "")
+        personality = _keep(request.personality, "personality", "")
+        speech_style = _keep(request.speech_style, "speech_style", "")
+        likes = _keep(request.likes, "likes", "")
+        dislikes = _keep(request.dislikes, "dislikes", "")
         situation = request.situation or char["situation"]
+
+        if int(age) < MIN_CHARACTER_AGE:
+            conn.close()
+            raise HTTPException(
+                status_code=400,
+                detail=f"캐릭터 나이는 {MIN_CHARACTER_AGE}세 이상만 등록할 수 있어요.",
+            )
+
+        # 재생성한 프롬프트와 컬럼을 함께 갱신해 둘이 어긋나지 않게 한다
+        for col, val in (("age", age), ("job", job),
+                         ("personality", personality), ("speech_style", speech_style)):
+            fields.append(f"{col} = ?")
+            params.append(val)
         new_prompt = f"""
 너는 {name}라는 캐릭터야.
 
@@ -607,10 +667,26 @@ async def delete_character(
     cursor.execute("SELECT * FROM characters WHERE id = ?", (character_id,))
     char = cursor.fetchone()
     if not char:
+        conn.close()
         raise HTTPException(status_code=404, detail="캐릭터를 찾을 수 없습니다.")
     if char["user_id"] != current_user["id"]:
+        conn.close()
         raise HTTPException(status_code=403, detail="삭제 권한이 없습니다.")
-    cursor.execute("DELETE FROM character_tags WHERE character_id = ?", (character_id,))
+    # FK 에 ON DELETE CASCADE 가 없어 고아 레코드가 남던 문제 — 명시적으로 정리
+    for stmt in (
+        "DELETE FROM character_tags WHERE character_id = ?",
+        "DELETE FROM character_images WHERE character_id = ?",
+        "DELETE FROM character_backgrounds WHERE character_id = ?",
+        "DELETE FROM character_likes WHERE character_id = ?",
+        "DELETE FROM character_bookmarks WHERE character_id = ?",
+        "DELETE FROM character_reviews WHERE character_id = ?",
+        "DELETE FROM character_reports WHERE character_id = ?",
+        "DELETE FROM chat_history WHERE character_id = ?",
+        "DELETE FROM user_notes WHERE character_id = ?",
+        "DELETE FROM user_personas WHERE character_id = ?",
+        "DELETE FROM memory_book WHERE character_id = ?",
+    ):
+        cursor.execute(stmt, (character_id,))
     cursor.execute("DELETE FROM characters WHERE id = ?", (character_id,))
     conn.commit()
     conn.close()
@@ -640,11 +716,10 @@ async def upload_emotion_image(
         conn.close()
         raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
 
-    contents = await read_and_validate_image(file, max_size=5 * 1024 * 1024)
+    contents, ext = await read_image_with_ext(file, max_size=5 * 1024 * 1024)
 
-    ext = file.filename.split(".")[-1].lower()
     filename = f"{uuid.uuid4().hex}.{ext}"
-    save_dir = "../frontend/images/emotions"
+    save_dir = str(UPLOAD_DIR / "emotions")
     os.makedirs(save_dir, exist_ok=True)
     with open(f"{save_dir}/{filename}", "wb") as f:
         f.write(contents)
@@ -693,11 +768,10 @@ async def upload_background_image(
         conn.close()
         raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
 
-    contents = await read_and_validate_image(file, max_size=10 * 1024 * 1024)
+    contents, ext = await read_image_with_ext(file, max_size=10 * 1024 * 1024)
 
-    ext = file.filename.split(".")[-1].lower()
     filename = f"{uuid.uuid4().hex}.{ext}"
-    save_dir = "../frontend/images/backgrounds"
+    save_dir = str(UPLOAD_DIR / "backgrounds")
     os.makedirs(save_dir, exist_ok=True)
     with open(f"{save_dir}/{filename}", "wb") as f:
         f.write(contents)

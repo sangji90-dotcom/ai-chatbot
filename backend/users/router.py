@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from database import get_db
-from deps import get_current_user, get_optional_user
+from core.config import IS_PROD, UPLOAD_DIR
+from core.db import transaction
+from deps import get_current_user, get_optional_user, require_admin
+from utils import read_image_with_ext
 from typing import Optional
 import uuid
 import os
@@ -333,7 +336,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         SELECT SUM(amount) as total, MIN(expires_at) as nearest_expiry
         FROM token_history
         WHERE user_id = ?
-          AND token_type = 'silver'
+          AND token_type = 'event'
           AND expires_at IS NOT NULL
           AND expires_at > ?
           AND expires_at <= ?
@@ -380,17 +383,11 @@ async def update_profile(
 async def upload_profile_image(
         file: UploadFile = File(...),
         current_user: dict = Depends(get_current_user)):
-    allowed_types = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-    if file.content_type not in allowed_types:
-        raise HTTPException(status_code=400, detail="허용되지 않는 파일 형식입니다.")
+    # 확장자는 magic bytes 판정 결과로 결정한다 (filename 신뢰 금지 — polyglot XSS 방지)
+    contents, ext = await read_image_with_ext(file, max_size=5 * 1024 * 1024)
 
-    contents = await file.read()
-    if len(contents) > 5 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="파일 크기는 5MB 이하여야 합니다.")
-
-    ext = file.filename.split(".")[-1]
     filename = f"{uuid.uuid4().hex}.{ext}"
-    save_dir = "../frontend/images/profiles"
+    save_dir = str(UPLOAD_DIR / "profiles")
     os.makedirs(save_dir, exist_ok=True)
 
     with open(f"{save_dir}/{filename}", "wb") as f:
@@ -407,9 +404,18 @@ async def upload_profile_image(
 
     return {"image_url": image_url, "message": "프로필 이미지 업로드 완료"}
 
-@router.post("/me/adult-verify", summary="성인 인증 (임시 자기선언)")
+@router.post("/me/adult-verify", summary="성인 인증 (개발 환경 전용)")
 async def adult_verify(current_user: dict = Depends(get_current_user)):
-    """PG 본인인증 연동 전 임시 자기선언 방식"""
+    """자기선언 방식은 청소년보호 의무를 충족하지 못한다.
+
+    PASS/NICE 본인확인을 붙이기 전까지 production 에서는 비활성화한다.
+    (이전에는 조건 없이 is_adult=1 이 되어 성인 캐릭터가 그대로 열렸다)
+    """
+    if IS_PROD:
+        raise HTTPException(
+            status_code=503,
+            detail="본인확인 서비스 준비 중이에요. 잠시만 기다려주세요.",
+        )
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("UPDATE users SET is_adult = 1 WHERE id = ?", (current_user["id"],))
@@ -465,6 +471,34 @@ async def delete_account(current_user: dict = Depends(get_current_user)):
                    (current_user["id"], current_user["id"]))
     cursor.execute("DELETE FROM chat_history WHERE user_id = ?", (current_user["id"],))
     cursor.execute("DELETE FROM token_history WHERE user_id = ?", (current_user["id"],))
+    # 기존 구현이 남기던 것들 — 개인정보 파기 관점에서 함께 정리
+    for stmt in (
+        "DELETE FROM refresh_tokens WHERE user_id = ?",
+        "DELETE FROM notifications WHERE user_id = ?",
+        "DELETE FROM message_ratings WHERE user_id = ?",
+        "DELETE FROM character_bookmarks WHERE user_id = ?",
+        "DELETE FROM character_reviews WHERE user_id = ?",
+        "DELETE FROM user_blocks WHERE blocker_id = ? OR blocked_id = ?",
+        "DELETE FROM community_likes WHERE user_id = ?",
+        "DELETE FROM user_achievements WHERE user_id = ?",
+        "DELETE FROM referral_codes WHERE user_id = ?",
+        "DELETE FROM suggestions WHERE user_id = ?",
+        "DELETE FROM token_grants WHERE user_id = ?",
+    ):
+        params = (current_user["id"], current_user["id"]) if "OR" in stmt else (current_user["id"],)
+        try:
+            cursor.execute(stmt, params)
+        except Exception:
+            pass
+    # 게시글/댓글은 스레드 보존을 위해 익명화 (삭제 시 다른 유저의 맥락이 깨짐)
+    for stmt in (
+        "UPDATE community_posts SET status = 'deleted' WHERE user_id = ?",
+        "UPDATE community_comments SET status = 'deleted' WHERE user_id = ?",
+    ):
+        try:
+            cursor.execute(stmt, (current_user["id"],))
+        except Exception:
+            pass
     cursor.execute("UPDATE characters SET visibility = 'private' WHERE user_id = ?",
                    (current_user["id"],))
     cursor.execute("DELETE FROM users WHERE id = ?", (current_user["id"],))
