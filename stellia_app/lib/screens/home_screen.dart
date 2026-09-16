@@ -260,7 +260,7 @@ class _CharacterCard extends StatelessWidget {
                       character.imageUrl,
                       width: 64, height: 64,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _AvatarPlaceholder(name: character.name),
+                      errorBuilder: (_, _, _) => _AvatarPlaceholder(name: character.name),
                     )
                   : _AvatarPlaceholder(name: character.name),
             ),

@@ -121,7 +121,7 @@ class _RankingScreenState extends State<RankingScreen> {
                               color: const Color(0xFF0F0F18),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: i < 3 ? const Color(0xFF7C6CFF).withOpacity(0.3) : const Color(0xFF1F1F2E),
+                                color: i < 3 ? const Color(0xFF7C6CFF).withValues(alpha: 0.3) : const Color(0xFF1F1F2E),
                               ),
                             ),
                             child: Row(
@@ -146,7 +146,7 @@ class _RankingScreenState extends State<RankingScreen> {
                                   borderRadius: BorderRadius.circular(10),
                                   child: char.imageUrl.isNotEmpty
                                       ? Image.network(char.imageUrl, width: 52, height: 52, fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => _placeholder(char.name))
+                                          errorBuilder: (_, _, _) => _placeholder(char.name))
                                       : _placeholder(char.name),
                                 ),
                                 const SizedBox(width: 12),

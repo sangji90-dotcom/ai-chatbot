@@ -71,12 +71,12 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: isUnlocked
-                          ? const Color(0xFF7C6CFF).withOpacity(0.08)
+                          ? const Color(0xFF7C6CFF).withValues(alpha: 0.08)
                           : const Color(0xFF0F0F18),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: isUnlocked
-                            ? const Color(0xFF7C6CFF).withOpacity(0.3)
+                            ? const Color(0xFF7C6CFF).withValues(alpha: 0.3)
                             : const Color(0xFF1F1F2E),
                       ),
                     ),
@@ -87,7 +87,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                           height: 48,
                           decoration: BoxDecoration(
                             color: isUnlocked
-                                ? const Color(0xFF7C6CFF).withOpacity(0.2)
+                                ? const Color(0xFF7C6CFF).withValues(alpha: 0.2)
                                 : const Color(0xFF1F1F2E),
                             borderRadius: BorderRadius.circular(14),
                           ),

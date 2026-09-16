@@ -69,7 +69,7 @@ class _LikedCharactersScreenState extends State<LikedCharactersScreen> {
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: char.imageUrl.isNotEmpty
-                                    ? Image.network(char.imageUrl, width: 56, height: 56, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _placeholder(char.name))
+                                    ? Image.network(char.imageUrl, width: 56, height: 56, fit: BoxFit.cover, errorBuilder: (_, _, _) => _placeholder(char.name))
                                     : _placeholder(char.name),
                               ),
                               const SizedBox(width: 14),

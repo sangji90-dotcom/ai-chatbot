@@ -294,9 +294,9 @@ class _NarrationBubble extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF7C6CFF).withOpacity(0.08),
+        color: const Color(0xFF7C6CFF).withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF7C6CFF).withOpacity(0.2)),
+        border: Border.all(color: const Color(0xFF7C6CFF).withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

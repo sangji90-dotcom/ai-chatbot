@@ -234,7 +234,7 @@ class ApiService {
   static Future<Map<String, dynamic>> getReferralCode() async {
     final token = await getToken();
     final res = await _dio.get(
-      '/events/referral/my-code',
+      '/events/referral-code',  // 서버 라우트와 불일치해 404 나던 경로
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
     return res.data;

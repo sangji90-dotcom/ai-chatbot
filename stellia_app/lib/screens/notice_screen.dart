@@ -65,12 +65,12 @@ class _NoticeScreenState extends State<NoticeScreen> {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: isPinned
-                                  ? const Color(0xFF7C6CFF).withOpacity(0.08)
+                                  ? const Color(0xFF7C6CFF).withValues(alpha: 0.08)
                                   : const Color(0xFF0F0F18),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
                                 color: isPinned
-                                    ? const Color(0xFF7C6CFF).withOpacity(0.3)
+                                    ? const Color(0xFF7C6CFF).withValues(alpha: 0.3)
                                     : const Color(0xFF1F1F2E),
                               ),
                             ),

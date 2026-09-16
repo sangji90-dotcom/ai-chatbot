@@ -67,7 +67,7 @@ class _CharacterProfileScreenState extends State<CharacterProfileScreen> {
                   ? Image.network(
                       char.imageUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _AvatarPlaceholder(name: char.name),
+                      errorBuilder: (_, _, _) => _AvatarPlaceholder(name: char.name),
                     )
                   : _AvatarPlaceholder(name: char.name),
             ),
@@ -115,9 +115,9 @@ class _CharacterProfileScreenState extends State<CharacterProfileScreen> {
                       children: char.tags.map((tag) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF7C6CFF).withOpacity(0.12),
+                          color: const Color(0xFF7C6CFF).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(999),
-                          border: Border.all(color: const Color(0xFF7C6CFF).withOpacity(0.3)),
+                          border: Border.all(color: const Color(0xFF7C6CFF).withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           '#$tag',

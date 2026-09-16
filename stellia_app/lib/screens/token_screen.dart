@@ -128,15 +128,15 @@ class _TokenScreenState extends State<TokenScreen> {
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    const Color(0xFFFFD700).withOpacity(0.18),
-                                    const Color(0xFFFFD700).withOpacity(0.05),
+                                    const Color(0xFFFFD700).withValues(alpha: 0.18),
+                                    const Color(0xFFFFD700).withValues(alpha: 0.05),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
                                   color: const Color(
                                     0xFFFFD700,
-                                  ).withOpacity(0.3),
+                                  ).withValues(alpha: 0.3),
                                 ),
                               ),
                               child: Column(
@@ -321,10 +321,10 @@ class _TokenScreenState extends State<TokenScreen> {
                           margin: const EdgeInsets.only(bottom: 16),
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF49D89A).withOpacity(0.1),
+                            color: const Color(0xFF49D89A).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: const Color(0xFF49D89A).withOpacity(0.3),
+                              color: const Color(0xFF49D89A).withValues(alpha: 0.3),
                             ),
                           ),
                           child: Text(
@@ -356,13 +356,13 @@ class _TokenScreenState extends State<TokenScreen> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  const Color(0xFFFFD700).withOpacity(0.08),
-                                  const Color(0xFFFFD700).withOpacity(0.03),
+                                  const Color(0xFFFFD700).withValues(alpha: 0.08),
+                                  const Color(0xFFFFD700).withValues(alpha: 0.03),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: const Color(0xFFFFD700).withOpacity(0.3),
+                                color: const Color(0xFFFFD700).withValues(alpha: 0.3),
                               ),
                             ),
                             child: Row(
@@ -399,7 +399,7 @@ class _TokenScreenState extends State<TokenScreen> {
                                   decoration: BoxDecoration(
                                     color: const Color(
                                       0xFFFFD700,
-                                    ).withOpacity(0.2),
+                                    ).withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Text(
@@ -429,7 +429,7 @@ class _TokenScreenState extends State<TokenScreen> {
                           color: const Color(0xFF0F0F18),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: const Color(0xFF7C6CFF).withOpacity(0.3),
+                            color: const Color(0xFF7C6CFF).withValues(alpha: 0.3),
                           ),
                         ),
                         child: Column(
@@ -570,12 +570,12 @@ class _TokenScreenState extends State<TokenScreen> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: const Color(0xFFFFD700).withOpacity(0.4),
+                            color: const Color(0xFFFFD700).withValues(alpha: 0.4),
                           ),
                           gradient: LinearGradient(
                             colors: [
-                              const Color(0xFFFFD700).withOpacity(0.1),
-                              const Color(0xFFFFD700).withOpacity(0.04),
+                              const Color(0xFFFFD700).withValues(alpha: 0.1),
+                              const Color(0xFFFFD700).withValues(alpha: 0.04),
                             ],
                           ),
                         ),
@@ -658,7 +658,7 @@ class _TokenScreenState extends State<TokenScreen> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(
                                     0xFFFFD700,
-                                  ).withOpacity(0.3),
+                                  ).withValues(alpha: 0.3),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),

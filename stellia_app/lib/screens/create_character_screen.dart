@@ -89,7 +89,7 @@ class _CreateCharacterScreenState extends State<CreateCharacterScreen> {
     }
     setState(() { _loading = true; _message = ''; });
     try {
-      final res = await ApiService.createCharacter(
+      await ApiService.createCharacter(
         name: _nameController.text,
         description: _descController.text,
         age: _age,

@@ -10,7 +10,6 @@ class EventsScreen extends StatefulWidget {
 
 class _EventsScreenState extends State<EventsScreen> {
   Map<String, dynamic>? _user;
-  Map<String, dynamic>? _referralInfo;
   bool _loading = true;
   bool _attendanceLoading = false;
   bool _attended = false;
@@ -80,7 +79,7 @@ class _EventsScreenState extends State<EventsScreen> {
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF7C6CFF).withOpacity(0.3)),
+                    border: Border.all(color: const Color(0xFF7C6CFF).withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,7 +104,7 @@ class _EventsScreenState extends State<EventsScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF7C6CFF).withOpacity(0.15),
+                              color: const Color(0xFF7C6CFF).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(

@@ -134,7 +134,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: _outputLength == opt['value']
-                          ? const Color(0xFF7C6CFF).withOpacity(0.12)
+                          ? const Color(0xFF7C6CFF).withValues(alpha: 0.12)
                           : const Color(0xFF0F0F18),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
@@ -196,7 +196,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Switch(
                         value: _safetyMode,
                         onChanged: _saveSafetyMode,
-                        activeColor: const Color(0xFF7C6CFF),
+                        activeThumbColor: const Color(0xFF7C6CFF),
                       ),
                     ],
                   ),

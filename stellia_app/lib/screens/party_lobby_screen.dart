@@ -185,7 +185,7 @@ class _StoryCard extends StatelessWidget {
                 story['image_url'],
                 height: 140, width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _defaultImage(),
+                errorBuilder: (_, _, _) => _defaultImage(),
               ),
             )
           else
