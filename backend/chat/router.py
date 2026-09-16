@@ -1,6 +1,9 @@
 import io
+import json
+import logging
 import os
 import re
+from dataclasses import dataclass
 from datetime import datetime
 from urllib.parse import quote
 
@@ -13,12 +16,14 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
 from chat import llm, memory, session_store
+from chat.tagfilter import TagStripper
 from core.config import (
     AUTO_SUMMARY_THRESHOLD,
     BASE_DIR,
     CHAT_DEDUCT,
     MEMORY_EXTRACT_EVERY,
     MEMORY_FOR_ALL,
+    REGENERATE_COST,
     RECENT_TURNS_KEPT as RECENT_TURNS,
 )
 from core.db import read_only, transaction
@@ -31,6 +36,18 @@ client = llm.client
 
 OUTPUT_LENGTH = {"short": 300, "medium": 1000, "long": 2000}
 MAX_MESSAGE_LEN = 4000
+
+_SSE_HEADERS = {
+    "Cache-Control": "no-cache, no-transform",
+    "Connection": "keep-alive",
+    # nginx 등 리버스 프록시가 버퍼링하면 스트리밍 효과가 사라진다
+    "X-Accel-Buffering": "no",
+}
+
+
+def _sse(event: str, data: dict) -> str:
+    return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
 
 TAG_INSTRUCTION = """
 응답 마지막에 반드시 아래 형식으로 태그를 추가해줘. 태그는 대화 내용을 분석해서 결정해.
@@ -208,51 +225,39 @@ async def extract_memory(user_id: int, character_id: str, session_id: str,
 
 
 # ── 대화 ────────────────────────────────────────────────────────────────
-@router.post("", summary="대화하기")
-async def chat(request: ChatRequest, current_user: dict = Depends(get_current_user)):
-    """인증 필수. 이전에는 get_optional_user 라 비로그인도 토큰 차감 없이
-    Gemini 를 호출할 수 있었고(비용 무제한 노출), private/성인 캐릭터 검사도 없었다."""
-    from achievements.router import check_and_grant
+# ── 대화 파이프라인 ─────────────────────────────────────────────────────
+# chat / stream / regenerate 가 같은 절차를 공유하도록 준비·마무리를 분리한다.
+
+@dataclass
+class Turn:
+    """LLM 호출에 필요한 것들을 한 번에 들고 다니는 컨텍스트."""
+    uid: int
+    character: dict
+    char_name: str
+    session_id: str
+    character_id: str
+    key: str
+    working: list          # 이번 호출에 넣을 히스토리
+    system_instruction: str
+    max_tokens: int
+    charged: int           # 차감한 토큰 (실패 시 이만큼 환급)
+
+
+async def _prepare_turn(current_user: dict, character_id: str, session_id: str,
+                        user_message: str | None, cost: int) -> Turn:
+    """권한 검사 → 기억 주입 → 토큰 차감 → 히스토리 구성.
+
+    user_message 가 None 이면 재생성이다 (새 유저 발화를 추가하지 않음).
+    """
     from tokens.router import deduct_token
-    from core import token_service as ts
 
     uid = current_user["id"]
-    character = assert_character_access(request.character_id, current_user)
+    character = assert_character_access(character_id, current_user)
     char_name = character["name"]
 
-    if check_harmful_content(request.message):
-        return {"character": char_name, "message": "해당 내용은 생성할 수 없어요."}
+    key = session_store.make_key(uid, session_id, character_id)
+    history = _load_history(uid, session_id, character_id)
 
-    key = session_store.make_key(uid, request.session_id, request.character_id)
-    history = _load_history(uid, request.session_id, request.character_id)
-
-    # ── 요약 명령 ──
-    if request.message.strip() == "요약!":
-        if len(history) < 4:
-            return {"character": char_name, "message": "아직 요약할 대화가 충분하지 않아요."}
-        history_text = "\n".join(
-            f"{'유저' if m['role'] == 'user' else char_name}: {m['content']}" for m in history
-        )
-        response = await llm.generate(
-            [{"role": "user", "parts": [{"text": history_text}]}],
-            system_instruction="지금까지의 대화 내용을 간결하게 요약해줘. 중요한 사건, 감정, 결정만 남기고 압축해줘. 3~5문장으로.",
-            max_output_tokens=500,
-            apply_safety=False,
-        )
-        summary = llm.text_of(response)
-        session_store.set(key, [
-            {"role": "user", "content": f"[이전 대화 요약]\n{summary}"},
-            {"role": "assistant", "content": "네, 이전 내용을 기억하고 있어요. 계속 이야기해요."},
-        ])
-        with transaction() as cur:
-            cur.execute(
-                "INSERT INTO chat_history (session_id, character_id, user_id, role, content) "
-                "VALUES (?, ?, ?, 'system', ?)",
-                (request.session_id, request.character_id, uid, f"[요약]\n{summary}"),
-            )
-        return {"character": char_name, "message": f"📝 대화를 요약했어요!\n\n{summary}"}
-
-    # ── 출력 길이 ──
     with read_only() as cur:
         cur.execute("SELECT output_length, output_multiplier FROM users WHERE id = ?", (uid,))
         u = cur.fetchone()
@@ -260,99 +265,110 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
     multiplier = (u["output_multiplier"] if u and u["output_multiplier"] else 1.0)
     max_tokens = int(base_tokens * multiplier)
 
-    # ── 토큰 차감 (LLM 호출 전) ──
-    deduct_token(uid, CHAT_DEDUCT, f"{char_name}와 대화")
+    # 차감은 LLM 호출 전에. 실패하면 Turn.charged 만큼 환급한다.
+    if cost > 0:
+        deduct_token(uid, cost, f"{char_name}와 대화")
 
-    context_block, injected = _build_context_block(current_user, request.character_id)
-    system_instruction = character["prompt"] + context_block
-    memory.log_event(uid, request.character_id, request.session_id, "inject",
+    context_block, injected = _build_context_block(current_user, character_id)
+    memory.log_event(uid, character_id, session_id, "inject",
                      turn_count=len(history), value=injected)
 
-    working = history + [{"role": "user", "content": request.message}]
+    working = history + ([{"role": "user", "content": user_message}] if user_message else [])
+
     if len(working) > AUTO_SUMMARY_THRESHOLD:
         before = len(working)
         try:
             working = await auto_summarize(working, char_name)
-            memory.log_event(uid, request.character_id, request.session_id, "summarize",
+            memory.log_event(uid, character_id, session_id, "summarize",
                              turn_count=before, value=len(working))
         except HTTPException as exc:
             # 요약 실패는 대화를 막지 않지만, 조용히 넘기면 기억 손실 원인을 못 찾는다
-            memory.log_event(uid, request.character_id, request.session_id, "summarize_fail",
+            memory.log_event(uid, character_id, session_id, "summarize_fail",
                              turn_count=before, detail=str(exc.detail))
 
-    try:
-        contents = _to_contents(working)
-        response = await llm.generate(contents, system_instruction + TAG_INSTRUCTION, max_tokens)
-        raw_message = llm.text_of(response)
+    return Turn(
+        uid=uid, character=character, char_name=char_name,
+        session_id=session_id, character_id=character_id, key=key,
+        working=working,
+        system_instruction=character["prompt"] + context_block,
+        max_tokens=max_tokens, charged=cost,
+    )
 
-        # MAX_TOKENS 로 잘리면 1회 이어서 생성
-        finish = None
-        if getattr(response, "candidates", None):
-            finish = getattr(response.candidates[0].finish_reason, "name", None)
-        if finish == "MAX_TOKENS":
-            cont = await llm.generate(
-                contents + [
-                    {"role": "model", "parts": [{"text": raw_message}]},
-                    {"role": "user", "parts": [{"text": "(이어서 작성)"}]},
-                ],
-                system_instruction + TAG_INSTRUCTION,
-                max_tokens,
-            )
-            raw_message += llm.text_of(cont)
 
-        if not raw_message.strip():
-            raise HTTPException(status_code=502, detail="AI가 응답을 생성하지 못했어요. 다시 시도해주세요.")
-    except HTTPException:
-        # 서비스 제공에 실패했으므로 차감한 토큰을 되돌린다.
-        # 이전 구현은 환급이 없어 LLM 오류마다 유저 토큰이 증발했다.
-        with transaction() as cur:
-            ts.refund(cur, uid, CHAT_DEDUCT, f"{char_name}와 대화 실패")
-        raise
-
-    emotion_match = re.search(r"\[EMOTION:(\w+)\]", raw_message)
-    situation_match = re.search(r"\[SITUATION:(\w+)\]", raw_message)
-    emotion = emotion_match.group(1) if emotion_match else "neutral"
-    situation = situation_match.group(1) if situation_match else "default"
-    assistant_message = re.sub(r"\[EMOTION:\w+\]\s*|\[SITUATION:\w+\]\s*", "", raw_message).strip()
-
-    # ── 저장: 유저 메시지 + 응답 + 카운터를 한 트랜잭션으로 ──
+def _refund(turn: Turn) -> None:
+    """서비스 제공에 실패했으면 차감분을 되돌린다."""
+    from core import token_service as ts
+    if turn.charged <= 0:
+        return
     with transaction() as cur:
-        cur.execute(
-            "INSERT INTO chat_history (session_id, character_id, user_id, role, content) "
-            "VALUES (?, ?, ?, 'user', ?)",
-            (request.session_id, request.character_id, uid, request.message),
-        )
-        user_msg_id = cur.lastrowid
-        cur.execute(
-            "INSERT INTO chat_history (session_id, character_id, user_id, role, content) "
-            "VALUES (?, ?, ?, 'assistant', ?)",
-            (request.session_id, request.character_id, uid, assistant_message),
-        )
-        message_id = cur.lastrowid
-        cur.execute(
-            "UPDATE characters SET chat_count = chat_count + 1 WHERE id = ?", (request.character_id,)
-        )
+        ts.refund(cur, turn.uid, turn.charged, f"{turn.char_name}와 대화 실패")
+
+
+async def _finalize_turn(turn: Turn, user_message: str | None, assistant_message: str,
+                         replaced_message_id: int | None = None) -> int:
+    """응답 저장 + 카운터 + 캐시 갱신 + 업적 + 기억 추출. message_id 반환."""
+    from achievements.router import check_and_grant
+
+    uid, cid, sid = turn.uid, turn.character_id, turn.session_id
+
+    with transaction() as cur:
+        user_msg_id = None
+        if replaced_message_id is not None:
+            # 재생성: 기존 응답을 교체한다 (히스토리에 중복 응답을 쌓지 않음)
+            cur.execute(
+                "UPDATE chat_history SET content = ? WHERE id = ? AND user_id = ?",
+                (assistant_message, replaced_message_id, uid),
+            )
+            message_id = replaced_message_id
+        else:
+            if user_message is not None:
+                cur.execute(
+                    "INSERT INTO chat_history (session_id, character_id, user_id, role, content) "
+                    "VALUES (?, ?, ?, 'user', ?)",
+                    (sid, cid, uid, user_message),
+                )
+                user_msg_id = cur.lastrowid
+            cur.execute(
+                "INSERT INTO chat_history (session_id, character_id, user_id, role, content) "
+                "VALUES (?, ?, ?, 'assistant', ?)",
+                (sid, cid, uid, assistant_message),
+            )
+            message_id = cur.lastrowid
+            cur.execute(
+                "UPDATE characters SET chat_count = chat_count + 1 WHERE id = ?", (cid,)
+            )
+
         cur.execute(
             "SELECT COUNT(*) AS cnt FROM chat_history WHERE user_id = ? AND role = 'user'", (uid,)
         )
         total = cur.fetchone()["cnt"]
         cur.execute(
-            "SELECT COUNT(*) AS cnt FROM chat_history WHERE user_id = ? AND character_id = ? AND role = 'user'",
-            (uid, request.character_id),
+            "SELECT COUNT(*) AS cnt FROM chat_history "
+            " WHERE user_id = ? AND character_id = ? AND role = 'user'", (uid, cid),
         )
         single = cur.fetchone()["cnt"]
 
-    # working 의 마지막 유저 메시지에 DB id 를 채우고, 응답을 이어 붙인다.
-    # (id 가 있어야 OOC 수정이 캐시에도 반영된다 — 기존 구현이 놓쳤던 부분)
-    for item in reversed(working):
-        if item.get("role") == "user" and item.get("content") == request.message:
-            item["id"] = user_msg_id
-            break
-    working.append({"id": message_id, "role": "assistant", "content": assistant_message})
-    session_store.set(key, working)
+    # 캐시 갱신
+    working = turn.working
+    if replaced_message_id is not None:
+        for item in reversed(working):
+            if item.get("role") == "assistant":
+                item["content"] = assistant_message
+                item["id"] = replaced_message_id
+                break
+    else:
+        if user_message is not None:
+            for item in reversed(working):
+                if item.get("role") == "user" and item.get("content") == user_message:
+                    item["id"] = user_msg_id
+                    break
+        working.append({"id": message_id, "role": "assistant", "content": assistant_message})
+    session_store.set(turn.key, working)
 
-    # ── 기억 자동 추출 ──
-    # 변경점: (1) 메모리 패스 게이팅 해제 (2) 10번째 턴 1쌍이 아니라 직전 구간 전체를 본다
+    # 재생성은 업적·기억 추출을 다시 돌리지 않는다 (같은 턴이므로)
+    if replaced_message_id is not None:
+        return message_id
+
     if len(working) % MEMORY_EXTRACT_EVERY == 0:
         allowed = MEMORY_FOR_ALL
         if not allowed:
@@ -365,16 +381,12 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
                     allowed = datetime.fromisoformat(expires) > datetime.now()
                 except ValueError:
                     allowed = False
-
         if allowed:
             try:
-                await extract_memory(
-                    uid, request.character_id, request.session_id,
-                    working[-MEMORY_EXTRACT_EVERY:], char_name,
-                )
+                await extract_memory(uid, cid, sid, working[-MEMORY_EXTRACT_EVERY:], turn.char_name)
             except HTTPException as exc:
-                memory.log_event(uid, request.character_id, request.session_id,
-                                 "extract_fail", turn_count=len(working), detail=str(exc.detail))
+                memory.log_event(uid, cid, sid, "extract_fail",
+                                 turn_count=len(working), detail=str(exc.detail))
 
     for threshold, code in ((1, "first_chat"), (10, "chat_10"), (50, "chat_50"),
                             (100, "chat_100"), (500, "chat_500"), (1000, "chat_1000")):
@@ -384,16 +396,256 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
         if single == threshold:
             check_and_grant(uid, code)
 
+    return message_id
+
+
+async def _run_llm(turn: Turn) -> str:
+    """비스트리밍 생성 + MAX_TOKENS 이어쓰기 1회."""
+    contents = _to_contents(turn.working)
+    response = await llm.generate(contents, turn.system_instruction + TAG_INSTRUCTION, turn.max_tokens)
+    raw = llm.text_of(response)
+
+    finish = None
+    if getattr(response, "candidates", None):
+        finish = getattr(response.candidates[0].finish_reason, "name", None)
+    if finish == "MAX_TOKENS":
+        cont = await llm.generate(
+            contents + [
+                {"role": "model", "parts": [{"text": raw}]},
+                {"role": "user", "parts": [{"text": "(이어서 작성)"}]},
+            ],
+            turn.system_instruction + TAG_INSTRUCTION,
+            turn.max_tokens,
+        )
+        raw += llm.text_of(cont)
+
+    if not raw.strip():
+        raise HTTPException(status_code=502, detail="AI가 응답을 생성하지 못했어요. 다시 시도해주세요.")
+    return raw
+
+
+def _split_tags(raw: str) -> tuple[str, str, str]:
+    emotion = re.search(r"\[EMOTION:(\w+)\]", raw)
+    situation = re.search(r"\[SITUATION:(\w+)\]", raw)
+    message = re.sub(r"\[EMOTION:\w+\]\s*|\[SITUATION:\w+\]\s*", "", raw).strip()
+    return (message,
+            emotion.group(1) if emotion else "neutral",
+            situation.group(1) if situation else "default")
+
+
+async def _handle_summary_command(turn_user: dict, character_id: str, session_id: str,
+                                  char_name: str, key: str, history: list):
+    """'요약!' 명령 처리. 요약 대상이 부족하면 None 을 돌려준다."""
+    if len(history) < 4:
+        return {"character": char_name, "message": "아직 요약할 대화가 충분하지 않아요."}
+    history_text = "\n".join(
+        f"{'유저' if m['role'] == 'user' else char_name}: {m['content']}" for m in history
+    )
+    response = await llm.generate(
+        [{"role": "user", "parts": [{"text": history_text}]}],
+        system_instruction="지금까지의 대화 내용을 간결하게 요약해줘. 중요한 사건, 감정, 결정만 남기고 압축해줘. 3~5문장으로.",
+        max_output_tokens=500,
+        apply_safety=False,
+    )
+    summary = llm.text_of(response)
+    session_store.set(key, [
+        {"role": "user", "content": f"[이전 대화 요약]\n{summary}"},
+        {"role": "assistant", "content": "네, 이전 내용을 기억하고 있어요. 계속 이야기해요."},
+    ])
+    with transaction() as cur:
+        cur.execute(
+            "INSERT INTO chat_history (session_id, character_id, user_id, role, content) "
+            "VALUES (?, ?, ?, 'system', ?)",
+            (session_id, character_id, turn_user["id"], f"[요약]\n{summary}"),
+        )
+    return {"character": char_name, "message": f"📝 대화를 요약했어요!\n\n{summary}"}
+
+
+@router.post("", summary="대화하기")
+async def chat(request: ChatRequest, current_user: dict = Depends(get_current_user)):
+    """인증 필수. 이전에는 get_optional_user 라 비로그인도 토큰 차감 없이
+    Gemini 를 호출할 수 있었고(비용 무제한 노출), private/성인 캐릭터 검사도 없었다."""
+    uid = current_user["id"]
+    character = assert_character_access(request.character_id, current_user)
+    char_name = character["name"]
+
+    if check_harmful_content(request.message):
+        return {"character": char_name, "message": "해당 내용은 생성할 수 없어요."}
+
+    if request.message.strip() == "요약!":
+        key = session_store.make_key(uid, request.session_id, request.character_id)
+        history = _load_history(uid, request.session_id, request.character_id)
+        return await _handle_summary_command(
+            current_user, request.character_id, request.session_id, char_name, key, history
+        )
+
+    turn = await _prepare_turn(current_user, request.character_id, request.session_id,
+                               request.message, CHAT_DEDUCT)
+    try:
+        raw = await _run_llm(turn)
+    except HTTPException:
+        _refund(turn)
+        raise
+
+    message, emotion, situation = _split_tags(raw)
+    message_id = await _finalize_turn(turn, request.message, message)
+
     return {
         "character": char_name,
-        "message": assistant_message,
+        "message": message,
         "message_id": message_id,
         "emotion": emotion,
         "situation": situation,
     }
 
 
-# ── 부가 엔드포인트 ─────────────────────────────────────────────────────
+class RegenerateRequest(BaseModel):
+    character_id: str
+    session_id: str = Field(min_length=1, max_length=128)
+
+
+@router.post("/regenerate", summary="응답 재생성")
+async def regenerate(request: RegenerateRequest,
+                     current_user: dict = Depends(get_current_user)):
+    """마지막 AI 응답을 버리고 다시 생성한다.
+
+    캐릭터챗에서 마음에 안 드는 응답이 나왔을 때 유저의 선택지는
+    '재생성' 아니면 '이탈' 인데, 지금까지는 재생성이 없어 이탈뿐이었다.
+
+    재생성은 불만 신호이기도 하므로 계측에 남긴다.
+    """
+    uid = current_user["id"]
+
+    # 마지막 assistant 메시지를 찾는다
+    with read_only() as cur:
+        cur.execute(
+            """
+            SELECT id, role FROM chat_history
+             WHERE user_id = ? AND character_id = ? AND session_id = ? AND role != 'system'
+             ORDER BY id DESC LIMIT 1
+            """,
+            (uid, request.character_id, request.session_id),
+        )
+        last = cur.fetchone()
+
+    if not last or last["role"] != "assistant":
+        raise HTTPException(status_code=400, detail="재생성할 응답이 없어요.")
+    target_id = last["id"]
+
+    turn = await _prepare_turn(current_user, request.character_id, request.session_id,
+                               None, REGENERATE_COST)
+
+    # 마지막 assistant 응답을 빼고 같은 맥락으로 다시 요청한다
+    if turn.working and turn.working[-1].get("role") == "assistant":
+        turn.working = turn.working[:-1]
+    if not turn.working:
+        _refund(turn)
+        raise HTTPException(status_code=400, detail="재생성할 응답이 없어요.")
+
+    try:
+        raw = await _run_llm(turn)
+    except HTTPException:
+        _refund(turn)
+        raise
+
+    message, emotion, situation = _split_tags(raw)
+    # working 끝에 assistant 를 다시 붙여야 _finalize_turn 이 교체 대상을 찾는다
+    turn.working.append({"id": target_id, "role": "assistant", "content": message})
+    await _finalize_turn(turn, None, message, replaced_message_id=target_id)
+
+    memory.log_event(uid, request.character_id, request.session_id,
+                     "regenerated", turn_count=len(turn.working),
+                     detail=f"message_id={target_id}")
+
+    return {
+        "character": turn.char_name,
+        "message": message,
+        "message_id": target_id,
+        "emotion": emotion,
+        "situation": situation,
+    }
+
+
+@router.post("/stream", summary="대화하기 (스트리밍)")
+async def chat_stream(request: ChatRequest, current_user: dict = Depends(get_current_user)):
+    """SSE 로 응답을 흘려보낸다.
+
+    비스트리밍은 완성까지 3~10초 동안 빈 화면이라 체감 이탈이 크다.
+    이벤트: delta(조각) / done(저장 결과) / error
+    """
+    uid = current_user["id"]
+    character = assert_character_access(request.character_id, current_user)
+    char_name = character["name"]
+
+    if check_harmful_content(request.message):
+        async def blocked():
+            yield _sse("delta", {"text": "해당 내용은 생성할 수 없어요."})
+            yield _sse("done", {"message_id": None, "emotion": "neutral", "situation": "default"})
+        return StreamingResponse(blocked(), media_type="text/event-stream", headers=_SSE_HEADERS)
+
+    if request.message.strip() == "요약!":
+        key = session_store.make_key(uid, request.session_id, request.character_id)
+        history = _load_history(uid, request.session_id, request.character_id)
+        result = await _handle_summary_command(
+            current_user, request.character_id, request.session_id, char_name, key, history
+        )
+
+        async def summarized():
+            yield _sse("delta", {"text": result["message"]})
+            yield _sse("done", {"message_id": None, "emotion": "neutral", "situation": "default"})
+        return StreamingResponse(summarized(), media_type="text/event-stream", headers=_SSE_HEADERS)
+
+    # 토큰 차감은 스트림 시작 전에 — 부족하면 여기서 402 가 나가야 한다
+    turn = await _prepare_turn(current_user, request.character_id, request.session_id,
+                               request.message, CHAT_DEDUCT)
+
+    async def event_stream():
+        stripper = TagStripper()
+        try:
+            async for chunk in llm.generate_stream(
+                _to_contents(turn.working), turn.system_instruction + TAG_INSTRUCTION,
+                turn.max_tokens,
+            ):
+                safe = stripper.feed(chunk)
+                if safe:
+                    yield _sse("delta", {"text": safe})
+            tail = stripper.flush()
+            if tail:
+                yield _sse("delta", {"text": tail})
+        except HTTPException as exc:
+            _refund(turn)
+            yield _sse("error", {"detail": exc.detail, "refunded": turn.charged})
+            return
+        except Exception:  # noqa: BLE001
+            logging.getLogger("chat").exception("stream failed")
+            _refund(turn)
+            yield _sse("error", {"detail": "AI 응답 생성에 실패했어요.", "refunded": turn.charged})
+            return
+
+        message = stripper.clean_text()
+        if not message:
+            _refund(turn)
+            yield _sse("error", {"detail": "AI가 응답을 생성하지 못했어요.", "refunded": turn.charged})
+            return
+
+        emotion, situation = stripper.tags()
+        try:
+            message_id = await _finalize_turn(turn, request.message, message)
+        except Exception:  # noqa: BLE001
+            logging.getLogger("chat").exception("finalize failed")
+            yield _sse("error", {"detail": "응답 저장에 실패했어요."})
+            return
+
+        yield _sse("done", {
+            "message_id": message_id,
+            "emotion": emotion,
+            "situation": situation,
+            "character": char_name,
+        })
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream", headers=_SSE_HEADERS)
+
+
 @router.post("/rating", summary="메시지 평가")
 def rate_message(request: RatingRequest, current_user: dict = Depends(get_current_user)):
     if request.rating not in ("like", "dislike"):

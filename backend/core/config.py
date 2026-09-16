@@ -48,6 +48,10 @@ FRONTEND_DIST = BASE_DIR.parent / "stellia-frontend" / "dist"
 
 # 토큰 경제
 CHAT_DEDUCT = 50
+# 재생성 비용. LLM 을 한 번 더 호출하므로 기본은 대화와 동일하게 둔다.
+# CBT 에서는 0 으로 두는 것을 고려할 것 — 재생성이 유료면 유저는 재생성 대신
+# 이탈을 택하고, 그러면 10턴 도달률이 떨어져 기억 품질 검증 자체가 불가능해진다.
+REGENERATE_COST = int(os.getenv("REGENERATE_COST", str(CHAT_DEDUCT)))
 SIGNUP_TOKEN = 3000
 ATTENDANCE_TOKEN = 1000
 AD_TOKEN = 500

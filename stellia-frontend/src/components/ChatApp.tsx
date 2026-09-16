@@ -3,10 +3,12 @@ import axios from "axios";
 import ChatHeader from "./ChatHeader";
 import MessageBubble from "./MessageBubble";
 import MessageFeedback from "./MessageFeedback";
+import { streamChat } from "../lib/chatStream";
 import ChatInput from "./ChatInput";
 import CharacterProfileModal from "./CharacterProfileModal";
 import ChatRoomModal from "./ChatRoomModal";
 import type { Character, Message, User } from "../App";
+import { useToast } from "./Toast";
 
 interface ChatAppProps {
   apiUrl: string;
@@ -20,8 +22,10 @@ interface ChatAppProps {
 }
 
 export default function ChatApp({ apiUrl, token, user, character, forceNewSession, onBack, onSelectCharacter, onGoCreator }: ChatAppProps) {
+  const toast = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [typing, setTyping] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [coins, setCoins] = useState<number>(user?.token_balance ?? 0);
   const [lowCoinAlert, setLowCoinAlert] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -193,6 +197,40 @@ export default function ChatApp({ apiUrl, token, user, character, forceNewSessio
     }
   };
 
+  const handleRegenerate = async () => {
+    if (!sessionId || typing || regenerating) return;
+    setRegenerating(true);
+    try {
+      const res = await axios.post(
+        `${apiUrl}/chat/regenerate`,
+        { character_id: character.id, session_id: sessionId },
+        { headers }
+      );
+      if (res.data.emotion) setCurrentEmotion(res.data.emotion);
+      if (res.data.situation) setCurrentSituation(res.data.situation);
+      // 마지막 AI 메시지를 교체한다 (서버도 같은 message_id 를 덮어쓴다)
+      setMessages(prev => {
+        const next = [...prev];
+        for (let i = next.length - 1; i >= 0; i--) {
+          if (next[i].sender === "ai") {
+            next[i] = { ...next[i], content: res.data.message, messageId: res.data.message_id };
+            break;
+          }
+        }
+        return next;
+      });
+      refreshCoins();
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        const detail = err.response?.data?.detail;
+        if (err.response?.status === 402) setLowCoinAlert(true);
+        toast.error(detail || "재생성에 실패했어요.");
+      }
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
   const handleSend = async (text: string) => {
     if (!text.trim() || !sessionId) return;
 
@@ -206,24 +244,61 @@ export default function ChatApp({ apiUrl, token, user, character, forceNewSessio
     setMessages(prev => [...prev, userMessage]);
     setTyping(true);
 
-    try {
-      const res = await axios.post(
-        `${apiUrl}/chat`,
-        { character_id: character.id, message: text, session_id: sessionId },
-        { headers }
-      );
-
-      if (res.data.emotion) setCurrentEmotion(res.data.emotion);
-      if (res.data.situation) setCurrentSituation(res.data.situation);
-
+    // 스트리밍: 빈 AI 말풍선을 먼저 띄우고 조각이 올 때마다 채운다.
+    // 비스트리밍은 완성까지 3~10초 빈 화면이라 체감 이탈이 컸다.
+    const aiId = crypto.randomUUID();
+    let opened = false;
+    const openBubble = () => {
+      if (opened) return;
+      opened = true;
+      setTyping(false);
       setMessages(prev => [...prev, {
-        id: crypto.randomUUID(),
+        id: aiId,
         sender: "ai",
-        content: res.data.message,
-        messageId: res.data.message_id,   // 피드백 전송에 필요
+        content: "",
         timestamp: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
       }]);
-      refreshCoins();
+    };
+
+    try {
+      await streamChat(
+        apiUrl, token,
+        { character_id: character.id, message: text, session_id: sessionId },
+        {
+          onDelta: (chunk) => {
+            openBubble();
+            setMessages(prev => prev.map(m =>
+              m.id === aiId ? { ...m, content: m.content + chunk } : m
+            ));
+          },
+          onDone: (done) => {
+            openBubble();
+            if (done.emotion) setCurrentEmotion(done.emotion);
+            if (done.situation) setCurrentSituation(done.situation);
+            setMessages(prev => prev.map(m =>
+              m.id === aiId ? { ...m, messageId: done.message_id ?? undefined } : m
+            ));
+            refreshCoins();
+          },
+          onError: (detail, refunded) => {
+            // 스트림 도중 실패는 토큰이 환급된다 — 그 사실을 알려준다
+            const suffix = refunded ? " (토큰은 환급됐어요)" : "";
+            if (opened) {
+              setMessages(prev => prev.map(m =>
+                m.id === aiId ? { ...m, content: m.content || detail + suffix } : m
+              ));
+            } else {
+              setTyping(false);
+              setMessages(prev => [...prev, {
+                id: aiId, sender: "ai", content: detail + suffix,
+                timestamp: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
+              }]);
+            }
+            if (detail.includes("토큰이 부족")) setLowCoinAlert(true);
+            refreshCoins();
+          },
+        },
+      );
 
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 400) {
@@ -357,12 +432,34 @@ export default function ChatApp({ apiUrl, token, user, character, forceNewSessio
           }
             feedback={
               message.sender === "ai" && message.messageId && sessionId ? (
-                <MessageFeedback
-                  apiUrl={apiUrl}
-                  token={token}
-                  sessionId={sessionId}
-                  messageId={message.messageId}
-                />
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8, flexWrap: "wrap" }}>
+                  <MessageFeedback
+                    apiUrl={apiUrl}
+                    token={token}
+                    sessionId={sessionId}
+                    messageId={message.messageId}
+                  />
+                  {/* 재생성은 마지막 응답에만. 중간 응답을 바꾸면 이후 맥락이 어긋난다 */}
+                  {isLastAiMessage && (
+                    <button
+                      onClick={handleRegenerate}
+                      disabled={regenerating || typing}
+                      title="다른 응답으로 다시 생성"
+                      style={{
+                        background: "none",
+                        border: "1px solid var(--border-default)",
+                        borderRadius: 999,
+                        padding: "3px 10px",
+                        fontSize: 11,
+                        color: "var(--text-muted)",
+                        cursor: regenerating || typing ? "default" : "pointer",
+                        opacity: regenerating || typing ? 0.4 : 0.8,
+                      }}
+                    >
+                      {regenerating ? "생성 중..." : "↻ 다시 생성"}
+                    </button>
+                  )}
+                </div>
               ) : undefined
             }
         />

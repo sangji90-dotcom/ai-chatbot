@@ -119,6 +119,21 @@ class ApiService {
     return res.data;
   }
 
+  /// 마지막 AI 응답을 버리고 다시 생성한다.
+  /// 서버가 같은 message_id 를 덮어쓰므로 히스토리에 응답이 쌓이지 않는다.
+  static Future<Map<String, dynamic>> regenerate({
+    required String characterId,
+    required String sessionId,
+  }) async {
+    final token = await getToken();
+    final res = await _dio.post(
+      '/chat/regenerate',
+      data: {'character_id': characterId, 'session_id': sessionId},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return res.data;
+  }
+
   /// 메시지 평가. reason 은 dislike 일 때만 의미가 있다.
   /// 사유가 없으면 '기억을 못한다' 인지 '말투가 이상하다' 인지 구분할 수 없어
   /// 기억 품질을 측정할 수 없다.

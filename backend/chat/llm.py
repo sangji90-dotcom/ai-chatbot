@@ -55,6 +55,42 @@ async def generate(contents, system_instruction: str, max_output_tokens: int,
         raise HTTPException(status_code=502, detail="AI 응답 생성에 실패했어요. 잠시 후 다시 시도해주세요.") from exc
 
 
+async def generate_stream(contents, system_instruction: str, max_output_tokens: int,
+                          apply_safety: bool = True):
+    """청크 단위로 텍스트를 yield 한다.
+
+    SSE 로 흘려보내기 위한 경로. 실패는 호출부가 토큰 환급을 할 수 있도록
+    HTTPException 으로 올린다.
+    """
+    config = {
+        "system_instruction": system_instruction,
+        "max_output_tokens": max_output_tokens,
+    }
+    if apply_safety:
+        config["safety_settings"] = SAFETY_SETTINGS
+
+    aio = getattr(client, "aio", None)
+    if aio is None:
+        # SDK 가 비동기 스트리밍을 지원하지 않으면 한 번에 받아 통째로 넘긴다
+        response = await generate(contents, system_instruction, max_output_tokens, apply_safety)
+        yield text_of(response)
+        return
+
+    try:
+        stream = await aio.models.generate_content_stream(
+            model=MODEL, contents=contents, config=config
+        )
+        async for chunk in stream:
+            piece = text_of(chunk)
+            if piece:
+                yield piece
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("LLM stream failed")
+        raise HTTPException(
+            status_code=502, detail="AI 응답 생성에 실패했어요. 잠시 후 다시 시도해주세요."
+        ) from exc
+
+
 def text_of(response) -> str:
     """안전 필터로 차단되면 response.text 가 None 이다. 호출부가 터지지 않게 정규화."""
     try:

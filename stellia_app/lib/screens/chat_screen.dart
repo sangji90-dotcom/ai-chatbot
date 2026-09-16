@@ -77,6 +77,40 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  bool _regenerating = false;
+
+  /// 마음에 안 드는 응답을 다시 굴린다.
+  /// 이게 없으면 유저의 선택지는 '직접 고치기' 아니면 '이탈' 뿐이다.
+  Future<void> _regenerate() async {
+    if (_regenerating || _typing || _messages.isEmpty) return;
+    final last = _messages.last;
+    if (last['sender'] != 'ai' || last['message_id'] is! int) return;
+
+    setState(() => _regenerating = true);
+    try {
+      final res = await ApiService.regenerate(
+        characterId: widget.character.id,
+        sessionId: _sessionId,
+      );
+      setState(() {
+        _messages[_messages.length - 1] = {
+          'sender': 'ai',
+          'content': res['message'] ?? '',
+          'message_id': res['message_id'],
+        };
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('재생성에 실패했어요.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _regenerating = false);
+    }
+    _scrollToBottom();
+  }
+
   Future<void> _send() async {
     final text = _controller.text.trim();
     if (text.isEmpty || _typing) return;
@@ -233,13 +267,35 @@ class _ChatScreenState extends State<ChatScreen> {
                 // 우측 정렬이 깨지므로, 피드백이 붙는 AI 메시지만 감싼다.
                 final messageId = msg['message_id'];
                 if (isUser || messageId is! int) return bubble;
+                final isLastAi = index == _messages.length - 1;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     bubble,
-                    MessageFeedback(
-                      sessionId: _sessionId,
-                      messageId: messageId,
+                    Row(
+                      children: [
+                        MessageFeedback(
+                          sessionId: _sessionId,
+                          messageId: messageId,
+                        ),
+                        // 재생성은 마지막 응답에만. 중간 응답을 바꾸면 이후 맥락이 어긋난다
+                        if (isLastAi)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8, top: 2),
+                            child: TextButton(
+                              onPressed: (_regenerating || _typing) ? null : _regenerate,
+                              style: TextButton.styleFrom(
+                                minimumSize: Size.zero,
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                _regenerating ? '생성 중...' : '↻ 다시 생성',
+                                style: const TextStyle(fontSize: 11, color: Color(0xFF8A8FA3)),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ],
                 );
