@@ -887,6 +887,17 @@ def init_db():
             pass
     _backfill_character_fields(cursor, conn)
 
+    # 파티 방 설정 (FE 가 PATCH /party/rooms/{code}/settings 로 보내는 값)
+    for ddl in (
+        "ALTER TABLE party_rooms ADD COLUMN output_multiplier REAL DEFAULT 1.0",
+        "ALTER TABLE party_members ADD COLUMN last_message_at TIMESTAMP DEFAULT NULL",
+    ):
+        try:
+            cursor.execute(ddl)
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+
     # ── 깨진 FK / 고아 행 복구 ────────────────────────────────
     _repair_dangling_fk_references(cursor, conn)
     _clean_orphan_rows(cursor, conn)

@@ -64,6 +64,9 @@ SESSION_CACHE_TTL_SEC = 2 * 60 * 60
 
 MIN_CHARACTER_AGE = 19
 
+# 파티 방 생성 도배 방지 쿨다운 (초)
+PARTY_ROOM_COOLDOWN_SEC = int(os.getenv("PARTY_ROOM_COOLDOWN_SEC", "10"))
+
 # ── 기억(메모리) 동작 ────────────────────────────────────────
 # CBT 에서는 기억 품질 자체가 검증 대상이라 유료 게이팅을 연다.
 # 유료화 시점에 이 값만 0 으로 돌리면 메모리 패스 보유자 전용으로 되돌아간다.

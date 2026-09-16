@@ -14,7 +14,8 @@ os.environ["ENV"] = "development"
 os.environ["DB_PATH"] = str(Path(_tmp) / "test.db")
 os.environ["UPLOAD_DIR"] = str(Path(_tmp) / "images")
 os.environ["RUN_SCHEDULER"] = "0"
-os.environ["RATE_LIMIT_ENABLED"] = "0"  # 레이트리밋 자체는 별도 테스트에서 검증
+os.environ["RATE_LIMIT_ENABLED"] = "0"
+os.environ["PARTY_ROOM_COOLDOWN_SEC"] = "0"  # 쿨다운 자체는 test_party 에서 따로 검증  # 레이트리밋 자체는 별도 테스트에서 검증
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
