@@ -1,0 +1,12 @@
+# 줄바꿈 정규화 — Windows 에서 작업하면서 CRLF/LF 가 섞여
+# 내용 변경이 없는 파일 99개가 diff 에 잡히던 문제를 막는다.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ttf binary
+*.db binary
+*.gz binary

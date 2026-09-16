@@ -1,5 +1,37 @@
+# secrets
+.env
+*.env
+!.env.example
 backend/.env
+stellia-frontend/.env
+stellia-frontend/.env.*
+!stellia-frontend/.env.example
+
+# database
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# python
 venv/
+.venv/
 __pycache__/
 *.pyc
+.pytest_cache/
+
+# node
+node_modules/
+stellia-frontend/dist/
+
+# uploads
 frontend/images/
+backend/uploads/
+
+# flutter
+stellia_app/build/
+stellia_app/.dart_tool/
+
+# ide
+.vscode/PythonImportHelper-v2-Completion.json
