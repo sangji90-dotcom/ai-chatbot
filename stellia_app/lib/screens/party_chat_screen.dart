@@ -40,6 +40,8 @@ class _PartyChatScreenState extends State<PartyChatScreen> {
         Uri.parse('$wsUrl/party/ws/${widget.roomCode}/$_userId'),
       );
 
+      _channel!.sink.add(jsonEncode({'type': 'auth', 'token': token}));
+
       setState(() => _connected = true);
 
       _channel!.stream.listen(
@@ -48,7 +50,24 @@ class _PartyChatScreenState extends State<PartyChatScreen> {
           setState(() => _messages.add(msg));
           _scrollToBottom();
         },
-        onDone: () => setState(() => _connected = false),
+        onDone: () {
+          setState(() => _connected = false);
+          final code = _channel?.closeCode;
+          final reasons = {
+            4401: '인증에 실패했어요. 다시 로그인해주세요.',
+            4403: '참가한 방이 아니에요.',
+            4404: '방을 찾을 수 없어요.',
+            4410: '방이 종료됐어요.',
+          };
+          if (code != null && reasons.containsKey(code)) {
+            if (mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(reasons[code]!)));
+              Navigator.pop(context);
+            }
+          }
+        },
         onError: (_) => setState(() => _connected = false),
       );
     } catch (e) {
@@ -99,13 +118,20 @@ class _PartyChatScreenState extends State<PartyChatScreen> {
           children: [
             Text(
               '파티챗 · ${widget.roomCode}',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
             ),
             const SizedBox(width: 8),
             Container(
-              width: 8, height: 8,
+              width: 8,
+              height: 8,
               decoration: BoxDecoration(
-                color: _connected ? const Color(0xFF49D89A) : const Color(0xFFFF6B8A),
+                color: _connected
+                    ? const Color(0xFF49D89A)
+                    : const Color(0xFFFF6B8A),
                 shape: BoxShape.circle,
               ),
             ),
@@ -115,7 +141,13 @@ class _PartyChatScreenState extends State<PartyChatScreen> {
           if (!_started)
             TextButton(
               onPressed: _startGame,
-              child: const Text('시작', style: TextStyle(color: Color(0xFF7C6CFF), fontWeight: FontWeight.w700)),
+              child: const Text(
+                '시작',
+                style: TextStyle(
+                  color: Color(0xFF7C6CFF),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
         ],
         bottom: PreferredSize(
@@ -134,7 +166,13 @@ class _PartyChatScreenState extends State<PartyChatScreen> {
                       children: [
                         Text('⚔', style: TextStyle(fontSize: 48)),
                         SizedBox(height: 16),
-                        Text('시작 버튼을 눌러 파티챗을 시작하세요', style: TextStyle(color: Color(0xFF6B7280), fontSize: 14)),
+                        Text(
+                          '시작 버튼을 눌러 파티챗을 시작하세요',
+                          style: TextStyle(
+                            color: Color(0xFF6B7280),
+                            fontSize: 14,
+                          ),
+                        ),
                       ],
                     ),
                   )
@@ -185,7 +223,10 @@ class _PartyChatScreenState extends State<PartyChatScreen> {
                         hintText: '메시지 입력...',
                         hintStyle: TextStyle(color: Color(0xFF6B7280)),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -194,14 +235,19 @@ class _PartyChatScreenState extends State<PartyChatScreen> {
                 GestureDetector(
                   onTap: _sendMessage,
                   child: Container(
-                    width: 46, height: 46,
+                    width: 46,
+                    height: 46,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFF7C6CFF), Color(0xFF5FD6FF)],
                       ),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ),
               ],
@@ -228,7 +274,10 @@ class _SystemMessage extends StatelessWidget {
             color: const Color(0xFF1F1F2E),
             borderRadius: BorderRadius.circular(999),
           ),
-          child: Text(message, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
+          child: Text(
+            message,
+            style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12),
+          ),
         ),
       ),
     );
@@ -252,9 +301,23 @@ class _NarrationBubble extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('✦ 나레이션', style: TextStyle(color: Color(0xFF7C6CFF), fontSize: 11, fontWeight: FontWeight.w600)),
+          const Text(
+            '✦ 나레이션',
+            style: TextStyle(
+              color: Color(0xFF7C6CFF),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(message, style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.6)),
+          Text(
+            message,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+              height: 1.6,
+            ),
+          ),
         ],
       ),
     );
@@ -266,27 +329,40 @@ class _ChatBubble extends StatelessWidget {
   final String message;
   final bool isMe;
 
-  const _ChatBubble({required this.username, required this.message, required this.isMe});
+  const _ChatBubble({
+    required this.username,
+    required this.message,
+    required this.isMe,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe) ...[
             Container(
-              width: 30, height: 30,
+              width: 30,
+              height: 30,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFF7C6CFF), Color(0xFF5FD6FF)]),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF7C6CFF), Color(0xFF5FD6FF)],
+                ),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Center(
                 child: Text(
                   username.isNotEmpty ? username[0].toUpperCase() : '?',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ),
@@ -294,17 +370,32 @@ class _ChatBubble extends StatelessWidget {
           ],
           Flexible(
             child: Column(
-              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isMe
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 if (!isMe)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 4, left: 4),
-                    child: Text(username, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 11)),
+                    child: Text(
+                      username,
+                      style: const TextStyle(
+                        color: Color(0xFF6B7280),
+                        fontSize: 11,
+                      ),
+                    ),
                   ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
-                    gradient: isMe ? const LinearGradient(colors: [Color(0xFF7C6CFF), Color(0xFF6A5AE0)]) : null,
+                    gradient: isMe
+                        ? const LinearGradient(
+                            colors: [Color(0xFF7C6CFF), Color(0xFF6A5AE0)],
+                          )
+                        : null,
                     color: isMe ? null : const Color(0xFF0F0F18),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(16),
@@ -312,9 +403,18 @@ class _ChatBubble extends StatelessWidget {
                       bottomLeft: Radius.circular(isMe ? 16 : 4),
                       bottomRight: Radius.circular(isMe ? 4 : 16),
                     ),
-                    border: isMe ? null : Border.all(color: const Color(0xFF1F1F2E)),
+                    border: isMe
+                        ? null
+                        : Border.all(color: const Color(0xFF1F1F2E)),
                   ),
-                  child: Text(message, style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5)),
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                  ),
                 ),
               ],
             ),

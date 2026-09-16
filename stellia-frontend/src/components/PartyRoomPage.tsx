@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import type { User } from "../App";
 
@@ -15,33 +15,52 @@ export default function PartyRoomPage({ apiUrl, token, user, roomCode, onBack, o
   const [room, setRoom] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
   const [story, setStory] = useState<any>(null);
+  const [character, setCharacter] = useState<any>(null);
   const [outputMultiplier, setOutputMultiplier] = useState(1.0);
   const [loading] = useState(false);
   const [error, setError] = useState("");
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const headers = { Authorization: `Bearer ${token}` };
 
+  const clearPolling = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
   useEffect(() => {
     fetchRoomInfo();
-    const interval = setInterval(fetchRoomInfo, 3000);
-    return () => clearInterval(interval);
+    intervalRef.current = setInterval(fetchRoomInfo, 3000);
+    return clearPolling;
   }, []);
 
   const fetchRoomInfo = async () => {
-  try {
-    const res = await axios.get(`${apiUrl}/party/rooms/${roomCode}`, { headers });
-    setRoom(res.data.room);
-    setMembers(res.data.members);
+    try {
+      const res = await axios.get(`${apiUrl}/party/rooms/${roomCode}`, { headers });
+      setRoom(res.data.room);
+      setMembers(res.data.members);
 
-    if (res.data.room.story_id) {
-      const storyRes = await axios.get(`${apiUrl}/party/stories`, { headers });
-      const found = storyRes.data.find((s: any) => s.id === res.data.room.story_id);
-      if (found) setStory(found);
+      if (res.data.room.story_id) {
+        const storyRes = await axios.get(`${apiUrl}/party/stories`, { headers });
+        const found = storyRes.data.find((s: any) => s.id === res.data.room.story_id);
+        if (found) setStory(found);
+      } else if (res.data.room.character_id) {
+        const charRes = await axios.get(`${apiUrl}/characters/${res.data.room.character_id}`, { headers });
+        setCharacter(charRes.data);
+      }
+    } catch (e: any) {
+      if (e.response?.status === 404 || e.response?.status === 410) {
+        clearPolling();
+        setError("방이 종료됐어요.");
+        onBack();
+        return;
+      }
+      console.error(e);
+      setError("방 정보를 불러오지 못했어요.");
     }
-     } catch (e) {
-    console.error(e);
-        }
-    };
+  };
 
   const isHost = room?.host_id === user?.id;
 
@@ -66,6 +85,7 @@ export default function PartyRoomPage({ apiUrl, token, user, roomCode, onBack, o
   const handleLeave = async () => {
     try {
       await axios.delete(`${apiUrl}/party/rooms/${roomCode}/leave`, { headers });
+      clearPolling();
       onBack();
     } catch {
       setError("방 나가기에 실패했어요.");
@@ -87,7 +107,6 @@ export default function PartyRoomPage({ apiUrl, token, user, roomCode, onBack, o
 
   return (
     <div style={{ position: "relative", zIndex: 2, minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      {/* 헤더 */}
       <div
         style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -110,14 +129,15 @@ export default function PartyRoomPage({ apiUrl, token, user, roomCode, onBack, o
             ←
           </button>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>{story?.title ?? "대기실"}</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>
+              {story?.title ?? character?.name ?? "대기실"}
+            </div>
             <div style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 2 }}>
               {members.length}/{room?.max_members ?? 4}명 참가 중
             </div>
           </div>
         </div>
 
-        {/* 방 코드 */}
         <div
           onClick={handleCopyCode}
           style={{
@@ -142,7 +162,6 @@ export default function PartyRoomPage({ apiUrl, token, user, roomCode, onBack, o
           <div style={{ color: "#ff6b8a", fontSize: 13, textAlign: "center" }}>{error}</div>
         )}
 
-        {/* 스토리 정보 */}
         {story && (
           <div className="glass-card" style={{ borderRadius: 20, padding: 20 }}>
             <div style={{ color: "var(--text-muted)", fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 12 }}>
@@ -155,7 +174,18 @@ export default function PartyRoomPage({ apiUrl, token, user, roomCode, onBack, o
           </div>
         )}
 
-        {/* 멤버 목록 */}
+        {!story && character && (
+          <div className="glass-card" style={{ borderRadius: 20, padding: 20 }}>
+            <div style={{ color: "var(--text-muted)", fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 12 }}>
+              캐릭터
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>{character.name}</div>
+            <div style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6 }}>
+              {character.description}
+            </div>
+          </div>
+        )}
+
         <div className="glass-card" style={{ borderRadius: 20, padding: 20 }}>
           <div style={{ color: "var(--text-muted)", fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 16 }}>
             참가 멤버
@@ -201,7 +231,6 @@ export default function PartyRoomPage({ apiUrl, token, user, roomCode, onBack, o
                   </div>
                 </div>
 
-                {/* 방장 위임 버튼 */}
                 {isHost && member.user_id !== user?.id && (
                   <button
                     onClick={() => handleDelegate(member.user_id)}
@@ -218,7 +247,6 @@ export default function PartyRoomPage({ apiUrl, token, user, roomCode, onBack, o
               </div>
             ))}
 
-            {/* 빈 슬롯 */}
             {Array.from({ length: (room?.max_members ?? 4) - members.length }).map((_, i) => (
               <div
                 key={`empty-${i}`}
@@ -235,7 +263,6 @@ export default function PartyRoomPage({ apiUrl, token, user, roomCode, onBack, o
           </div>
         </div>
 
-        {/* 방장 설정 */}
         {isHost && (
           <div className="glass-card" style={{ borderRadius: 20, padding: 20 }}>
             <div style={{ color: "var(--text-muted)", fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 16 }}>
@@ -280,7 +307,6 @@ export default function PartyRoomPage({ apiUrl, token, user, roomCode, onBack, o
           </div>
         )}
 
-        {/* 시작 버튼 */}
         {isHost && (
           <button
             onClick={handleStart}

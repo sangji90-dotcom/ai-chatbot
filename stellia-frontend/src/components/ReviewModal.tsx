@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+
 interface ReviewModalProps {
-  apiUrl: string;
-  token: string;
   characterId: string;
   characterName: string;
+  apiUrl: string;
+  token: string;
   onClose: () => void;
 }
 

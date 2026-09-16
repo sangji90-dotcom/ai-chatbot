@@ -14,6 +14,7 @@ class CharacterProfileScreen extends StatefulWidget {
 class _CharacterProfileScreenState extends State<CharacterProfileScreen> {
   bool _isLiked = false;
   bool _isBookmarked = false;
+  
   int _likeCount = 0;
 
   @override

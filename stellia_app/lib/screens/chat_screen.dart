@@ -4,7 +4,8 @@ import '../models/character.dart';
 
 class ChatScreen extends StatefulWidget {
   final Character character;
-  const ChatScreen({super.key, required this.character});
+  final bool forceNew;
+  const ChatScreen({super.key, required this.character, this.forceNew = false});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -20,9 +21,55 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _sessionId = 'session_${DateTime.now().millisecondsSinceEpoch}';
-    if (widget.character.firstMessage.isNotEmpty) {
-      _messages.add({'sender': 'ai', 'content': widget.character.firstMessage});
+    if (widget.forceNew) {
+      _sessionId = 'session_${DateTime.now().millisecondsSinceEpoch}';
+      if (widget.character.firstMessage.isNotEmpty) {
+        _messages.add({
+          'sender': 'ai',
+          'content': widget.character.firstMessage,
+        });
+      }
+    } else {
+      _loadExistingSession();
+    }
+  }
+
+  Future<void> _loadExistingSession() async {
+    try {
+      final sessions = await ApiService.getChatSessions(widget.character.id);
+      if (sessions.isNotEmpty) {
+        final sessionId = sessions[0]['session_id'];
+        setState(() => _sessionId = sessionId);
+
+        // 채팅 기록 불러오기
+        final history = await ApiService.getChatHistory(
+          widget.character.id,
+          sessionId,
+        );
+        setState(() {
+          _messages.clear();
+          for (final msg in history) {
+            _messages.add({
+              'sender': msg['role'] == 'user' ? 'user' : 'ai',
+              'content': msg['content'],
+            });
+          }
+        });
+      } else {
+        setState(() {
+          _sessionId = 'session_${DateTime.now().millisecondsSinceEpoch}';
+          if (widget.character.firstMessage.isNotEmpty) {
+            _messages.add({
+              'sender': 'ai',
+              'content': widget.character.firstMessage,
+            });
+          }
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _sessionId = 'session_${DateTime.now().millisecondsSinceEpoch}';
+      });
     }
   }
 

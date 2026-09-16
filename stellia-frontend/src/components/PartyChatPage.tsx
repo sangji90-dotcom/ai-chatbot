@@ -11,7 +11,16 @@ interface PartyChatPageProps {
 }
 
 interface PartyMessage {
-  type: "chat" | "narration" | "system" | "kick_vote_started" | "kick_vote_update" | "kick_result" | "host_delegated" | "settings_updated" | "kicked";
+  type:
+    | "chat"
+    | "narration"
+    | "system"
+    | "kick_vote_started"
+    | "kick_vote_update"
+    | "kick_result"
+    | "host_delegated"
+    | "settings_updated"
+    | "kicked";
   username?: string;
   message: string;
   target_user_id?: number;
@@ -22,38 +31,74 @@ interface PartyMessage {
   output_multiplier?: number;
 }
 
-export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, onLeave }: PartyChatPageProps) {
+export default function PartyChatPage({
+  apiUrl,
+  token,
+  user,
+  roomCode,
+  onBack,
+  onLeave,
+}: PartyChatPageProps) {
   const [messages, setMessages] = useState<PartyMessage[]>([]);
   const [input, setInput] = useState("");
   const [members, setMembers] = useState<string[]>([]);
   const [_, setHostId] = useState<number | null>(null);
   const [room, setRoom] = useState<any>(null);
   const [started, setStarted] = useState(false);
-  const [kickVotes, setKickVotes] = useState<Record<number, { yes: number; no: number; total: number }>>({});
+  const [kickVotes, setKickVotes] = useState<
+    Record<number, { yes: number; no: number; total: number }>
+  >({});
   const [connected, setConnected] = useState(false);
   const [showLog, setShowLog] = useState(false);
+  const [story, setStory] = useState<any>(null);
+  const [character, setCharacter] = useState<any>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const wsUrl = apiUrl.replace("https://", "wss://").replace("http://", "ws://");
+  const wsUrl = apiUrl
+    .replace("https://", "wss://")
+    .replace("http://", "ws://");
 
   useEffect(() => {
-    // 방 정보 먼저 로드
     fetch(`${apiUrl}/party/rooms/${roomCode}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => {
+        if (res.status === 404 || res.status === 410) {
+          onLeave();
+          return null;
+        }
+        return res.json();
+      })
+      .then(async (data) => {
+        if (!data) return;
         setRoom(data.room);
         setHostId(data.room.host_id);
         setMembers(data.members.map((m: any) => m.username));
+
+        if (data.room.story_id) {
+          const storyData = await fetch(`${apiUrl}/party/stories`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }).then((r) => r.json());
+          setStory(
+            storyData.find((s: any) => s.id === data.room.story_id) ?? null,
+          );
+        } else if (data.room.character_id) {
+          const charData = await fetch(
+            `${apiUrl}/characters/${data.room.character_id}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          ).then((r) => r.json());
+          setCharacter(charData);
+        }
       });
 
-    // WebSocket 연결
     const ws = new WebSocket(`${wsUrl}/party/ws/${roomCode}/${user?.id}`);
     wsRef.current = ws;
 
     ws.onopen = () => {
+      ws.send(JSON.stringify({ type: "auth", token }));
       setConnected(true);
     };
 
@@ -72,7 +117,7 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
 
       if (data.type === "kick_vote_update") {
         const payload = data as any;
-        setKickVotes(prev => ({
+        setKickVotes((prev) => ({
           ...prev,
           [payload.target_user_id]: {
             yes: payload.yes,
@@ -87,10 +132,23 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
         if (payload.members) setMembers(payload.members);
       }
 
-      setMessages(prev => [...prev, data]);
+      setMessages((prev) => [...prev, data]);
     };
 
-    ws.onclose = () => setConnected(false);
+    ws.onclose = (event) => {
+      setConnected(false);
+      const CLOSE_MESSAGES: Record<number, string> = {
+        4401: "인증에 실패했어요. 다시 로그인해주세요.",
+        4403: "참가한 방이 아니에요.",
+        4404: "방을 찾을 수 없어요.",
+        4410: "방이 종료됐어요.",
+      };
+      const msg = CLOSE_MESSAGES[event.code];
+      if (msg) {
+        alert(msg);
+        onLeave();
+      }
+    };
 
     return () => ws.close();
   }, []);
@@ -120,7 +178,11 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
   };
 
   const handleVote = (targetUserId: number, vote: "yes" | "no") => {
-    sendMessage("kick_vote_result", { message: "", target_user_id: targetUserId, vote });
+    sendMessage("kick_vote_result", {
+      message: "",
+      target_user_id: targetUserId,
+      vote,
+    });
   };
 
   const handleExportLog = async () => {
@@ -139,9 +201,21 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
   const isHost = room?.host_id === user?.id;
 
   const renderMessage = (msg: PartyMessage, idx: number) => {
-    if (msg.type === "system" || msg.type === "host_delegated" || msg.type === "settings_updated") {
+    if (
+      msg.type === "system" ||
+      msg.type === "host_delegated" ||
+      msg.type === "settings_updated"
+    ) {
       return (
-        <div key={idx} style={{ textAlign: "center", color: "var(--text-muted)", fontSize: 13, padding: "8px 0" }}>
+        <div
+          key={idx}
+          style={{
+            textAlign: "center",
+            color: "var(--text-muted)",
+            fontSize: 13,
+            padding: "8px 0",
+          }}
+        >
           {msg.message}
         </div>
       );
@@ -152,14 +226,28 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
         <div
           key={idx}
           style={{
-            padding: "16px 20px", borderRadius: 16, margin: "8px 0",
-            background: "linear-gradient(135deg, rgba(139,124,255,.15), rgba(95,214,255,.08))",
+            padding: "16px 20px",
+            borderRadius: 16,
+            margin: "8px 0",
+            background:
+              "linear-gradient(135deg, rgba(139,124,255,.15), rgba(95,214,255,.08))",
             border: "1px solid rgba(139,124,255,.2)",
-            color: "var(--text-primary)", lineHeight: 1.8, fontSize: 15,
+            color: "var(--text-primary)",
+            lineHeight: 1.8,
+            fontSize: 15,
             fontStyle: "italic",
           }}
         >
-          <div style={{ color: "var(--primary)", fontSize: 12, marginBottom: 8, fontStyle: "normal" }}>📖 나레이션</div>
+          <div
+            style={{
+              color: "var(--primary)",
+              fontSize: 12,
+              marginBottom: 8,
+              fontStyle: "normal",
+            }}
+          >
+            📖 나레이션
+          </div>
           {msg.message}
         </div>
       );
@@ -170,7 +258,9 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
         <div
           key={idx}
           style={{
-            padding: 16, borderRadius: 16, margin: "8px 0",
+            padding: 16,
+            borderRadius: 16,
+            margin: "8px 0",
             background: "rgba(255,107,138,.08)",
             border: "1px solid rgba(255,107,138,.2)",
           }}
@@ -179,8 +269,15 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
             ⚠ {msg.message}
           </div>
           {kickVotes[msg.target_user_id!] && (
-            <div style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 10 }}>
-              찬성 {kickVotes[msg.target_user_id!].yes} / 반대 {kickVotes[msg.target_user_id!].no}
+            <div
+              style={{
+                color: "var(--text-muted)",
+                fontSize: 13,
+                marginBottom: 10,
+              }}
+            >
+              찬성 {kickVotes[msg.target_user_id!].yes} / 반대{" "}
+              {kickVotes[msg.target_user_id!].no}
             </div>
           )}
           {msg.target_user_id !== user?.id && (
@@ -188,9 +285,14 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
               <button
                 onClick={() => handleVote(msg.target_user_id!, "yes")}
                 style={{
-                  flex: 1, padding: "8px", borderRadius: 10, border: "none",
-                  background: "rgba(255,107,138,.2)", color: "#ff6b8a",
-                  fontWeight: 600, cursor: "pointer",
+                  flex: 1,
+                  padding: "8px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: "rgba(255,107,138,.2)",
+                  color: "#ff6b8a",
+                  fontWeight: 600,
+                  cursor: "pointer",
                 }}
               >
                 찬성
@@ -198,10 +300,14 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
               <button
                 onClick={() => handleVote(msg.target_user_id!, "no")}
                 style={{
-                  flex: 1, padding: "8px", borderRadius: 10,
+                  flex: 1,
+                  padding: "8px",
+                  borderRadius: 10,
                   border: "1px solid var(--border-default)",
-                  background: "rgba(255,255,255,.04)", color: "var(--text-muted)",
-                  fontWeight: 600, cursor: "pointer",
+                  background: "rgba(255,255,255,.04)",
+                  color: "var(--text-muted)",
+                  fontWeight: 600,
+                  cursor: "pointer",
                 }}
               >
                 반대
@@ -214,7 +320,15 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
 
     if (msg.type === "kick_result") {
       return (
-        <div key={idx} style={{ textAlign: "center", color: "#ff6b8a", fontSize: 13, padding: "8px 0" }}>
+        <div
+          key={idx}
+          style={{
+            textAlign: "center",
+            color: "#ff6b8a",
+            fontSize: 13,
+            padding: "8px 0",
+          }}
+        >
           {msg.message}
         </div>
       );
@@ -223,14 +337,27 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
     // 일반 채팅
     const isMe = msg.username === user?.username;
     return (
-      <div key={idx} style={{ display: "flex", justifyContent: isMe ? "flex-end" : "flex-start", marginBottom: 8 }}>
+      <div
+        key={idx}
+        style={{
+          display: "flex",
+          justifyContent: isMe ? "flex-end" : "flex-start",
+          marginBottom: 8,
+        }}
+      >
         {!isMe && (
           <div
             style={{
-              width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              flexShrink: 0,
               background: "var(--gradient-cosmic)",
-              display: "grid", placeItems: "center",
-              fontWeight: 700, fontSize: 13, marginRight: 8,
+              display: "grid",
+              placeItems: "center",
+              fontWeight: 700,
+              fontSize: 13,
+              marginRight: 8,
             }}
           >
             {msg.username?.[0]?.toUpperCase()}
@@ -238,16 +365,27 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
         )}
         <div style={{ maxWidth: "70%" }}>
           {!isMe && (
-            <div style={{ color: "var(--text-muted)", fontSize: 12, marginBottom: 4 }}>{msg.username}</div>
+            <div
+              style={{
+                color: "var(--text-muted)",
+                fontSize: 12,
+                marginBottom: 4,
+              }}
+            >
+              {msg.username}
+            </div>
           )}
           <div
             style={{
-              padding: "12px 16px", borderRadius: isMe ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+              padding: "12px 16px",
+              borderRadius: isMe ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
               background: isMe
                 ? "linear-gradient(135deg, var(--primary), var(--primary-active))"
                 : "rgba(24,29,54,.95)",
               border: isMe ? "none" : "1px solid var(--border-default)",
-              color: "#fff", fontSize: 15, lineHeight: 1.6,
+              color: "#fff",
+              fontSize: 15,
+              lineHeight: 1.6,
             }}
           >
             {msg.message}
@@ -258,12 +396,23 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
   };
 
   return (
-    <div style={{ position: "relative", zIndex: 2, height: "100vh", display: "flex", flexDirection: "column" }}>
+    <div
+      style={{
+        position: "relative",
+        zIndex: 2,
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       {/* 헤더 */}
       <div
         style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "0 24px", height: 72,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 24px",
+          height: 72,
           background: "rgba(9,11,20,.85)",
           backdropFilter: "blur(20px)",
           borderBottom: "1px solid var(--border-subtle)",
@@ -274,16 +423,22 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
           <button
             onClick={onBack}
             style={{
-              width: 38, height: 38, borderRadius: 10,
+              width: 38,
+              height: 38,
+              borderRadius: 10,
               border: "1px solid var(--border-default)",
               background: "rgba(255,255,255,.04)",
-              color: "var(--text-primary)", fontSize: 16, cursor: "pointer",
+              color: "var(--text-primary)",
+              fontSize: 16,
+              cursor: "pointer",
             }}
           >
             ←
           </button>
           <div>
-            <div style={{ fontWeight: 700 }}>{room?.story_id ? "파티챗" : "파티챗"}</div>
+            <div style={{ fontWeight: 700 }}>
+              {story?.title ?? character?.name ?? "파티챗"}
+            </div>
             <div style={{ color: "var(--text-muted)", fontSize: 12 }}>
               {connected ? "🟢 연결됨" : "🔴 연결 중..."} · {members.length}명
             </div>
@@ -298,10 +453,14 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
                 key={i}
                 title={m}
                 style={{
-                  width: 30, height: 30, borderRadius: "50%",
+                  width: 30,
+                  height: 30,
+                  borderRadius: "50%",
                   background: "var(--gradient-cosmic)",
-                  display: "grid", placeItems: "center",
-                  fontWeight: 700, fontSize: 12,
+                  display: "grid",
+                  placeItems: "center",
+                  fontWeight: 700,
+                  fontSize: 12,
                   border: "2px solid var(--bg-base)",
                   marginLeft: i > 0 ? -8 : 0,
                 }}
@@ -315,10 +474,13 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
           <button
             onClick={() => setShowLog(!showLog)}
             style={{
-              padding: "6px 12px", borderRadius: 8, fontSize: 12,
+              padding: "6px 12px",
+              borderRadius: 8,
+              fontSize: 12,
               border: "1px solid var(--border-default)",
               background: "rgba(255,255,255,.04)",
-              color: "var(--text-muted)", cursor: "pointer",
+              color: "var(--text-muted)",
+              cursor: "pointer",
             }}
           >
             📋 로그
@@ -328,10 +490,13 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
           <button
             onClick={handleExportLog}
             style={{
-              padding: "6px 12px", borderRadius: 8, fontSize: 12,
+              padding: "6px 12px",
+              borderRadius: 8,
+              fontSize: 12,
               border: "1px solid var(--border-default)",
               background: "rgba(255,255,255,.04)",
-              color: "var(--text-muted)", cursor: "pointer",
+              color: "var(--text-muted)",
+              cursor: "pointer",
             }}
           >
             📄 저장
@@ -341,10 +506,13 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
           <button
             onClick={onLeave}
             style={{
-              padding: "6px 12px", borderRadius: 8, fontSize: 12,
+              padding: "6px 12px",
+              borderRadius: 8,
+              fontSize: 12,
               border: "1px solid rgba(255,107,138,.3)",
               background: "rgba(255,107,138,.08)",
-              color: "#ff6b8a", cursor: "pointer",
+              color: "#ff6b8a",
+              cursor: "pointer",
             }}
           >
             나가기
@@ -355,22 +523,34 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
       {/* 채팅 영역 */}
       <div
         style={{
-          flex: 1, overflowY: "auto",
+          flex: 1,
+          overflowY: "auto",
           padding: "20px 24px",
-          display: "flex", flexDirection: "column",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         {!started && isHost && (
           <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <div style={{ color: "var(--text-muted)", fontSize: 15, marginBottom: 20 }}>
+            <div
+              style={{
+                color: "var(--text-muted)",
+                fontSize: 15,
+                marginBottom: 20,
+              }}
+            >
               모든 멤버가 준비됐으면 스토리를 시작하세요.
             </div>
             <button
               onClick={handleStart}
               style={{
-                padding: "16px 40px", borderRadius: 16, border: "none",
+                padding: "16px 40px",
+                borderRadius: 16,
+                border: "none",
                 background: "var(--gradient-cosmic)",
-                color: "#fff", fontWeight: 700, fontSize: 16,
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: 16,
                 cursor: "pointer",
                 boxShadow: "0 0 30px rgba(139,124,255,.3)",
               }}
@@ -381,7 +561,13 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
         )}
 
         {!started && !isHost && (
-          <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text-muted)" }}>
+          <div
+            style={{
+              textAlign: "center",
+              padding: "40px 0",
+              color: "var(--text-muted)",
+            }}
+          >
             방장이 스토리를 시작하기를 기다리는 중...
           </div>
         )}
@@ -396,26 +582,36 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
           style={{
             padding: "8px 24px",
             borderTop: "1px solid var(--border-subtle)",
-            display: "flex", gap: 8, overflowX: "auto",
+            display: "flex",
+            gap: 8,
+            overflowX: "auto",
           }}
         >
-          {members.filter(m => m !== user?.username).map((m, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                const targetId = room?.members?.find((mem: any) => mem.username === m)?.user_id;
-                if (targetId) handleKickVote(targetId);
-              }}
-              style={{
-                padding: "4px 10px", borderRadius: 8, fontSize: 11,
-                border: "1px solid rgba(255,107,138,.2)",
-                background: "rgba(255,107,138,.06)",
-                color: "#ff6b8a", cursor: "pointer", whiteSpace: "nowrap",
-              }}
-            >
-              {m} 강퇴 투표
-            </button>
-          ))}
+          {members
+            .filter((m) => m !== user?.username)
+            .map((m, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  const targetId = room?.members?.find(
+                    (mem: any) => mem.username === m,
+                  )?.user_id;
+                  if (targetId) handleKickVote(targetId);
+                }}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: 8,
+                  fontSize: 11,
+                  border: "1px solid rgba(255,107,138,.2)",
+                  background: "rgba(255,107,138,.06)",
+                  color: "#ff6b8a",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {m} 강퇴 투표
+              </button>
+            ))}
         </div>
       )}
 
@@ -431,30 +627,42 @@ export default function PartyChatPage({ apiUrl, token, user, roomCode, onBack, o
         >
           <div
             style={{
-              display: "flex", gap: 12, alignItems: "center",
-              padding: "10px 16px", borderRadius: 18,
+              display: "flex",
+              gap: 12,
+              alignItems: "center",
+              padding: "10px 16px",
+              borderRadius: 18,
               border: "1px solid var(--border-default)",
               background: "rgba(255,255,255,.04)",
             }}
           >
             <input
               value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleSend()}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
               placeholder="메시지를 입력하세요..."
               style={{
-                flex: 1, border: "none", outline: "none",
+                flex: 1,
+                border: "none",
+                outline: "none",
                 background: "transparent",
-                color: "var(--text-primary)", fontSize: 15,
+                color: "var(--text-primary)",
+                fontSize: 15,
               }}
             />
             <button
               onClick={handleSend}
               disabled={!input.trim()}
               style={{
-                width: 40, height: 40, borderRadius: 12, border: "none",
-                background: input.trim() ? "var(--gradient-cosmic)" : "rgba(255,255,255,.06)",
-                color: "#fff", cursor: input.trim() ? "pointer" : "not-allowed",
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                border: "none",
+                background: input.trim()
+                  ? "var(--gradient-cosmic)"
+                  : "rgba(255,255,255,.06)",
+                color: "#fff",
+                cursor: input.trim() ? "pointer" : "not-allowed",
                 fontSize: 16,
               }}
             >
