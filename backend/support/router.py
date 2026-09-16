@@ -1,15 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
-from database import get_db
-from deps import get_current_user, get_optional_user
-from google import genai
-import os
-from dotenv import load_dotenv
+from core.db import read_only, transaction
+from deps import get_current_user
+from chat import llm
 
 router = APIRouter(prefix="/support", tags=["고객센터"])
-load_dotenv()
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 # ===== FAQ 데이터 =====
 FAQ_LIST = [
@@ -42,11 +38,11 @@ SUPPORT_SYSTEM_PROMPT = f"""당신은 AI 캐릭터 챗봇 서비스의 친절한
 
 # ===== Request Models =====
 class InquiryRequest(BaseModel):
-    title: str
-    content: str
+    title: str = Field(min_length=1, max_length=100)
+    content: str = Field(min_length=1, max_length=4000)
 
 class AiAskRequest(BaseModel):
-    message: str
+    message: str = Field(min_length=1, max_length=2000)
 
 # ===== FAQ 목록 =====
 @router.get("/faq", summary="FAQ 목록")
@@ -57,17 +53,17 @@ async def get_faq(category: Optional[str] = None):
 
 # ===== AI 1차 답변 (문의 전 자동 답변) =====
 @router.post("/ask", summary="AI 자동 답변")
-async def ask_ai(request: AiAskRequest):
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=[{"role": "user", "parts": [{"text": request.message}]}],
-        config={
-            "system_instruction": SUPPORT_SYSTEM_PROMPT,
-            "max_output_tokens": 500,
-        }
+async def ask_ai(request: AiAskRequest, current_user: dict = Depends(get_current_user)):
+    """인증 필수. 이전에는 무인증 + 레이트리밋 없음이라
+    이 엔드포인트만으로 Gemini 비용 공격이 가능했다."""
+    response = await llm.generate(
+        [{"role": "user", "parts": [{"text": request.message}]}],
+        system_instruction=SUPPORT_SYSTEM_PROMPT,
+        max_output_tokens=500,
+        apply_safety=False,
     )
-    answer = response.text
-    needs_human = any(keyword in answer for keyword in ["담당자", "접수", "문의가 접수"])
+    answer = llm.text_of(response)
+    needs_human = (not answer) or any(k in answer for k in ["담당자", "접수", "문의가 접수"])
 
     return {
         "answer": answer,
@@ -78,20 +74,18 @@ async def ask_ai(request: AiAskRequest):
 @router.post("/inquiries", summary="문의 접수")
 async def create_inquiry(
         request: InquiryRequest,
-        current_user: dict = Depends(get_optional_user)):
+        current_user: dict = Depends(get_current_user)):
 
-    # AI 1차 자동 답변 시도
+    # AI 1차 자동 답변 시도 (실패해도 문의 접수 자체는 진행)
     ai_answer = ""
     try:
-        ai_response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[{"role": "user", "parts": [{"text": f"{request.title}\n{request.content}"}]}],
-            config={
-                "system_instruction": SUPPORT_SYSTEM_PROMPT,
-                "max_output_tokens": 500,
-            }
+        ai_response = await llm.generate(
+            [{"role": "user", "parts": [{"text": f"{request.title}\n{request.content}"}]}],
+            system_instruction=SUPPORT_SYSTEM_PROMPT,
+            max_output_tokens=500,
+            apply_safety=False,
         )
-        ai_answer = ai_response.text
+        ai_answer = llm.text_of(ai_response)
     except Exception:
         ai_answer = ""
 
@@ -99,21 +93,18 @@ async def create_inquiry(
         keyword in ai_answer for keyword in ["담당자", "접수", "문의가 접수"]
     )
 
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO inquiries (user_id, title, content, answer, status)
-        VALUES (?, ?, ?, ?, ?)
-    """, (
-        current_user["id"] if current_user else None,
-        request.title,
-        request.content,
-        ai_answer if not needs_human else "",
-        "answered" if not needs_human else "pending"
-    ))
-    conn.commit()
-    inquiry_id = cursor.lastrowid
-    conn.close()
+    with transaction() as cur:
+        cur.execute("""
+            INSERT INTO inquiries (user_id, title, content, answer, status)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            current_user["id"],
+            request.title,
+            request.content,
+            ai_answer if not needs_human else "",
+            "answered" if not needs_human else "pending",
+        ))
+        inquiry_id = cur.lastrowid
 
     return {
         "inquiry_id": inquiry_id,
@@ -125,30 +116,25 @@ async def create_inquiry(
 # ===== 내 문의 목록 =====
 @router.get("/inquiries/me", summary="내 문의 목록")
 async def get_my_inquiries(current_user: dict = Depends(get_current_user)):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT id, title, content, answer, status, created_at
-        FROM inquiries WHERE user_id = ?
-        ORDER BY created_at DESC
-    """, (current_user["id"],))
-    rows = cursor.fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    with read_only() as cur:
+        cur.execute("""
+            SELECT id, title, content, answer, status, created_at
+            FROM inquiries WHERE user_id = ?
+            ORDER BY created_at DESC
+        """, (current_user["id"],))
+        return [dict(r) for r in cur.fetchall()]
 
 # ===== 내 문의 상세 =====
 @router.get("/inquiries/{inquiry_id}", summary="문의 상세")
 async def get_inquiry(
         inquiry_id: int,
         current_user: dict = Depends(get_current_user)):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT id, title, content, answer, status, created_at
-        FROM inquiries WHERE id = ? AND user_id = ?
-    """, (inquiry_id, current_user["id"]))
-    row = cursor.fetchone()
-    conn.close()
+    with read_only() as cur:
+        cur.execute("""
+            SELECT id, title, content, answer, status, created_at
+            FROM inquiries WHERE id = ? AND user_id = ?
+        """, (inquiry_id, current_user["id"]))
+        row = cur.fetchone()
 
     if not row:
         raise HTTPException(status_code=404, detail="문의를 찾을 수 없습니다.")

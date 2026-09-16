@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from database import get_db
-from deps import get_current_user, get_optional_user
+from deps import assert_character_access, get_current_user, get_optional_user
 from typing import Optional
 
 router = APIRouter(prefix="/reviews", tags=["리뷰"])
 
 
 class ReviewRequest(BaseModel):
-    rating: int
-    content: str = ""
+    rating: int = Field(ge=1, le=5)
+    content: str = Field(default="", max_length=1000)
 
 
 @router.post("/{character_id}", summary="리뷰 작성/수정")
@@ -17,16 +17,20 @@ async def create_or_update_review(
         character_id: str,
         request: ReviewRequest,
         current_user: dict = Depends(get_current_user)):
-    if request.rating < 1 or request.rating > 5:
-        raise HTTPException(status_code=400, detail="별점은 1~5 사이여야 해요.")
+    # 접근 권한 없는(비공개/성인) 캐릭터에는 리뷰를 남길 수 없다
+    assert_character_access(character_id, current_user)
 
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT id FROM characters WHERE id = ?", (character_id,))
+    # 대화 이력이 없는 계정의 평점 조작 방지
+    cursor.execute("""
+        SELECT 1 FROM chat_history
+         WHERE user_id = ? AND character_id = ? AND role = 'user' LIMIT 1
+    """, (current_user["id"], character_id))
     if not cursor.fetchone():
         conn.close()
-        raise HTTPException(status_code=404, detail="캐릭터를 찾을 수 없습니다.")
+        raise HTTPException(status_code=403, detail="대화해본 캐릭터만 리뷰를 남길 수 있어요.")
 
     cursor.execute("SELECT id FROM character_reviews WHERE user_id = ? AND character_id = ?",
                    (current_user["id"], character_id))

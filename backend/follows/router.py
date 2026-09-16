@@ -1,6 +1,9 @@
+import sqlite3
+
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
 from deps import get_current_user
+from core.serializers import public_character, visible_character_filter
 from typing import Optional, List
 
 router = APIRouter(
@@ -63,9 +66,12 @@ async def follow_user(
         if follower_count == 100: check_and_grant(user_id, "follower_100")
 
         return {"message": "팔로우 완료"}
-    except:
+    except sqlite3.IntegrityError:
         conn.close()
         raise HTTPException(status_code=400, detail="이미 팔로우한 사용자입니다.")
+    except Exception:
+        conn.close()
+        raise
 
 @router.delete("/{user_id}", summary="언팔로우", description="팔로우를 취소합니다.")
 async def unfollow_user(
@@ -104,14 +110,19 @@ async def get_my_follows(current_user: dict = Depends(get_current_user)):
 async def get_following_new_characters(current_user: dict = Depends(get_current_user)):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("""
+    # 공개/성인 필터가 없어 팔로우만 하면 남의 private 캐릭터를 prompt 까지 조회할 수 있었다
+    cursor.execute(f"""
         SELECT c.*, u.username as creator FROM characters c
         JOIN users u ON c.user_id = u.id
         JOIN follows f ON c.user_id = f.following_id
         WHERE f.follower_id = ?
+          AND {visible_character_filter(current_user)}
         ORDER BY c.created_at DESC
         LIMIT 20
     """, (current_user["id"],))
     rows = cursor.fetchall()
     conn.close()
-    return [dict(row) for row in rows]
+    return [
+        {**public_character(r, current_user["id"]), "creator": r["creator"]}
+        for r in rows
+    ]

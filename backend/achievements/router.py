@@ -72,36 +72,36 @@ def init_achievements():
 
 
 def check_and_grant(user_id: int, code: str):
-    from tokens.router import add_token
+    """업적 달성 처리.
 
-    conn = get_db()
-    cursor = conn.cursor()
+    기존에는 '존재 확인 -> INSERT' 사이에 경합이 있어 동시 요청 시
+    UNIQUE(user_id, achievement_code) 위반으로 500 이 났고,
+    보상 지급도 별도 트랜잭션이라 중복 지급 여지가 있었다.
+    INSERT OR IGNORE 의 rowcount 로 '내가 최초 달성자인지'를 원자적으로 판정한다.
+    """
+    from core import token_service as ts
+    from core.db import transaction
 
-    cursor.execute("""
-        SELECT id FROM user_achievements WHERE user_id = ? AND achievement_code = ?
-    """, (user_id, code))
-    if cursor.fetchone():
-        conn.close()
-        return None
+    with transaction() as cursor:
+        cursor.execute("SELECT * FROM achievements WHERE code = ?", (code,))
+        achievement = cursor.fetchone()
+        if not achievement:
+            return None
 
-    cursor.execute("SELECT * FROM achievements WHERE code = ?", (code,))
-    achievement = cursor.fetchone()
-    if not achievement:
-        conn.close()
-        return None
+        cursor.execute("""
+            INSERT OR IGNORE INTO user_achievements (user_id, achievement_code)
+            VALUES (?, ?)
+        """, (user_id, code))
+        if cursor.rowcount == 0:
+            return None  # 이미 달성함
 
-    cursor.execute("""
-        INSERT INTO user_achievements (user_id, achievement_code) VALUES (?, ?)
-    """, (user_id, code))
-    conn.commit()
-    conn.close()
+        expires_at = datetime.now() + timedelta(days=21)
+        ts.grant(cursor, user_id, achievement["reward_token"], ts.SILVER,
+                 f"업적 달성: {achievement['title']}", expires_at,
+                 idempotency_key=f"achievement:{user_id}:{code}")
+        result = dict(achievement)
 
-    # 업적 달성 토큰 지급
-    expires_at = datetime.now() + timedelta(days=21)
-    add_token(user_id, achievement["reward_token"], "event",
-              f"업적 달성: {achievement['title']}", expires_at)
-
-    return dict(achievement)
+    return result
 
 
 @router.get("", summary="전체 업적 목록")
