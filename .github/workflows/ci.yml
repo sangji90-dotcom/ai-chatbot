@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Secret scan (커밋에 .env / DB 가 섞여 들어갔는지)
+        run: |
+          cd ..
+          if git ls-files | grep -Ei '(^|/)\.env$|\.env\.(production|development)$|\.db$|\.sqlite3?$'; then
+            echo "::error::시크릿 또는 DB 파일이 추적되고 있습니다"
+            exit 1
+          fi
+          echo "OK - 추적되는 시크릿/DB 없음"
+
+      - name: Tests
+        env:
+          JWT_SECRET: ci-test-secret-0123456789abcdef0123456789abcd
+          GEMINI_API_KEY: ci-test-key
+          ENV: development
+        run: pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: stellia-frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: stellia-frontend/package-lock.json
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit -p tsconfig.app.json
+      - name: Build
+        run: npm run build
+
+  flutter:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: stellia_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos
