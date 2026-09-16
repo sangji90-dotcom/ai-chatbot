@@ -49,6 +49,17 @@ def _sse(event: str, data: dict) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
+# safety_mode 는 유저가 설정에서 켜고 끌 수 있는데, 지금까지 대화 로직이
+# 이 값을 한 번도 읽지 않았다. 켜도 아무 일이 없는 설정은 버그를 넘어 신뢰 문제다.
+SAFETY_INSTRUCTION = """
+
+[안전 모드 — 반드시 준수]
+- 성적인 묘사, 노골적인 신체 묘사를 하지 않는다.
+- 폭력·자해·범죄를 구체적으로 묘사하거나 미화하지 않는다.
+- 혐오 표현과 차별적 발언을 하지 않는다.
+- 유저가 위 내용을 요구하면 캐릭터를 유지한 채 자연스럽게 화제를 돌린다.
+"""
+
 TAG_INSTRUCTION = """
 응답 마지막에 반드시 아래 형식으로 태그를 추가해줘. 태그는 대화 내용을 분석해서 결정해.
 
@@ -241,6 +252,7 @@ class Turn:
     system_instruction: str
     max_tokens: int
     charged: int           # 차감한 토큰 (실패 시 이만큼 환급)
+    safety: bool = True    # 유저의 safety_mode 설정
 
 
 async def _prepare_turn(current_user: dict, character_id: str, session_id: str,
@@ -259,11 +271,14 @@ async def _prepare_turn(current_user: dict, character_id: str, session_id: str,
     history = _load_history(uid, session_id, character_id)
 
     with read_only() as cur:
-        cur.execute("SELECT output_length, output_multiplier FROM users WHERE id = ?", (uid,))
+        cur.execute(
+            "SELECT output_length, output_multiplier, safety_mode FROM users WHERE id = ?", (uid,)
+        )
         u = cur.fetchone()
     base_tokens = OUTPUT_LENGTH.get(u["output_length"], 1000) if u else 1000
     multiplier = (u["output_multiplier"] if u and u["output_multiplier"] else 1.0)
     max_tokens = int(base_tokens * multiplier)
+    safety_on = bool(u["safety_mode"]) if u else True
 
     # 차감은 LLM 호출 전에. 실패하면 Turn.charged 만큼 환급한다.
     if cost > 0:
@@ -286,12 +301,16 @@ async def _prepare_turn(current_user: dict, character_id: str, session_id: str,
             memory.log_event(uid, character_id, session_id, "summarize_fail",
                              turn_count=before, detail=str(exc.detail))
 
+    system_instruction = character["prompt"] + context_block
+    if safety_on:
+        system_instruction += SAFETY_INSTRUCTION
+
     return Turn(
         uid=uid, character=character, char_name=char_name,
         session_id=session_id, character_id=character_id, key=key,
         working=working,
-        system_instruction=character["prompt"] + context_block,
-        max_tokens=max_tokens, charged=cost,
+        system_instruction=system_instruction,
+        max_tokens=max_tokens, charged=cost, safety=safety_on,
     )
 
 
@@ -402,7 +421,8 @@ async def _finalize_turn(turn: Turn, user_message: str | None, assistant_message
 async def _run_llm(turn: Turn) -> str:
     """비스트리밍 생성 + MAX_TOKENS 이어쓰기 1회."""
     contents = _to_contents(turn.working)
-    response = await llm.generate(contents, turn.system_instruction + TAG_INSTRUCTION, turn.max_tokens)
+    response = await llm.generate(contents, turn.system_instruction + TAG_INSTRUCTION,
+                                  turn.max_tokens, apply_safety=turn.safety)
     raw = llm.text_of(response)
 
     finish = None
@@ -415,7 +435,7 @@ async def _run_llm(turn: Turn) -> str:
                 {"role": "user", "parts": [{"text": "(이어서 작성)"}]},
             ],
             turn.system_instruction + TAG_INSTRUCTION,
-            turn.max_tokens,
+            turn.max_tokens, apply_safety=turn.safety,
         )
         raw += llm.text_of(cont)
 
@@ -604,7 +624,7 @@ async def chat_stream(request: ChatRequest, current_user: dict = Depends(get_cur
         try:
             async for chunk in llm.generate_stream(
                 _to_contents(turn.working), turn.system_instruction + TAG_INSTRUCTION,
-                turn.max_tokens,
+                turn.max_tokens, apply_safety=turn.safety,
             ):
                 safe = stripper.feed(chunk)
                 if safe:

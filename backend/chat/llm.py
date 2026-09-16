@@ -26,14 +26,22 @@ SAFETY_SETTINGS = [
 ]
 
 
+# safety_mode 를 꺼도 유지되는 최소 안전선
+MINIMUM_SAFETY = [
+    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_ONLY_HIGH"},
+    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_ONLY_HIGH"},
+]
+
+
 async def generate(contents, system_instruction: str, max_output_tokens: int,
                    apply_safety: bool = True, timeout: float = 60.0):
     config = {
         "system_instruction": system_instruction,
         "max_output_tokens": max_output_tokens,
     }
-    if apply_safety:
-        config["safety_settings"] = SAFETY_SETTINGS
+    # apply_safety=False 여도 아동 관련은 절대 풀지 않는다.
+    # 유저 설정(safety_mode)으로 조절되는 것은 성인 표현 수위이지, 아동 보호가 아니다.
+    config["safety_settings"] = SAFETY_SETTINGS if apply_safety else MINIMUM_SAFETY
 
     try:
         aio = getattr(client, "aio", None)
@@ -66,8 +74,7 @@ async def generate_stream(contents, system_instruction: str, max_output_tokens: 
         "system_instruction": system_instruction,
         "max_output_tokens": max_output_tokens,
     }
-    if apply_safety:
-        config["safety_settings"] = SAFETY_SETTINGS
+    config["safety_settings"] = SAFETY_SETTINGS if apply_safety else MINIMUM_SAFETY
 
     aio = getattr(client, "aio", None)
     if aio is None:
