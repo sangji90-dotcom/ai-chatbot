@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { usePricing } from "../lib/usePricing";
 
 interface ChatRoomModalProps {
   apiUrl: string;
@@ -13,6 +14,7 @@ interface ChatRoomModalProps {
 export default function ChatRoomModal({
   apiUrl, token, characterId, onClose, onExportPdf
 }: ChatRoomModalProps) {
+  const { chat: pricing } = usePricing(apiUrl);
   const [activeSection, setActiveSection] = useState<"main" | "usernote" | "persona" | "memorybook" | "output">("main");
   const [user, setUser] = useState<any>(null);
   const [userNote, setUserNote] = useState("");
@@ -481,9 +483,9 @@ export default function ChatRoomModal({
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
-                  { value: "short", label: "짧게", desc: "간결하고 빠른 응답", tokens: "300토큰/회" },
-                  { value: "medium", label: "보통", desc: "적당한 길이의 응답", tokens: "1,000토큰/회" },
-                  { value: "long", label: "길게", desc: "상세하고 풍부한 응답", tokens: "2,000토큰/회" },
+                  // 서버 요금표에서 받는다. 예전엔 LLM 출력 토큰 상한을
+                  // 코인 요금처럼 표시해 유저가 "길게 = 2,000코인" 으로 오해했다.
+                  ...pricing.map(p => ({ ...p, tokens: `${p.cost}코인/회` })),
                 ].map(opt => (
                   <button
                     key={opt.value}

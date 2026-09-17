@@ -12,12 +12,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Map<String, dynamic>? _user;
   bool _loading = true;
   String _outputLength = 'medium';
+
+  /// 서버 요금표. 로드 실패 시에도 화면이 비지 않도록 기본값을 둔다.
+  List<Map<String, String>> _pricing = const [
+    {'value': 'short', 'label': '짧게', 'desc': '간결하고 빠른 응답', 'tokens': '30코인/회'},
+    {'value': 'medium', 'label': '보통', 'desc': '적당한 길이의 응답', 'tokens': '50코인/회'},
+    {'value': 'long', 'label': '길게', 'desc': '상세하고 풍부한 응답', 'tokens': '80코인/회'},
+  ];
+
+  Future<void> _loadPricing() async {
+    try {
+      final res = await ApiService.getPricing();
+      final chat = res['chat'];
+      if (chat is List && chat.isNotEmpty) {
+        final parsed = chat
+            .map<Map<String, String>>((e) => {
+                  'value': '${e['value']}',
+                  'label': '${e['label']}',
+                  'desc': '${e['desc']}',
+                  'tokens': '${e['cost']}코인/회',
+                })
+            .toList();
+        if (mounted) setState(() => _pricing = parsed);
+      }
+    } catch (_) {
+      // 기본값 유지
+    }
+  }
   bool _safetyMode = false;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _loadPricing();
   }
 
   Future<void> _load() async {
@@ -123,11 +151,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // 출력량 설정
                 const Text('출력량 설정', style: TextStyle(color: Color(0xFF6B7280), fontSize: 13, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 10),
-                ...[
-                  {'value': 'short', 'label': '짧게', 'desc': '간결하고 빠른 응답', 'tokens': '300토큰/회'},
-                  {'value': 'medium', 'label': '보통', 'desc': '적당한 길이의 응답', 'tokens': '1,000토큰/회'},
-                  {'value': 'long', 'label': '길게', 'desc': '상세하고 풍부한 응답', 'tokens': '2,000토큰/회'},
-                ].map((opt) => GestureDetector(
+                // 서버 요금표에서 받는다. 예전 숫자(300/1,000/2,000)는
+                // LLM 출력 토큰 상한이지 코인 요금이 아니었고,
+                // 유저는 "길게 = 2,000코인" 으로 오해했다.
+                ..._pricing.map((opt) => GestureDetector(
                   onTap: () => _saveOutputLength(opt['value']!),
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 8),

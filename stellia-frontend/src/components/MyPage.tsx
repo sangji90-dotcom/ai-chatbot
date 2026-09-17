@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { usePricing } from "../lib/usePricing";
 import CharacterImageModal from "./CharacterImageModal";
 
 interface MyPageProps {
@@ -27,6 +28,7 @@ const DIFFICULTY_LABEL: Record<string, string> = {
 };
 
 export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharacter }: MyPageProps) {
+  const { chat: pricing } = usePricing(apiUrl);
   const [activeTab, setActiveTab] = useState<"profile" | "characters" | "likes" | "bookmarks" | "achievements" | "tokens" | "settings">("profile");
   const [user, setUser] = useState<any>(null);
   const [myCharacters, setMyCharacters] = useState<any[]>([]);
@@ -552,9 +554,7 @@ export default function MyPage({ apiUrl, token, onBack, onGoAdmin, onEditCharact
             <div style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 16 }}>AI 응답의 기본 길이를 설정해요.</div>
             <div style={{ display: "flex", gap: 10 }}>
               {[
-                { label: "짧게", value: "short", tokens: "300토큰" },
-                { label: "보통", value: "medium", tokens: "1,000토큰" },
-                { label: "길게", value: "long", tokens: "2,000토큰" },
+                ...pricing.map(p => ({ label: p.label, value: p.value, tokens: `${p.cost}코인` })),
               ].map(opt => (
                 <button key={opt.value} onClick={async () => {
                   await axios.patch(`${apiUrl}/users/me/settings`, { output_length: opt.value }, { headers });

@@ -255,6 +255,12 @@ class ApiService {
     return res.data;
   }
 
+  /// 요금표. 클라이언트가 숫자를 박아두면 서버와 어긋난다.
+  static Future<Map<String, dynamic>> getPricing() async {
+    final res = await _dio.get('/tokens/pricing');
+    return res.data;
+  }
+
   static Future<Map<String, dynamic>> getTokens() async {
     final token = await getToken();
     final res = await _dio.get(

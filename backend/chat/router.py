@@ -20,7 +20,9 @@ from chat.tagfilter import TagStripper
 from core.config import (
     AUTO_SUMMARY_THRESHOLD,
     BASE_DIR,
+    CHAT_COST_BY_LENGTH,
     CHAT_DEDUCT,
+    chat_cost,
     MEMORY_EXTRACT_EVERY,
     MEMORY_FOR_ALL,
     REGENERATE_COST,
@@ -275,10 +277,15 @@ async def _prepare_turn(current_user: dict, character_id: str, session_id: str,
             "SELECT output_length, output_multiplier, safety_mode FROM users WHERE id = ?", (uid,)
         )
         u = cur.fetchone()
-    base_tokens = OUTPUT_LENGTH.get(u["output_length"], 1000) if u else 1000
+    output_length = u["output_length"] if u else "medium"
+    base_tokens = OUTPUT_LENGTH.get(output_length, 1000)
     multiplier = (u["output_multiplier"] if u and u["output_multiplier"] else 1.0)
     max_tokens = int(base_tokens * multiplier)
     safety_on = bool(u["safety_mode"]) if u else True
+
+    # cost < 0 이면 유저의 출력 길이 설정에 따라 자동 산정한다
+    if cost < 0:
+        cost = chat_cost(output_length)
 
     # 차감은 LLM 호출 전에. 실패하면 Turn.charged 만큼 환급한다.
     if cost > 0:
@@ -500,7 +507,7 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
         )
 
     turn = await _prepare_turn(current_user, request.character_id, request.session_id,
-                               request.message, CHAT_DEDUCT)
+                               request.message, cost=-1)
     try:
         raw = await _run_llm(turn)
     except HTTPException:
@@ -516,6 +523,7 @@ async def chat(request: ChatRequest, current_user: dict = Depends(get_current_us
         "message_id": message_id,
         "emotion": emotion,
         "situation": situation,
+        "cost": turn.charged,
     }
 
 
@@ -552,8 +560,10 @@ async def regenerate(request: RegenerateRequest,
         raise HTTPException(status_code=400, detail="재생성할 응답이 없어요.")
     target_id = last["id"]
 
+    # REGENERATE_COST 를 명시적으로 0 으로 둔 경우는 무료, 아니면 길이별 요금을 따른다
+    regen_cost = 0 if REGENERATE_COST == 0 else -1
     turn = await _prepare_turn(current_user, request.character_id, request.session_id,
-                               None, REGENERATE_COST)
+                               None, regen_cost)
 
     # 마지막 assistant 응답을 빼고 같은 맥락으로 다시 요청한다
     if turn.working and turn.working[-1].get("role") == "assistant":
@@ -617,7 +627,7 @@ async def chat_stream(request: ChatRequest, current_user: dict = Depends(get_cur
 
     # 토큰 차감은 스트림 시작 전에 — 부족하면 여기서 402 가 나가야 한다
     turn = await _prepare_turn(current_user, request.character_id, request.session_id,
-                               request.message, CHAT_DEDUCT)
+                               request.message, cost=-1)
 
     async def event_stream():
         stripper = TagStripper()
@@ -775,11 +785,17 @@ def get_sessions(character_id: str, current_user: dict = Depends(get_current_use
     with read_only() as cur:
         cur.execute(
             """
-            SELECT session_id, MAX(created_at) AS last_chat, COUNT(*) AS message_count
+            -- FE 는 started_at / last_at 을 읽는데 서버가 last_chat 만 줘서
+            -- 세션 목록의 날짜가 "Invalid Date" 로 표시되고 있었다.
+            SELECT session_id,
+                   MIN(created_at) AS started_at,
+                   MAX(created_at) AS last_at,
+                   MAX(created_at) AS last_chat,   -- 기존 필드명 호환
+                   COUNT(*) AS message_count
               FROM chat_history
              WHERE character_id = ? AND user_id = ? AND role = 'user'
              GROUP BY session_id
-             ORDER BY last_chat DESC
+             ORDER BY last_at DESC
             """,
             (character_id, current_user["id"]),
         )

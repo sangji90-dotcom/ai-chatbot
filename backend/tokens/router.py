@@ -54,6 +54,35 @@ def deduct_token(user_id: int, amount: int, reason: str) -> int:
 
 
 # ── 조회 ────────────────────────────────────────────────────────────────
+@router.get("/pricing", summary="요금표")
+async def get_pricing():
+    """클라이언트가 숫자를 직접 박아두면 서버와 어긋난다.
+
+    실제로 설정 화면 3곳(웹 2 + 앱 1)이 "300/1,000/2,000 토큰/회" 라고
+    표시하고 있었는데, 그건 LLM 출력 토큰 상한이지 코인 요금이 아니었다.
+    """
+    from core.config import CHAT_COST_BY_LENGTH
+
+    return {
+        "chat": [
+            {"value": "short", "label": "짧게", "desc": "간결하고 빠른 응답",
+             "cost": CHAT_COST_BY_LENGTH["short"]},
+            {"value": "medium", "label": "보통", "desc": "적당한 길이의 응답",
+             "cost": CHAT_COST_BY_LENGTH["medium"]},
+            {"value": "long", "label": "길게", "desc": "상세하고 풍부한 응답",
+             "cost": CHAT_COST_BY_LENGTH["long"]},
+        ],
+        "rewards": {
+            "signup": SIGNUP_TOKEN,
+            "attendance": ATTENDANCE_TOKEN,
+            "ad": AD_TOKEN,
+            "ad_daily_limit": AD_DAILY_LIMIT,
+        },
+        "event_token_expire_days": EVENT_EXPIRE_DAYS,
+        "memory_pass": {"coins": MEMORY_PASS_30DAY_COINS, "cash": MEMORY_PASS_CASH_PRICE},
+    }
+
+
 @router.get("/packages", summary="토큰 패키지 목록")
 async def get_packages():
     return TOKEN_PACKAGES

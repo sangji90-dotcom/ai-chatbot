@@ -211,3 +211,50 @@ def test_stream_blocks_private_character(client, user_a, user_b, fake_llm):
     resp = client.post("/chat/stream", headers=auth(user_b), json={
         "character_id": cid, "message": "안녕", "session_id": "st-4"})
     assert resp.status_code == 403
+
+
+def test_session_list_returns_dates_frontend_reads(client, user_a, fake_llm):
+    """FE 는 started_at / last_at 을 읽는데 서버가 last_chat 만 줘서
+    세션 목록 날짜가 'Invalid Date' 로 표시됐다."""
+    cid = _character(client, user_a, "세션날짜")
+    client.post("/chat", headers=auth(user_a), json={
+        "character_id": cid, "message": "첫 메시지", "session_id": "date-1"})
+
+    sessions = client.get(f"/chat/sessions/{cid}", headers=auth(user_a)).json()
+    assert sessions, "세션이 있어야 한다"
+    s = sessions[0]
+    for field in ("session_id", "started_at", "last_at", "message_count"):
+        assert field in s, f"FE 가 읽는 {field} 가 응답에 없다"
+    assert s["started_at"] and s["last_at"]
+
+
+# ── 출력 길이별 차등 과금 ────────────────────────────────────────────────
+@pytest.mark.parametrize("length,expected", [("short", 30), ("medium", 50), ("long", 80)])
+def test_chat_cost_follows_output_length(client, user_a, fake_llm, length, expected):
+    """세 옵션 모두 50코인이 빠지는데 설정 화면은 300/1,000/2,000 이라고
+    표시하고 있었다(그건 LLM 출력 토큰 상한이었다)."""
+    cid = _character(client, user_a, f"과금{length}")
+    client.patch("/users/me/settings", headers=auth(user_a), json={"output_length": length})
+
+    r = client.post("/chat", headers=auth(user_a), json={
+        "character_id": cid, "message": "안녕", "session_id": f"cost-{length}"})
+    assert r.status_code == 200, r.text
+    assert r.json()["cost"] == expected, "클라이언트가 하드코딩하지 않도록 실제 차감액을 내려준다"
+
+    # 잔액 차이로 재면 업적 보상 지급에 오염된다 — 차감 내역을 직접 본다
+    conn = sqlite3.connect(DB_PATH)
+    row = conn.execute(
+        "SELECT amount FROM token_history WHERE token_type = 'use' ORDER BY id DESC LIMIT 1"
+    ).fetchone()
+    conn.close()
+    assert row[0] == -expected, f"{length} 설정의 실제 차감액이 {expected} 이어야 한다"
+
+
+def test_pricing_endpoint_matches_actual_cost(client):
+    r = client.get("/tokens/pricing")
+    assert r.status_code == 200
+    body = r.json()
+    costs = {c["value"]: c["cost"] for c in body["chat"]}
+    assert costs == {"short": 30, "medium": 50, "long": 80}
+    assert body["rewards"]["signup"] == 3000
+    assert body["event_token_expire_days"] == 21

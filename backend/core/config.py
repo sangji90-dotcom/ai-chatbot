@@ -47,7 +47,24 @@ UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", str(BASE_DIR.parent / "frontend" / "im
 FRONTEND_DIST = BASE_DIR.parent / "stellia-frontend" / "dist"
 
 # 토큰 경제
-CHAT_DEDUCT = 50
+CHAT_DEDUCT = 50  # 기본값 / output_length 미설정 시
+
+# 출력 길이별 차등 과금.
+# LLM 비용은 실제로 출력 토큰에 비례하므로 구조적으로 맞고,
+# "짧게/보통/길게" 선택지가 존재할 이유도 생긴다.
+#
+# 기존에는 세 옵션 모두 50코인이 빠지는데 설정 화면은 "300/1,000/2,000 토큰/회"
+# 라고 표시했다. 그 숫자는 LLM max_output_tokens 였지 코인이 아니었고,
+# 유저는 "길게 쓰면 2000코인이 빠진다"고 읽었다 (가입 지급이 3000코인).
+CHAT_COST_BY_LENGTH = {
+    "short": int(os.getenv("CHAT_COST_SHORT", "30")),
+    "medium": int(os.getenv("CHAT_COST_MEDIUM", "50")),
+    "long": int(os.getenv("CHAT_COST_LONG", "80")),
+}
+
+
+def chat_cost(output_length: str | None) -> int:
+    return CHAT_COST_BY_LENGTH.get(output_length or "medium", CHAT_DEDUCT)
 # 재생성 비용. LLM 을 한 번 더 호출하므로 기본은 대화와 동일하게 둔다.
 # CBT 에서는 0 으로 두는 것을 고려할 것 — 재생성이 유료면 유저는 재생성 대신
 # 이탈을 택하고, 그러면 10턴 도달률이 떨어져 기억 품질 검증 자체가 불가능해진다.
